@@ -1,3 +1,15 @@
+/****************************************************************
+* Lab 3: Mini Chat Server
+* Due 1/28/2015
+*
+* Client File
+*    
+* Michael Kinkema
+* Chase	Pietrangelo
+* Danny	Selgo
+* Daniel Jones
+*
+****************************************************************/
 
 #include <sys/socket.h>
 #include <netinet/in.h>
