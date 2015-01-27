@@ -35,7 +35,7 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-	while(1){
+	//while(1){
 		printf("Enter a line: ");
 		char line[5000];
 		char line2[5000];
@@ -50,7 +50,7 @@ int main(int argc, char **argv){
 		}
 
 		printf("Got from server %s\n", line2);
-	}
+	//}
 
 	return 0;
 }
