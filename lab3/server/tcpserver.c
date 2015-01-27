@@ -20,7 +20,7 @@ int main(int argc, char **argv){
 	serveraddr.sin_port=htons(9010);
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
-	bind(sockfd, (struct sockadd*) &serveraddr, sizeof(serveraddr));
+	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 	listen(sockfd, 10);
 
 	FD_SET(sockfd, &sockets);
