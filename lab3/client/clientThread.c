@@ -96,6 +96,8 @@ void* print_message(void* arg){
 	int sockfd = *(int *)arg;
 	int n;
 	while (n = recv(sockfd, line, 5000, 0) > 0){
+		printf("thread\n");
+		sleep(1);
 		printf("%s\n", line);
 	}
 	if (n < 0){
