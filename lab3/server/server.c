@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
+#include <arpa/inet.h>
 
 int main(int argc, char **argv){
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -42,8 +43,14 @@ int main(int argc, char **argv){
                     
                     int clientsocket = accept(sockfd, (struct sockaddr*) &clientaddr, &len);
 					FD_SET(clientsocket, &sockets);
-			inet_ntop( AF_INET, &clientaddr, &str, INET_ADDRSTRLEN );
-                    	printf("A client connected (IP=%s : Port=9010)\n",str);
+			//inet_ntop( AF_INET, &clientaddr, &str, INET_ADDRSTRLEN );
+                    	//int len;
+		
+			//len = sizeof(clientaddr);
+			//getpeername(i,&clientaddr,&len);
+			//str = inet_ntoa(clientaddr.sin_addr);
+
+			printf("A client connected (IP=%s : Port=9010)\n", inet_ntoa(clientaddr.sin_addr));
 				}
 				else{
                     if(recv(i, line, 5000, 0)) {
