@@ -34,7 +34,7 @@ int main(int argc, char** argv){
 	char serverIP[5000]; 
 
 	//if(argc!=4){ 
-		
+		/*
 		printf("Enter chat name: ");
 		fgets(name,5000,stdin);
 
@@ -52,8 +52,8 @@ int main(int argc, char** argv){
 
   	struct sockaddr_in serveraddr;
   	serveraddr.sin_family=AF_INET;
-  	serveraddr.sin_port=htons(atoi(serverPort));
-  	serveraddr.sin_addr.s_addr=inet_addr(serverIP);
+  	serveraddr.sin_port=htons(9010);
+  	serveraddr.sin_addr.s_addr=inet_addr("148.61.162.118");
 
   	if(connect(sockfd,(struct sockaddr*)&serveraddr,
                    sizeof(struct sockaddr_in))<0){
