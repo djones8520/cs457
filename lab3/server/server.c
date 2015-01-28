@@ -54,6 +54,7 @@ int main(int argc, char **argv){
                         }
                         memset(line,0,sizeof(line));
                     } else {
+                    	puts("Client disconnected.");
                         close(i);
                         FD_CLR(i, &sockets);
                     }
