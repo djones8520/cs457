@@ -40,18 +40,20 @@ int main(int argc, char **argv){
 					FD_SET(clientsocket, &sockets);
 				}
 				else{
-					char line[5000];
-					recv(i, line, 5000, 0);
+                    printf("here 1\n");
+                    char line[5000];
+                    //memset(line,'\0',5000);
+                    printf("here 2\n");
+                    recv(i, line, 5000, 0);
 					printf("Got from client: %s\n", line);
-					
+					printf("here 3\n");
 					int j;
-					
-					for(j=0; j<FD_SETSIZE; j++){
-						printf("Sending\n");
-						if(j != i)
-							send(j, line, strlen(line), 0);
-					}
-					
+					printf("here 4\n");
+					for(j=4; j<FD_SETSIZE; j++){
+                        if(j != i)
+                            send(j, line, strlen(line), 0);
+                    }
+					printf("here 5\n");
 					
 					//close(i);
 					//FD_CLR(i, &sockets);
