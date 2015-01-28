@@ -43,7 +43,6 @@ int main(int argc, char **argv){
 					char line[5000];
 					recv(i, line, 5000, 0);
 					printf("Got from client: %s\n", line);
-					printf("%d\n", i);
 					
 					int j;
 					
