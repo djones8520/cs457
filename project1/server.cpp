@@ -14,21 +14,35 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <string>
 #include <sys/select.h>
-#include <pthread.h>
 
-void* httpRequest(void* arg);
+using namespace std;
 
 int main(int argc, char **argv){
-	int p;
+	int port;
 	String docroot;
-	String logfile;
 	
 	if(argc > 1){
-		
+		for(int i = 1; i < argc; i++){
+			if(strcmp(argv[i],"-p") == 0){
+				i++;
+				port = atoi(argv[i]);
+			}else if(strcmp(argv[i],"-docroot") == 0){
+				i++;
+				docroot = argv[i];
+			}else if(strcmp(argv[i],"-logfile") == 0){
+				i++;
+				freopen(argv[i],"w",stdout);
+			}else{
+				cerr << "Invalid option. Valid options are -p, -docroot, -logfile\n"
+				exit(1);
+			}
+		}
 	}else{
-
+		p=8080;
+		getcwd(docroot);
 	}
 
         int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -52,17 +66,8 @@ int main(int argc, char **argv){
         FD_SET(sockfd, &sockets);
 
         int len = sizeof(clientaddr);
-	
-	pthread_t thread1;
-	void *result1;
-	int status;
 
-	// NOT IN THE RIGHT PLACE
-	if((status = pthread_create(&thread1, NULL, httpRequest, &sockfd)) != 0){
-		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
-	}
-
-    	char line[5000];
+    char line[5000];
         while(1){
                 fd_set tmp_set = sockets;
                 select(FD_SETSIZE, &tmp_set, NULL, NULL, NULL);
@@ -99,18 +104,7 @@ int main(int argc, char **argv){
                 }
         }
 
-	if ((status = pthread_join (thread1, &result1)) != 0) { 
-        	fprintf (stderr, "join error %d: %s\n", status, strerror(status)); 
-        	exit (1); 
-    	}
-
         return 0;
-}
-
-void* httpRequest(void* arg){
-	char line[5000];
-	int sockfd = *(int *) arg;
-	pthread_detach(pthread_self());
 }
 
 
