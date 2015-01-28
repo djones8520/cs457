@@ -47,6 +47,7 @@ int main(int argc, char **argv){
 					int j;
 					
 					for(j=0; j<FD_SETSIZE; j++){
+						printf("Sending\n");
 						if(j != i)
 							send(j, line, strlen(line), 0);
 					}
