@@ -57,6 +57,7 @@ int main(int argc, char **argv){
 	void *result1;
 	int status;
 
+	// NOT IN THE RIGHT PLACE
 	if((status = pthread_create(&thread1, NULL, httpRequest, &sockfd)) != 0){
 		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 	}
