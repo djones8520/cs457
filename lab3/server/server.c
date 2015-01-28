@@ -38,11 +38,12 @@ int main(int argc, char **argv){
 				if(i == sockfd){
 					
                     char str[INET_ADDRSTRLEN];
-                    inet_ntop( AF_INET, &clientaddr, &str, INET_ADDRSTRLEN );
-                    printf("A client connected (IP=%s : Port=9010)\n",str);
+                    
                     
                     int clientsocket = accept(sockfd, (struct sockaddr*) &clientaddr, &len);
 					FD_SET(clientsocket, &sockets);
+			inet_ntop( AF_INET, &clientaddr, &str, INET_ADDRSTRLEN );
+                    	printf("A client connected (IP=%s : Port=9010)\n",str);
 				}
 				else{
                     if(recv(i, line, 5000, 0)) {
