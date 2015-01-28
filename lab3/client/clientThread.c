@@ -3,7 +3,7 @@
 * Due 1/28/2015
 *
 * Client File
-*    
+*
 * Michael Kinkema
 * Chase	Pietrangelo
 * Danny	Selgo
@@ -23,92 +23,95 @@ void strip_newline(char* s);
 
 int main(int argc, char** argv){
 
-  	int sockfd = socket(AF_INET,SOCK_STREAM,0);
-  	if(sockfd<0){
-    		printf("There was an error creating the socket\n");
-    		return 1;
-  	}
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0){
+		printf("There was an error creating the socket\n");
+		return 1;
+	}
 
 	char name[5000];
 	char serverPort[5000];
-	char serverIP[5000]; 
+	char serverIP[5000];
 
 	//if(argc!=4){ 
-		/*
-		printf("Enter chat name: ");
-		fgets(name,5000,stdin);
+	/*
+	printf("Enter chat name: ");
+	fgets(name,5000,stdin);
 
-		printf("Enter server port number: ");
-		fgets(serverPort,5000,stdin);
-	  
-		printf("Enter server IP address: ");
-		fgets(serverIP,5000,stdin);
-		
+	printf("Enter server port number: ");
+	fgets(serverPort,5000,stdin);
+
+	printf("Enter server IP address: ");
+	fgets(serverIP,5000,stdin);
+
 	/*}else{
-		name=argv[1];
-		serverPort=argv[2];
-		serverIP=argv[3];
+	name=argv[1];
+	serverPort=argv[2];
+	serverIP=argv[3];
 	}*/
 
-  	struct sockaddr_in serveraddr;
-  	serveraddr.sin_family=AF_INET;
-  	serveraddr.sin_port=htons(9010);
-  	serveraddr.sin_addr.s_addr=inet_addr("148.61.162.118");
+	struct sockaddr_in serveraddr;
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(9010);
+	serveraddr.sin_addr.s_addr = inet_addr("148.61.162.118");
 
-  	if(connect(sockfd,(struct sockaddr*)&serveraddr,
-                   sizeof(struct sockaddr_in))<0){
-    		printf("There was an error connecting to the server.\n");
-    		return 1;
-  	}
+	if (connect(sockfd, (struct sockaddr*)&serveraddr,
+		sizeof(struct sockaddr_in)) < 0){
+		printf("There was an error connecting to the server.\n");
+		return 1;
+	}
 
-  	printf("Connected to server. Welcome to the chat room!\n");
+	printf("Connected to server. Welcome to the chat room!\n");
 
 	pthread_t thread1;
 	void *result1;
 	int status;
 
-	if((status = pthread_create(&thread1, NULL, print_message, &sockfd)) != 0){
+	if ((status = pthread_create(&thread1, NULL, print_message, &sockfd)) != 0){
 		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 	}
 
-	while(1){
-                char line[5000];
-                char msg[5000];
-                fgets(line,5000,stdin);
+	while (1){
+		char line[5000];
+		char msg[5000];
+		fgets(line, 5000, stdin);
 		strip_newline(name);
-                strcat(msg,name);
-                strcat(msg,": ");
+		strcat(msg, name);
+		strcat(msg, ": ");
 		strip_newline(msg);
-                strcat(msg,line);
+		strcat(msg, line);
 		strip_newline(msg);
-                send(sockfd,msg,strlen(msg),0);
-        }
+		send(sockfd, msg, strlen(msg), 0);
+	}
 
-	if ((status = pthread_join (thread1, &result1)) != 0) { 
-        	fprintf (stderr, "join error %d: %s\n", status, strerror(status)); 
-        	exit (1); 
-    	} 
-        return 0;
+	if ((status = pthread_join(thread1, &result1)) != 0) {
+		fprintf(stderr, "join error %d: %s\n", status, strerror(status));
+		exit(1);
+	}
+	return 0;
 }
 
 void* print_message(void* arg){
 	char line[5000];
-	int sockfd = *(int *) arg;
-        int n;
-        while(n = recv(sockfd,line,5000,0)>0){
-                printf("%s\n",line);
-        }
-        if(n<0){
-                printf("Sorry, had a problem receiving.\n");
-                exit(1);
-        }
+	int sockfd = *(int *)arg;
+	int n;
+	while (n = recv(sockfd, line, 5000, 0) > 0){
+		printf("%s\n", line);
+	}
+	if (n < 0){
+		printf("Sorry, had a problem receiving.\n");
+		exit(1);
+	}
+	
+	printf("Listening Thread closing\n");
+	
 	close(sockfd);
 	pthread_detach(pthread_self());
 }
 
 void strip_newline(char *s){
-	while(*s != '\0'){
-		if(*s == '\r' || *s == '\n'){
+	while (*s != '\0'){
+		if (*s == '\r' || *s == '\n'){
 			*s = '\0';
 		}
 		s++;
