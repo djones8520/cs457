@@ -44,7 +44,13 @@ int main(int argc, char **argv){
 					recv(i, line, 5000, 0);
 					printf("Got from client: %s\n", line);
 					printf("%d\n", i);
-					send(4, line, strlen(line), 0);
+					
+					int j;
+					
+					for(j=0; j<FD_SETSIZE; j++){
+						if(j != i)
+							send(j, line, strlen(line), 0);
+					}
 					
 					//close(i);
 					//FD_CLR(i, &sockets);
