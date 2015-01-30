@@ -71,8 +71,6 @@ int main(int argc, char **argv){
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 	listen(sockfd, 10);
 
-	int len = sizeof(clientaddr);
-
 	char line[5000];
 	while (1){
 		pthread_t thread;
@@ -80,6 +78,7 @@ int main(int argc, char **argv){
 		int status;
 
 		int len = sizeof(clientaddr);
+		//g++ doesn't like this
 		int clientsocket = accept(sockfd,(struct sockaddr*)&clientaddr,&len);
 		   
 		char line[5000];
