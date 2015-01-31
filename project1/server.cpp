@@ -56,7 +56,7 @@ int main(int argc, char **argv){
 		//getcwd(docroot);
 	}
 
-	socklen_t sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0){
 		printf("Problem creating socket\n");
@@ -77,9 +77,9 @@ int main(int argc, char **argv){
 		void *result;
 		int status;
 
-		int len = sizeof(clientaddr);
+		socklen_t len = sizeof(clientaddr);
 		//g++ doesn't like this
-		int clientsocket = accept(sockfd,(struct sockaddr*)&clientaddr, &len);
+		int clientsocket = accept(sockfd,(struct sockaddr*)&clientaddr,&len);
 		   
 		char line[5000];
 		recv(clientsocket, line, 5000, 0);
