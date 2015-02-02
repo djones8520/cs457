@@ -16,8 +16,8 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <iostream>
-#include <cstring>
-#include <string>
+//#include <cstring>
+//#include <string.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
