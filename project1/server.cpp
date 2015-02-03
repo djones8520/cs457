@@ -81,6 +81,7 @@ int main(int argc, char **argv){
 	listen(sockfd, 10);
 
 	while (1){
+		cout << "Inside loop" << endl;
 		pthread_t thread;
 		void *result;
 		int status;
@@ -103,9 +104,8 @@ int main(int argc, char **argv){
 		//inet_ntop(AF_INET, &clientaddr, &str, INET_ADDRSTRLEN);
 		//printf("A client connected (IP=%s : Port=9010)\n", str);
 
-
 		if((status = pthread_create(&thread, NULL, httpRequest, &req)) != 0){
-			fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
+			cout << "Error creating thread" << endl;
 		}
 	}
 
@@ -117,7 +117,7 @@ void* httpRequest(void* arg){
 	//int sockfd = *(int *) arg;
         //int n;
 
-	cout << "Thread created";
+	cout << "Thread created" << endl;
 /*
         while((n = recv(sockfd,line,5000,0))>0){
             printf("%s\n",line);
