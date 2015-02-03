@@ -12,6 +12,7 @@
 ****************************************************************/
 
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -33,8 +34,11 @@ typedef	struct requestParams{
 
 void* httpRequest(void* arg);
 string makeDateHeader();
+string makeLastModifiedHeader(string);
 
 int main(int argc, char **argv){
+	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
+	cout << "Date: " << makeDateHeader() << endl;
 	int port;
 	char *docroot = (char*)malloc(1024);
 	char *logfile;
@@ -167,3 +171,25 @@ string makeDateHeader()
     return buf;
 }
 
+string makeLastModifiedHeader(string file_name)
+{
+	const char *DAY_NAMES[] =
+        { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+        const char *MONTH_NAMES[] =
+        { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+	struct stat attr;
+	struct tm tm;
+	const int RFC1123_TIME_LEN = 29;
+	char * buf = (char *)malloc(RFC1123_TIME_LEN+1);
+
+	stat(file_name.c_str(),&attr);
+        gmtime_r(&attr.st_mtime,&tm);
+
+	strftime(buf,RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm);
+	memcpy(buf, DAY_NAMES[tm.tm_wday], 3);
+        memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
+
+	return buf;
+}
