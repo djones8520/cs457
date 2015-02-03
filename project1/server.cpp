@@ -21,6 +21,7 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -28,8 +29,11 @@ void* httpRequest(void* arg);
 
 int main(int argc, char **argv){
 	int port;
-	string docroot;
-	int p;
+	char * docroot;
+	char * logfile;
+
+	port = 8080;
+        getcwd(docroot,1024);
 
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
@@ -43,6 +47,7 @@ int main(int argc, char **argv){
 			}
 			else if (strcmp(argv[i], "-logfile") == 0){
 				i++;
+				logfile = argv[i];
 				freopen(argv[i], "w", stdout);
 			}
 			else{
@@ -51,10 +56,9 @@ int main(int argc, char **argv){
 			}
 		}
 	}
-	else{
-		p = 8080;
-		//getcwd(docroot);
-	}
+	printf("port: %d\n",port);
+	printf("docroot: %s\n",docroot);
+	printf("logfile: %s\n",logfile);
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
