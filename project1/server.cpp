@@ -26,11 +26,10 @@
 
 using namespace std;
 
-
 typedef	struct requestParams{
-			int clientSocket;
-			string data;
-		} request;
+	int clientSocket;
+	string data;
+} request;
 
 void* httpRequest(void* arg);
 string makeDateHeader();
