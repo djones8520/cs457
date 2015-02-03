@@ -33,6 +33,7 @@ typedef	struct requestParams{
 
 void* httpRequest(void* arg);
 string makeDateHeader();
+string makeContentTypeHeader(string filename);
 
 int main(int argc, char **argv){
 	int port;
@@ -165,5 +166,27 @@ string makeDateHeader()
     	memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
 
     return buf;
+}
+
+/*
+ * Creates the Content-Type header for the response header. Checks if
+ * the requested filename's extension is .html, .jpeg, or .pdf and then
+ * creates header accordingly. Otherwise defaults to text.
+ */
+string makeContentTypeHeader(string filename){
+	char *str1 = (char*)filename.c_str();
+	strtok(str1,".");
+	char *str2 = strtok(NULL,".");
+	string header = "Content-Type:";
+	if(strcmp(str2,"html")==0){
+		header+="text/html;";
+	}else if(strcmp(str2,"jpeg")==0){
+		header+="image;";
+	}else if(strcmp(str2,"pdf")==0){
+		header+="application/pdf;";
+	}else{
+		header+="text;";
+	}
+	return header;
 }
 
