@@ -32,6 +32,7 @@ typedef	struct requestParams{
 		} request;
 
 void* httpRequest(void* arg);
+string makeDateHeader();
 
 int main(int argc, char **argv){
 	int port;
@@ -136,4 +137,33 @@ void* httpRequest(void* arg){
 	pthread_detach(pthread_self());
 }
 
+
+string makeDateHeader()
+{
+        /*Doesn't send date header if there is a server error
+        if(response_status >= 500 && response_status <= 599)
+        {
+                return "0"
+        }*/
+
+	const char *DAY_NAMES[] =
+  	{ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+	const char *MONTH_NAMES[] =
+  	{ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    	
+	const int RFC1123_TIME_LEN = 29;
+    	time_t t;
+    	struct tm tm;
+    	char * buf = (char *)malloc(RFC1123_TIME_LEN+1);
+
+    	time(&t);
+    	gmtime_r(&t, &tm);
+
+    	strftime(buf, RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm);
+    	memcpy(buf, DAY_NAMES[tm.tm_wday], 3);
+    	memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
+
+    return buf;
+}
 
