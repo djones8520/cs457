@@ -112,10 +112,13 @@ int main(int argc, char **argv){
 			cout << "Error creating thread" << endl;
 		}
 	}
-
 	return 0;
 }
 
+
+/***********************************************************
+ *
+ ***********************************************************/
 void* httpRequest(void* arg){
 	//char line[5000];
 	//int sockfd = *(int *) arg;
@@ -140,14 +143,14 @@ void* httpRequest(void* arg){
 }
 
 
+/***********************************************************
+ * Returns the current time in RFC1123 formatting. All 
+ * status codes should be checked before calling this
+ * function. Specifically, if a 500 level code was sent, do
+ * not send the date header. 
+ ***********************************************************/
 string makeDateHeader()
 {
-        /*Doesn't send date header if there is a server error
-        if(response_status >= 500 && response_status <= 599)
-        {
-                return "0"
-        }*/
-
 	const char *DAY_NAMES[] =
   	{ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 	const char *MONTH_NAMES[] =
@@ -169,7 +172,13 @@ string makeDateHeader()
     return buf;
 }
 
-<<<<<<< HEAD
+
+/***********************************************************
+ * Given a file name of a file that exist, returns the date 
+ * that the file was last modified as an RFC1123 format. The
+ * last-modified header should be sent with all file
+ * requests, regardless of status code.
+ ***********************************************************/
 string makeLastModifiedHeader(string file_name)
 {
 	const char *DAY_NAMES[] =
@@ -192,12 +201,13 @@ string makeLastModifiedHeader(string file_name)
 
 	return buf;
 }
-=======
-/*
+
+
+/***********************************************************
  * Creates the Content-Type header for the response header. Checks if
  * the requested filename's extension is .html, .jpeg, or .pdf and then
  * creates header accordingly. Otherwise defaults to text.
- */
+ ***********************************************************/
 string makeContentTypeHeader(string filename){
 	char *str1 = (char*)filename.c_str();
 	strtok(str1,".");
@@ -214,5 +224,3 @@ string makeContentTypeHeader(string filename){
 	}
 	return header;
 }
-
->>>>>>> ad2449e4b36f7df8d8a217d6c1c4b05247714142
