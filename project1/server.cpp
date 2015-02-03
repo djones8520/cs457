@@ -21,15 +21,24 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 using namespace std;
+
+typedef	struct requestParams{
+			int clientSocket;
+			string line;
+		} request;
 
 void* httpRequest(void* arg);
 
 int main(int argc, char **argv){
 	int port;
-	string docroot;
-	int p;
+	char * docroot;
+	char * logfile;
+
+	port = 8080;
+        getcwd(docroot,1024);
 
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
@@ -43,6 +52,7 @@ int main(int argc, char **argv){
 			}
 			else if (strcmp(argv[i], "-logfile") == 0){
 				i++;
+				logfile = argv[i];
 				freopen(argv[i], "w", stdout);
 			}
 			else{
@@ -51,10 +61,9 @@ int main(int argc, char **argv){
 			}
 		}
 	}
-	else{
-		p = 8080;
-		//getcwd(docroot);
-	}
+	printf("port: %d\n",port);
+	printf("docroot: %s\n",docroot);
+	printf("logfile: %s\n",logfile);
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -84,12 +93,18 @@ int main(int argc, char **argv){
 		char line[5000];
 		recv(clientsocket, line, 5000, 0);
 		printf("Requested file from client: %s\n",line);
+		
+		requestParams *req = new requestParams;
+		
+		string line2;
+		req->clientSocket = clientsocket;
+		req->line = line2;
 
 		//char str[INET_ADDRSTRLEN];
 		//inet_ntop(AF_INET, &clientaddr, &str, INET_ADDRSTRLEN);
 		//printf("A client connected (IP=%s : Port=9010)\n", str);
 
-		if((status = pthread_create(&thread, NULL, httpRequest, &line)) != 0){
+		if((status = pthread_create(&thread, NULL, httpRequest, &req)) != 0){
 			fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 		}
 	}
