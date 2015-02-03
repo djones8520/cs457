@@ -29,12 +29,13 @@ using namespace std;
 
 typedef	struct requestParams{
 			int clientSocket;
-			string line;
+			string data;
 		} request;
 
 void* httpRequest(void* arg);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
+string makeContentTypeHeader(string filename);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -84,7 +85,6 @@ int main(int argc, char **argv){
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 	listen(sockfd, 10);
 
-	char line[5000];
 	while (1){
 		pthread_t thread;
 		void *result;
@@ -96,22 +96,20 @@ int main(int argc, char **argv){
 		   
 		char line[5000];
 		recv(clientsocket, line, 5000, 0);
-		printf("Requested file from client: %s\n",line);
-		
+		cout << "Requested file from client: " << line << endl;
 
 		requestParams *req = new requestParams;
 		
-		string line2;
+		string requestData = line;
 		req->clientSocket = clientsocket;
-		req->line = line2;
+		req->data = requestData;
 
 		//char str[INET_ADDRSTRLEN];
 		//inet_ntop(AF_INET, &clientaddr, &str, INET_ADDRSTRLEN);
 		//printf("A client connected (IP=%s : Port=9010)\n", str);
 
-
 		if((status = pthread_create(&thread, NULL, httpRequest, &req)) != 0){
-			fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
+			cout << "Error creating thread" << endl;
 		}
 	}
 
@@ -123,7 +121,7 @@ void* httpRequest(void* arg){
 	//int sockfd = *(int *) arg;
         //int n;
 
-	cout << "Thread created";
+	cout << "Thread created" << endl;
 /*
         while((n = recv(sockfd,line,5000,0))>0){
             printf("%s\n",line);
@@ -171,6 +169,7 @@ string makeDateHeader()
     return buf;
 }
 
+<<<<<<< HEAD
 string makeLastModifiedHeader(string file_name)
 {
 	const char *DAY_NAMES[] =
@@ -193,3 +192,27 @@ string makeLastModifiedHeader(string file_name)
 
 	return buf;
 }
+=======
+/*
+ * Creates the Content-Type header for the response header. Checks if
+ * the requested filename's extension is .html, .jpeg, or .pdf and then
+ * creates header accordingly. Otherwise defaults to text.
+ */
+string makeContentTypeHeader(string filename){
+	char *str1 = (char*)filename.c_str();
+	strtok(str1,".");
+	char *str2 = strtok(NULL,".");
+	string header = "Content-Type:";
+	if(strcmp(str2,"html")==0){
+		header+="text/html;";
+	}else if(strcmp(str2,"jpeg")==0){
+		header+="image;";
+	}else if(strcmp(str2,"pdf")==0){
+		header+="application/pdf;";
+	}else{
+		header+="text;";
+	}
+	return header;
+}
+
+>>>>>>> ad2449e4b36f7df8d8a217d6c1c4b05247714142
