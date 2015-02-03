@@ -81,7 +81,6 @@ int main(int argc, char **argv){
 	listen(sockfd, 10);
 
 	while (1){
-		cout << "Inside loop" << endl;
 		pthread_t thread;
 		void *result;
 		int status;
