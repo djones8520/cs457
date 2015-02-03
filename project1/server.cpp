@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 
 	struct sockaddr_in serveraddr, clientaddr;
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(9010);
+	serveraddr.sin_port = htons(8080);
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
