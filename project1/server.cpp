@@ -29,12 +29,11 @@ void* httpRequest(void* arg);
 
 int main(int argc, char **argv){
 	int port;
-	char * docroot;
-	char * logfile;
+	char *docroot = (char*)malloc(1024);
+	char *logfile;
 
 	port = 8080;
-        getcwd(docroot,1024);
-
+	getcwd(docroot,1024);
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
@@ -59,7 +58,6 @@ int main(int argc, char **argv){
 	printf("port: %d\n",port);
 	printf("docroot: %s\n",docroot);
 	printf("logfile: %s\n",logfile);
-
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0){
