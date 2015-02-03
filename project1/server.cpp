@@ -26,10 +26,10 @@
 using namespace std;
 
 
-typedef	struct request {
+typedef	struct requestParams{
 			int clientSocket;
-			char line[1000];
-		} requestStruct;
+			string line;
+		} request;
 
 void* httpRequest(void* arg);
 
@@ -95,16 +95,19 @@ int main(int argc, char **argv){
 		recv(clientsocket, line, 5000, 0);
 		printf("Requested file from client: %s\n",line);
 		
-		requestStruct* req = malloc(sizeof(requestStruct));
+
+		requestParams *req = new requestParams;
 		
-		request.clientSocket = clientsocket;
-		request.line = line;
+		string line2;
+		req->clientSocket = clientsocket;
+		req->line = line2;
 
 		//char str[INET_ADDRSTRLEN];
 		//inet_ntop(AF_INET, &clientaddr, &str, INET_ADDRSTRLEN);
 		//printf("A client connected (IP=%s : Port=9010)\n", str);
 
-		if((status = pthread_create(&thread, NULL, httpRequest, &request)) != 0){
+
+		if((status = pthread_create(&thread, NULL, httpRequest, &req)) != 0){
 			fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 		}
 	}
