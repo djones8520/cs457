@@ -185,7 +185,7 @@ void* httpRequest(void* arg){
     free(fp);
     pthread_detach(pthread_self());
     
-	return 0;
+    return 0;
 }
 
 /***********************************************************
@@ -212,30 +212,28 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
             string responseHeader;
             responseHeader = "HTTP/1.1 404 Page_not_found\r\n";
             responseHeader+=makeDateHeader();
-            responseHeader+=makeLastModifiedHeader(filename);
-            responseHeader+=makeContentTypeHeader(filename);
-            
-            cout << "Sending " << filename << "\n";
+	    responseHeader+=makeLastModifiedHeader(filename);
+	    responseHeader+=makeContentTypeHeader(filename);
+	    responseHeader+=makeContentLengthHeader(sizeof(*fp));
+	    responseHeader+= "\r\n";
+	    cout << "Sending " << filename << "\n";
+	    write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             
             while(1){
-                char buff[BYTES_TO_SEND]={0};
-                int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
-                string response = responseHeader;
-                if(bytesRead > 0){
-                    response+=makeContentLengthHeader(bytesRead);
-                    response+="\r\n";
-                    response+=buff;
-                    send(*clientsocket,response.c_str(),sizeof(response),0);
-                }
-                
-                if(bytesRead < BYTES_TO_SEND){
-                    if(feof(fp))
-                        cout << "Reached end of file\n";
-                    else if(ferror(fp))
-                        cout << "Error while reading file\n";
-                    break;
-                }
-            }
+	      char buff[BYTES_TO_SEND]={0};
+	      int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
+	      if(bytesRead > 0){
+		write(*clientsocket, buff, sizeof(buff));  //Sends the file without the header
+	      }
+        
+	      if(bytesRead < BYTES_TO_SEND){
+		if(feof(fp))
+		  cout << "Reached end of file\n";
+		else if(ferror(fp))
+		  cout << "Error while reading file\n";
+		break;
+	      }
+	    }
         }
             break;
         case 501:
