@@ -199,12 +199,16 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 			send(*clientsocket, &response[0], sizeof(response),0);
 			break;
 		case 404:
-			string filename = "404.html";
-			FILE *fp = fopen(filename,"rb");
+		{
+			string filename;
+			filename = "404.html";
+			FILE *fp;
+			fp = fopen(filename.c_str(),"rb");
 			if(fp == NULL){
 				cout << "IOError: could not open " << filename << "\n";
 				break;
 			}
+			string responseHeader;
 			responseHeader = "HTTP/1.1 404 Page_not_found\r\n";
 			responseHeader+=makeDateHeader();
 			responseHeader+=makeLastModifiedHeader(filename);
@@ -220,7 +224,7 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 					response+=makeContentLengthHeader(bytesRead);
 					response+="\r\n";
 					response+=buff;
-					send(*clientsocket,response,sizeof(response),0);
+					send(*clientsocket,response.c_str(),sizeof(response),0);
 				}
 
 				if(bytesRead < BYTES_TO_SEND){
@@ -231,6 +235,7 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 					break;
 				}
 			}
+		}
 			break;
 		case 501:
 			response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
