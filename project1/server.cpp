@@ -171,7 +171,7 @@ void* httpRequest(void* arg){
 			response+= makeContentLengthHeader(bytesRead);
 			response+= "\r\n";
 			response+= buff;
-			send(req->clientsocket, response, sizeof(response), 0);
+			send(req->clientsocket, &response[0], sizeof(response), 0);
 		}
 
 		if(bytesRead < BYTES_TO_SEND){
@@ -196,7 +196,7 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 	switch(statusCode){
 		case 304:
 			response = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
-			send(*clientsocket,response,sizeof(response),0);
+			send(*clientsocket, &response[0], sizeof(response),0);
 			break;
 		case 404:
 			string filename = "404.html";
@@ -234,7 +234,7 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 			break;
 		case 501:
 			response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
-			send(*clientsocket,response,sizeof(response),0);
+			send(*clientsocket, &response[0], sizeof(response), 0);
 			break;	
 	}	
 }
@@ -334,6 +334,7 @@ string makeContentTypeHeader(string filename){
 string makeContentLengthHeader(int length){
 	string header = "Content-Length:";
 	header+=length;
-	header+="\r\n"
+	header+="\r\n";
+	
 	return header;
 }
