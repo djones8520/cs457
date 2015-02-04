@@ -45,7 +45,6 @@ string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
-int isValidFileName(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -182,6 +181,7 @@ void* httpRequest(void* arg){
 
 /***********************************************************
  * Sends response header with appropriate status code.
+ * If 404 error, will send 404.html to client.
  ***********************************************************/
 void* sendErrorStatus(int statusCode,int* clientsocket){
 	string response;
@@ -191,8 +191,38 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 			send(*clientsocket, &response[0], sizeof(response),0);
 			break;
 		case 404:
-			response = "HTTP/1.1 404 Page not found\r\n\r\n";
-			send(*clientsocket, &response[0], sizeof(response), 0);
+			string filename = "404.html";
+			FILE *fp = fopen(filename,"rb");
+			if(fp == NULL){
+				cout << "IOError: could not open " << filename << "\n";
+				break;
+			}
+			responseHeader = "HTTP/1.1 404 Page_not_found\r\n";
+			responseHeader+=makeDateHeader();
+			responseHeader+=makeLastModifiedHeader(filename);
+			responseHeader+=makeContentTypeHeader(filename);
+
+			cout << "Sending " << filename << "\n";
+
+			while(1){
+				char buff[BYTES_TO_SEND]={0};
+				int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
+				string response = responseHeader;
+				if(bytesRead > 0){
+					response+=makeContentLengthHeader(bytesRead);
+					response+="\r\n";
+					response+=buff;
+					send(*clientsocket,response,sizeof(response),0);
+				}
+
+				if(bytesRead < BYTES_TO_SEND){
+					if(feof(fp))
+						cout << "Reached end of file\n";
+					else if(ferror(fp))
+						cout << "Error while reading file\n";
+					break;
+				}
+			}
 			break;
 		case 501:
 			response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
@@ -290,15 +320,13 @@ string makeContentTypeHeader(string filename){
 	return header;
 }
 
-
 /**************************************************************
  * Creates the Content-Length header for the response header.
  **************************************************************/
 string makeContentLengthHeader(int length){
 	string header = "Content-Length:";
 	header+=length;
-	header+="\r\n";
-	
+	header+="\r\n"
 	return header;
 }
 
@@ -309,10 +337,34 @@ string makeContentLengthHeader(int length){
  * indicates the file does not exist, and a negative number 
  * means that the filename is not valid.
  *
- * Valid file names are az AZ . -
+ * Valid file names are az AZ . - /
  * .. is invalid
+ * ~ is invalid
  **************************************************************/
 int isValidFileName(string file_name)
 {
-	return 0;
+	struct stat buf;
+	int i;
+
+	//Check filename is valid
+	for(i = 0; i < file_name.length(); i++)	
+	{
+		//a-z A-Z . - /
+		if (!(file_name.at(i) >= 45 && file_name.at(i) <=57) && (file_name.at(i) >= 65 && file_name.at(i) <= 90))
+		{
+			return -1;
+		}  
+    		//Check for ..
+		else if(file_name.at(i) == 46)
+		{
+			if(i != (file_name.length()-1))
+			{
+				if (file_name.at(i+1) == 46)
+					return -1;
+			}
+		}
+	}
+
+	//Check if file exist
+	return 	stat(file_name.c_str(), &buf) == 0;
 }
