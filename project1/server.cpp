@@ -339,7 +339,45 @@ string makeContentTypeHeader(string filename){
 string makeContentLengthHeader(int length){
 	string header = "Content-Length:";
 	header+=length;
-	header+="\r\n";
-	
+	header+="\r\n"
 	return header;
+}
+
+
+/**************************************************************
+ * Check if the filename is valid. A positive integer 
+ * indicates the file is valid and access is allowed, 0 
+ * indicates the file does not exist, and a negative number 
+ * means that the filename is not valid.
+ *
+ * Valid file names are az AZ . - /
+ * .. is invalid
+ * ~ is invalid
+ **************************************************************/
+int isValidFileName(string file_name)
+{
+	struct stat buf;
+	int i;
+
+	//Check filename is valid
+	for(i = 0; i < file_name.length(); i++)	
+	{
+		//a-z A-Z . - /
+		if (!(file_name.at(i) >= 45 && file_name.at(i) <=57) && (file_name.at(i) >= 65 && file_name.at(i) <= 90))
+		{
+			return -1;
+		}  
+    		//Check for ..
+		else if(file_name.at(i) == 46)
+		{
+			if(i != (file_name.length()-1))
+			{
+				if (file_name.at(i+1) == 46)
+					return -1;
+			}
+		}
+	}
+
+	//Check if file exist
+	return 	stat(file_name.c_str(), &buf) == 0;
 }
