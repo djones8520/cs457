@@ -257,13 +257,13 @@ string makeContentTypeHeader(string filename){
 	char *str2 = strtok(NULL,".");
 	string header = "Content-Type:";
 	if(strcmp(str2,"html")==0){
-		header+="text/html;";
+		header+="text/html\r\n";
 	}else if(strcmp(str2,"jpeg")==0){
-		header+="image/jpeg;";
+		header+="image/jpeg\r\n";
 	}else if(strcmp(str2,"pdf")==0){
-		header+="application/pdf;";
+		header+="application/pdf\r\n";
 	}else{
-		header+="text/plain;";
+		header+="text/plain\r\n";
 	}
 	return header;
 }
@@ -274,6 +274,6 @@ string makeContentTypeHeader(string filename){
 string makeContentLengthHeader(int length){
 	string header = "Content-Length:";
 	header+=length;
-	header+=";"
+	header+="\r\n"
 	return header;
 }
