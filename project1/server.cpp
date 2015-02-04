@@ -140,7 +140,10 @@ void* httpRequest(void* arg){
     //cout << "Thread created" << endl;
     
     vector<string> parsed = explode(req->data, ' ');
-    
+    if(strcmp(parsed[0].c_str(),"GET")!=0){
+      sendErrorStatus(501,&req->clientsocket);
+      exit(1);
+    }
     string filename = parsed[1];
     filename.erase(0,1);
     //cout << "FILE NAME: " << filename << endl;
