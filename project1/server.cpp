@@ -393,11 +393,15 @@ int isValidFileName(string file_name)
  * A positive integer indicates that the file has not been
  *    modified.
  **************************************************************/
-int checkIfModifiedSince(string pTime)
-{
-    
-    
-    return 0;
+int checkIfModifiedSince(string time_header)
+{/*
+    	tm tm;
+	string truncTime = truncTime.substr(19);
+
+	//Sat, 29 Oct 1994 19:43:31 GMT
+	strptime(truncTime,"%a, %d %b %Y %H:%M:%S");
+   */ 
+    	return 0;
 }
 
 /**************************************************************
