@@ -135,9 +135,6 @@ int main(int argc, char **argv){
  *
  ***********************************************************/
 void* httpRequest(void* arg){
-    //char line[5000];
-    //int sockfd = *(int *) arg;
-    //int n;
     requestParams* req = (requestParams*) arg;
     
     string filename = "PLACEHOLDER";
@@ -191,7 +188,8 @@ void* httpRequest(void* arg){
     
     free(fp);
     pthread_detach(pthread_self());
-    //return 0; //clears warning
+    
+	return 0; //clears warning
 }
 
 /***********************************************************
@@ -249,7 +247,8 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
             send(*clientsocket, &response[0], sizeof(response), 0);
             break;
     }
-    //return 0; //clears warning
+    
+	return 0; //clears warning
 }
 
 /***********************************************************
