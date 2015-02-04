@@ -43,6 +43,7 @@ string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
+int checkIfModifiedSince(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -374,4 +375,22 @@ int isValidFileName(string file_name)
 
 	//Check if file exist
 	return 	stat(file_name.c_str(), &buf) == 0;
+}
+
+
+/**************************************************************
+ * Check if the file requested has been modified since the date
+ * specified by the If-Modified-Since header.
+ *
+ * A negative integer indicates an invalid header.
+ * 0 indicates the file has not been modified. A 304 error 
+ *    should be sent in this case (not sent in this function).
+ * A positive integer indicates that the file has not been
+ *    modified.
+ **************************************************************/
+int checkIfModifiedSince(string pTime)
+{
+
+
+	return 0;
 }
