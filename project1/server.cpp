@@ -33,6 +33,8 @@ typedef	struct requestParams{
 	string data;
 } request;
 
+char *docroot = (char*)malloc(1024);
+
 void* httpRequest(void* arg);
 void* sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
@@ -44,7 +46,6 @@ int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
 	cout << "Date: " << makeDateHeader() << endl;
 	int port;
-	char *docroot = (char*)malloc(1024);
 	char *logfile;
 
 	port = 8080;
@@ -104,7 +105,7 @@ int main(int argc, char **argv){
 		requestParams *req = new requestParams;
 		
 		string requestData = line;
-		req->clientSocket = clientsocket;
+		req->clientsocket = clientsocket;
 		req->data = requestData;
 
 		//char str[INET_ADDRSTRLEN];
@@ -126,6 +127,9 @@ void* httpRequest(void* arg){
 	//char line[5000];
 	//int sockfd = *(int *) arg;
         //int n;
+	requestParams* req = (requestParams*) arg;
+	
+	string filename = "PLACEHOLDER";
 
 	cout << "Thread created" << endl;
 /*
@@ -145,10 +149,10 @@ void* httpRequest(void* arg){
     filepath+="/";
     filepath+=filename;
     string responseHeader;
-    FILE *fp = fopen(filepath,"rb");
+    FILE *fp = fopen(&filepath[0], "rb");
 	if(fp == NULL){
 		cout << "IOError: could not open " << filepath << "\n";
-		sendErrorStatus(404,&clientsocket);
+		sendErrorStatus(404, &req->clientsocket);
 		exit(1);
 	}
 
@@ -164,10 +168,10 @@ void* httpRequest(void* arg){
 		int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
 		string response = responseHeader;
 		if(bytesRead > 0){
-			response+=makeContentLengthHeader(bytesRead);
-			response+="\r\n";
-			response+=buff;
-			send(clientsocket,response,sizeof(response),0);
+			response+= makeContentLengthHeader(bytesRead);
+			response+= "\r\n";
+			response+= buff;
+			send(req->clientsocket, response, sizeof(response), 0);
 		}
 
 		if(bytesRead < BYTES_TO_SEND){
