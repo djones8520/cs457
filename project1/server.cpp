@@ -39,7 +39,6 @@ string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
-int isValidFileName(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -127,9 +126,6 @@ void* httpRequest(void* arg){
 	//char line[5000];
 	//int sockfd = *(int *) arg;
         //int n;
-	requestParams* req = (requestParams*) arg;
-	
-	char filename[5000] = "PLACEHOLDER";
 
 	cout << "Thread created" << endl;
 /*
@@ -168,10 +164,10 @@ void* httpRequest(void* arg){
 		int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
 		string response = responseHeader;
 		if(bytesRead > 0){
-			response+= makeContentLengthHeader(bytesRead);
-			response+= "\r\n";
-			response+= buff;
-			send(req->clientSocket, response, sizeof(response), 0);
+			response+=makeContentLengthHeader(bytesRead);
+			response+="\r\n";
+			response+=buff;
+			send(clientsocket,response,sizeof(response),0);
 		}
 
 		if(bytesRead < BYTES_TO_SEND){
@@ -189,6 +185,7 @@ void* httpRequest(void* arg){
 
 /***********************************************************
  * Sends response header with appropriate status code.
+ * If 404 error, will send 404.html to client.
  ***********************************************************/
 void* sendErrorStatus(int statusCode,int* clientsocket){
 	string response;
@@ -198,8 +195,38 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
 			send(*clientsocket,response,sizeof(response),0);
 			break;
 		case 404:
-			response = "HTTP/1.1 404 Page not found\r\n\r\n";
-			send(*clientsocket,response,sizeof(response),0);
+			string filename = "404.html";
+			FILE *fp = fopen(filename,"rb");
+			if(fp == NULL){
+				cout << "IOError: could not open " << filename << "\n";
+				break;
+			}
+			responseHeader = "HTTP/1.1 404 Page_not_found\r\n";
+			responseHeader+=makeDateHeader();
+			responseHeader+=makeLastModifiedHeader(filename);
+			responseHeader+=makeContentTypeHeader(filename);
+
+			cout << "Sending " << filename << "\n";
+
+			while(1){
+				char buff[BYTES_TO_SEND]={0};
+				int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
+				string response = responseHeader;
+				if(bytesRead > 0){
+					response+=makeContentLengthHeader(bytesRead);
+					response+="\r\n";
+					response+=buff;
+					send(*clientsocket,response,sizeof(response),0);
+				}
+
+				if(bytesRead < BYTES_TO_SEND){
+					if(feof(fp))
+						cout << "Reached end of file\n";
+					else if(ferror(fp))
+						cout << "Error while reading file\n";
+					break;
+				}
+			}
 			break;
 		case 501:
 			response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
@@ -297,7 +324,6 @@ string makeContentTypeHeader(string filename){
 	return header;
 }
 
-
 /**************************************************************
  * Creates the Content-Length header for the response header.
  **************************************************************/
@@ -306,19 +332,4 @@ string makeContentLengthHeader(int length){
 	header+=length;
 	header+="\r\n"
 	return header;
-}
-
-
-/**************************************************************
- * Check if the filename is valid. A positive integer 
- * indicates the file is valid and access is allowed, 0 
- * indicates the file does not exist, and a negative number 
- * means that the filename is not valid.
- *
- * Valid file names are az AZ . -
- * .. is invalid
- **************************************************************/
-int isValidFileName(string file_name)
-{
-	return 0;
 }
