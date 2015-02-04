@@ -39,7 +39,7 @@ struct requestParams{
 };
 
 void* httpRequest(void* arg);
-void sendErrorStatus(int statusCode,int* clientsocket);
+void sendErrorStatus(int statusCode,int* clientsocket,string logmsg);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
@@ -47,6 +47,7 @@ string makeContentLengthHeader(long length);
 int checkIfModifiedSince(string);
 vector<string> explode(const string& str, const char& ch);
 long getFileSize(string filename);
+int isValidFileName(string);
 
 int main(int argc, char **argv){
     int port;
@@ -82,7 +83,7 @@ int main(int argc, char **argv){
     getcwd(docroot,1024);
     
     printf("port: %d\n", port);
-    printf("docroot: %s\n", docroot);
+    printf("docroot: %s\n\n", docroot);
     //printf("logfile: %s\n", logfile);
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     
@@ -93,7 +94,7 @@ int main(int argc, char **argv){
     
     struct sockaddr_in serveraddr, clientaddr;
     serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(8080);
+    serveraddr.sin_port = htons(port);
     serveraddr.sin_addr.s_addr = INADDR_ANY;
     
     struct timeval to;
@@ -121,7 +122,7 @@ int main(int argc, char **argv){
         
         char line[5000];
         recv(clientsocket, line, 5000, 0);
-        cout << "Request:" << endl << line << endl;
+        //cout << "Request:" << endl << line << endl;
         
         requestParams *req = new requestParams;
         
@@ -134,7 +135,7 @@ int main(int argc, char **argv){
         //printf("A client connected (IP=%s : Port=9010)\n", str);
         
         if((status = pthread_create(&thread, NULL, httpRequest, req)) != 0){
-            cout << "Error creating thread" << endl;
+            cerr << "Error creating thread" << endl;
         }
     }
     return 0;
@@ -142,30 +143,45 @@ int main(int argc, char **argv){
 
 
 /***********************************************************
- *
+ * Thread function that takes HTTP requests to the server,
+ * parses the request, and uses the parsed data to create an
+ * appropriate response header before sending the requested
+ * file.
  ***********************************************************/
 void* httpRequest(void* arg){
     requestParams* req = (requestParams*) arg;
-    
-    //cout << "Thread created" << endl;
+
+    string logmsg = "Request:\n";
+    logmsg+=req->data;
     
     vector<string> parsed = explode(req->data, ' ');
     if(strcmp(parsed[0].c_str(),"GET")!=0){
-        sendErrorStatus(501,&req->clientsocket);
+        sendErrorStatus(501,&req->clientsocket,logmsg);
         return 0;
     }
     string filename = parsed[1];
     filename.erase(0,1);
-    //cout << "FILE NAME: " << filename << endl;
     
-    string filepath;// = docroot;
-    //filepath+="/";
+    string filepath;
     filepath+=filename;
+    
+    if(isValidFileName(filepath) != 1)
+      {
+	logmsg+="IOError: could not open ";
+        logmsg+=filepath;
+	logmsg+="\n\n";
+	cout << "Invalid File Requested" << filepath << endl << endl;
+        sendErrorStatus(404, &req->clientsocket,logmsg);
+        return 0;
+      }
+
     string responseHeader;
     FILE *fp = fopen(&filepath[0], "rb");
     if(fp == NULL){
-        cout << "IOError: could not open " << filepath << endl << endl;
-        sendErrorStatus(404, &req->clientsocket);
+        logmsg+="IOError: could not open ";
+        logmsg+=filepath;
+	logmsg+="\n\n";
+        sendErrorStatus(404, &req->clientsocket,logmsg);
         return 0;
     }
 
@@ -177,8 +193,9 @@ void* httpRequest(void* arg){
     responseHeader+=makeContentTypeHeader(filename);
     responseHeader+=makeContentLengthHeader(fileSize);
     responseHeader+= "\r\n";
-    //cout << "Sending " << filename << "\n";
-    cout << "Response:" << endl << responseHeader;
+    logmsg+="Response:\n";
+    logmsg+=responseHeader;
+    cout << logmsg;
     write(req->clientsocket, responseHeader.c_str(), responseHeader.size());
     while(1){
         char buff[BYTES_TO_SEND]={0};
@@ -204,12 +221,14 @@ void* httpRequest(void* arg){
  * Sends response header with appropriate status code.
  * If 404 error, will send 404.html to client.
  ***********************************************************/
-void sendErrorStatus(int statusCode,int* clientsocket){
+void sendErrorStatus(int statusCode,int* clientsocket,string logmsg){
     string responseHeader;
     switch(statusCode){
         case 304:
             responseHeader = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
-	    cout << "304Response:" << endl << responseHeader;
+	    logmsg+="304Response:\n"; 
+	    logmsg+=responseHeader;
+	    cout << logmsg;
             write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
         case 404:
@@ -219,7 +238,9 @@ void sendErrorStatus(int statusCode,int* clientsocket){
             FILE *fp;
             fp = fopen(filename.c_str(),"rb");
             if(fp == NULL){
-                cout << "IOError: could not open " << filename << "\n";
+                logmsg+="IOError: could not open ";
+		logmsg+=filename;
+		logmsg+="\n";
                 break;
             }
             
@@ -229,8 +250,9 @@ void sendErrorStatus(int statusCode,int* clientsocket){
 	    responseHeader+=makeContentTypeHeader(filename);
 	    responseHeader+=makeContentLengthHeader(sizeof(*fp));
 	    responseHeader+= "\r\n";
-	    //cout << "Sending " << filename << "\n";
-	    cout << "404Response:" << endl << responseHeader;
+	    logmsg+="404Response:\n";
+	    logmsg+=responseHeader;
+	    cout << logmsg;
 	    write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             
             while(1){
@@ -242,7 +264,7 @@ void sendErrorStatus(int statusCode,int* clientsocket){
         
 	      if(bytesRead < BYTES_TO_SEND){
 		if(ferror(fp))
-		  cout << "Error while reading file\n";
+		  cerr << "Error while reading file\n";
 		break;
 	      }
 	    }
@@ -250,7 +272,9 @@ void sendErrorStatus(int statusCode,int* clientsocket){
             break;
         case 501:
             responseHeader = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
-	    cout << "501Response:" << endl << responseHeader;
+	    logmsg+="501Response:\n"; 
+	    logmsg+=responseHeader;
+	    cout << logmsg;
             write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
     }
@@ -390,8 +414,15 @@ int isValidFileName(string file_name)
         }
     }
     
+    
     //Check if file exist
-    return 	stat(file_name.c_str(), &buf) == 0;
+    if(stat(file_name.c_str(), &buf) == 0)
+      {
+	if(S_ISREG(buf.st_mode))
+	  return 1;
+	return 0;
+      }
+    return 0;
 }
 
 
