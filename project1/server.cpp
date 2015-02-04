@@ -39,6 +39,8 @@ string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
+int isValidFileName(string);
+int fileAccessAllowed(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -293,6 +295,7 @@ string makeContentTypeHeader(string filename){
 	return header;
 }
 
+
 /**************************************************************
  * Creates the Content-Length header for the response header.
  **************************************************************/
@@ -301,4 +304,27 @@ string makeContentLengthHeader(int length){
 	header+=length;
 	header+="\r\n"
 	return header;
+}
+
+
+/**************************************************************
+ * Do not allow access to anyfiles higher than the doc_root 
+ * folder.
+ *
+ * A return of 1 indicates file access is allowed
+ * A return of 0 indicates file access is not permitted
+ **************************************************************/
+int fileAccessAllowed(string file_name)
+{
+
+
+	return 0;
+}
+
+
+/**************************************************************
+ **************************************************************/
+int isValidFileName(file_name)
+{
+	return 0;
 }
