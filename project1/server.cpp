@@ -275,6 +275,7 @@ string makeDateHeader()
     
     complete_date = "Date: ";
     complete_date += buf;
+    complete_date += "\r\n";
     
     return complete_date;
 }
@@ -308,7 +309,7 @@ string makeLastModifiedHeader(string file_name)
     memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
     complete_date = "Last-Modified: ";
     complete_date += buf;
-    
+    complete_date += "\r\n";
     return complete_date;
 }
 
