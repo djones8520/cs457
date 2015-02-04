@@ -39,7 +39,7 @@ struct requestParams{
 };
 
 void* httpRequest(void* arg);
-void* sendErrorStatus(int statusCode,int* clientsocket);
+void sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
@@ -140,8 +140,8 @@ void* httpRequest(void* arg){
     
     vector<string> parsed = explode(req->data, ' ');
     if(strcmp(parsed[0].c_str(),"GET")!=0){
-      sendErrorStatus(501,&req->clientsocket);
-      exit(1);
+        sendErrorStatus(501,&req->clientsocket);
+        return 0;
     }
     string filename = parsed[1];
     filename.erase(0,1);
@@ -153,9 +153,9 @@ void* httpRequest(void* arg){
     string responseHeader;
     FILE *fp = fopen(&filepath[0], "rb");
     if(fp == NULL){
-        cout << "IOError: could not open " << filepath << "\n";
+        cout << "IOError: could not open " << filepath << endl << endl;
         sendErrorStatus(404, &req->clientsocket);
-        exit(1);
+        return 0;
     }
 
     long fileSize = getFileSize(filename);
@@ -193,7 +193,7 @@ void* httpRequest(void* arg){
  * Sends response header with appropriate status code.
  * If 404 error, will send 404.html to client.
  ***********************************************************/
-void* sendErrorStatus(int statusCode,int* clientsocket){
+void sendErrorStatus(int statusCode,int* clientsocket){
     string responseHeader;
     switch(statusCode){
         case 304:
@@ -245,7 +245,6 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
             write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
     }
-	return 0;
 }
 
 /***********************************************************
