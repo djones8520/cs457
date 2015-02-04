@@ -47,6 +47,7 @@ string makeContentLengthHeader(long length);
 int checkIfModifiedSince(string);
 vector<string> explode(const string& str, const char& ch);
 long getFileSize(string filename);
+int isValidFileName(string);
 
 int main(int argc, char **argv){
     int port;
@@ -156,6 +157,14 @@ void* httpRequest(void* arg){
     string filepath;// = docroot;
     //filepath+="/";
     filepath+=filename;
+    
+    if(isValidFileName(filepath) != 1)
+      {
+	cout << "Invalid File Requested" << filepath << endl << endl;
+        sendErrorStatus(404, &req->clientsocket);
+        return 0;
+      }
+
     string responseHeader;
     FILE *fp = fopen(&filepath[0], "rb");
     if(fp == NULL){
@@ -385,8 +394,15 @@ int isValidFileName(string file_name)
         }
     }
     
+    
     //Check if file exist
-    return 	stat(file_name.c_str(), &buf) == 0;
+    if(stat(file_name.c_str(), &buf) == 0)
+      {
+	if(S_ISREG(buf.st_mode))
+	  return 1;
+	return 0;
+      }
+    return 0;
 }
 
 
