@@ -130,7 +130,7 @@ void* httpRequest(void* arg){
         //int n;
 	requestParams* req = (requestParams*) arg;
 	
-	char filename[5000] = "PLACEHOLDER";
+	string filename = "PLACEHOLDER";
 
 	cout << "Thread created" << endl;
 /*
@@ -150,7 +150,7 @@ void* httpRequest(void* arg){
     filepath+="/";
     filepath+=filename;
     string responseHeader;
-    FILE *fp = fopen(filepath,"rb");
+    FILE *fp = fopen(&filepath[0], "rb");
 	if(fp == NULL){
 		cout << "IOError: could not open " << filepath << "\n";
 		sendErrorStatus(404, &req->clientsocket);
