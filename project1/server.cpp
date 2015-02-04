@@ -37,8 +37,6 @@ typedef	struct requestParams{
 	string data;
 } request;
 
-char *docroot = (char*)malloc(1024);
-
 void* httpRequest(void* arg);
 void* sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
@@ -51,9 +49,8 @@ int main(int argc, char **argv){
 	cout << "Date: " << makeDateHeader() << endl;
 	int port;
 	char *logfile;
-
 	port = 8080;
-	getcwd(docroot,1024);
+
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
@@ -62,7 +59,10 @@ int main(int argc, char **argv){
 			}
 			else if (strcmp(argv[i], "-docroot") == 0){
 				i++;
-				docroot = argv[i];
+				if(chdir(argv[i])<0){
+					cerr << "Could not change working directory to given directory.\n";
+					return 1;
+				}
 			}
 			else if (strcmp(argv[i], "-logfile") == 0){
 				i++;
@@ -75,9 +75,13 @@ int main(int argc, char **argv){
 			}
 		}
 	}
+
+	char *docroot = (char*)malloc(1024);
+	getcwd(docroot,1024);
+
 	printf("port: %d\n", port);
 	printf("docroot: %s\n", docroot);
-	printf("logfile: %s\n", logfile);
+	//printf("logfile: %s\n", logfile);
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0){
@@ -137,7 +141,7 @@ void* httpRequest(void* arg){
 
 	cout << "Thread created" << endl;
 
-    string filepath = docroot;
+    string filepath;// = docroot;
     filepath+="/";
     filepath+=filename;
     string responseHeader;
