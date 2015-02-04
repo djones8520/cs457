@@ -39,7 +39,6 @@ string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
 int isValidFileName(string);
-int fileAccessAllowed(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -283,23 +282,17 @@ string makeContentLengthHeader(int length){
 
 
 /**************************************************************
- * Do not allow access to anyfiles higher than the doc_root 
- * folder.
+ * Check if the filename is valid. A positive integer 
+ * indicates the file is valid and access is allowed, 0 
+ * indicates the file does not exist, and a negative number 
+ * means that the filename is not valid.
  *
- * A return of 1 indicates file access is allowed
- * A return of 0 indicates file access is not permitted
+ * Valid file names are az AZ . -
+ * .. is invalid
  **************************************************************/
-int fileAccessAllowed(string file_name)
+int isValidFileName(string file_name)
 {
+	
 
-
-	return 0;
-}
-
-
-/**************************************************************
- **************************************************************/
-int isValidFileName(file_name)
-{
 	return 0;
 }
