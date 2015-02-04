@@ -127,6 +127,9 @@ void* httpRequest(void* arg){
 	//char line[5000];
 	//int sockfd = *(int *) arg;
         //int n;
+	requestParams* req = (requestParams*) arg;
+	
+	char filename[5000] = "PLACEHOLDER";
 
 	cout << "Thread created" << endl;
 /*
@@ -161,10 +164,10 @@ void* httpRequest(void* arg){
 		int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
 		string response = responseHeader;
 		if(bytesRead > 0){
-			response+=makeContentLengthHeader(bytesRead);
-			response+="\r\n";
-			response+=buff;
-			send(clientsocket,response,sizeof(response),0);
+			response+= makeContentLengthHeader(bytesRead);
+			response+= "\r\n";
+			response+= buff;
+			send(req->clientSocket, response, sizeof(response), 0);
 		}
 
 		if(bytesRead < BYTES_TO_SEND){
@@ -299,7 +302,7 @@ int fileAccessAllowed(string file_name)
 
 /**************************************************************
  **************************************************************/
-int isValidFileName(file_name)
+int isValidFileName(string file_name)
 {
 	return 0;
 }
