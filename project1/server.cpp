@@ -162,8 +162,11 @@ void* httpRequest(void* arg){
     
     if(isValidFileName(filepath) != 1)
       {
+	logmsg+="IOError: could not open ";
+        logmsg+=filepath;
+	logmsg+="\n\n";
 	cout << "Invalid File Requested" << filepath << endl << endl;
-        sendErrorStatus(404, &req->clientsocket);
+        sendErrorStatus(404, &req->clientsocket,logmsg);
         return 0;
       }
 
