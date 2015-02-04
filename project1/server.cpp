@@ -33,6 +33,8 @@ typedef	struct requestParams{
 	string data;
 } request;
 
+char *docroot = (char*)malloc(1024);
+
 void* httpRequest(void* arg);
 void* sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
@@ -45,7 +47,6 @@ int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
 	cout << "Date: " << makeDateHeader() << endl;
 	int port;
-	char *docroot = (char*)malloc(1024);
 	char *logfile;
 
 	port = 8080;
