@@ -197,6 +197,7 @@ string makeDateHeader()
     	time_t t;
     	struct tm tm;
     	char * buf = (char *)malloc(RFC1123_TIME_LEN+1);
+	string complete_date;
 
     	time(&t);
     	gmtime_r(&t, &tm);
@@ -205,7 +206,10 @@ string makeDateHeader()
     	memcpy(buf, DAY_NAMES[tm.tm_wday], 3);
     	memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
 
-    return buf;
+	complete_date = "Date: ";
+        complete_date += buf;
+
+        return complete_date;
 }
 
 
@@ -223,6 +227,7 @@ string makeLastModifiedHeader(string file_name)
         { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
+	string complete_date;
 	struct stat attr;
 	struct tm tm;
 	const int RFC1123_TIME_LEN = 29;
@@ -234,8 +239,10 @@ string makeLastModifiedHeader(string file_name)
 	strftime(buf,RFC1123_TIME_LEN+1, "---, %d --- %Y %H:%M:%S GMT", &tm);
 	memcpy(buf, DAY_NAMES[tm.tm_wday], 3);
         memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
-
-	return buf;
+	complete_date = "Last-Modified: "; 
+	complete_date += buf;
+	
+	return complete_date;
 }
 
 
