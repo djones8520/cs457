@@ -111,7 +111,6 @@ int main(int argc, char **argv){
         int status;
         
         socklen_t len = sizeof(clientaddr);
-        //g++ doesn't like this
         int clientsocket = accept(sockfd,(struct sockaddr*)&clientaddr,&len);
         
         char line[5000];

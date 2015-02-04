@@ -102,6 +102,12 @@ int main(int argc, char **argv){
 
     setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));
 
+    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to)) < 0)
+        cout << "setsockopt failed" << endl;
+
+    if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, &to,  sizeof(to)) < 0)
+        cout << "setsockopt failed" << endl;
+
     bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
     listen(sockfd, 10);
     
