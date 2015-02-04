@@ -28,6 +28,10 @@ using namespace std;
 
 #define BYTES_TO_SEND 256
 
+/*
+clientsocket stores the connection
+data holds the request from the client
+*/
 typedef	struct requestParams{
 	int clientsocket;
 	string data;
@@ -71,9 +75,9 @@ int main(int argc, char **argv){
 			}
 		}
 	}
-	printf("port: %d\n",port);
-	printf("docroot: %s\n",docroot);
-	printf("logfile: %s\n",logfile);
+	printf("port: %d\n", port);
+	printf("docroot: %s\n", docroot);
+	printf("logfile: %s\n", logfile);
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockfd < 0){
@@ -132,19 +136,7 @@ void* httpRequest(void* arg){
 	string filename = "PLACEHOLDER";
 
 	cout << "Thread created" << endl;
-/*
-        while((n = recv(sockfd,line,5000,0))>0){
-            printf("%s\n",line);
-            memset(line,0,sizeof(line));
-        }
-        if(n<0){
-            printf("Sorry, had a problem receiving.\n");
-            exit(1);
-        } else {
-            printf("Server has disconnected.\n");
-            exit(1);
-        }
-*/
+
     string filepath = docroot;
     filepath+="/";
     filepath+=filename;
@@ -183,7 +175,7 @@ void* httpRequest(void* arg){
 		}
 	}
 
-	//close(sockfd);
+	free(fp);
 	pthread_detach(pthread_self());
 }
 
