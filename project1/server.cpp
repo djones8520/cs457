@@ -135,9 +135,6 @@ int main(int argc, char **argv){
  *
  ***********************************************************/
 void* httpRequest(void* arg){
-    //char line[5000];
-    //int sockfd = *(int *) arg;
-    //int n;
     requestParams* req = (requestParams*) arg;
     
     string filename = "PLACEHOLDER";
@@ -165,19 +162,15 @@ void* httpRequest(void* arg){
     responseHeader+=makeDateHeader();
     responseHeader+=makeLastModifiedHeader(filename);
     responseHeader+=makeContentTypeHeader(filename);
-    
+    responseHeader+=makeContentLengthHeader(sizeof(*fp));
+    responseHeader+= "\r\n";
     cout << "Sending " << filename << "\n";
-    
+    send(req->clientsocket, responseHeader.c_str(), sizeof(responseHeader), 0);
     while(1){
         char buff[BYTES_TO_SEND]={0};
         int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
-        string response = responseHeader;
         if(bytesRead > 0){
-            response+= makeContentLengthHeader(bytesRead);
-            response+= "\r\n\r\n";
-            response+= buff;
-            send(req->clientsocket, &response[0], sizeof(response), 0);
-            //send(req->clientsocket, buff, sizeof(buff),0);  //Sends the file without the header
+            send(req->clientsocket, buff, sizeof(buff),0);  //Sends the file without the header
         }
         
         if(bytesRead < BYTES_TO_SEND){
@@ -189,9 +182,10 @@ void* httpRequest(void* arg){
         }
     }
     
-    //free(fp);
+    free(fp);
     pthread_detach(pthread_self());
-    //return 0; //clears warning
+    
+	return 0;
 }
 
 /***********************************************************
@@ -249,7 +243,7 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
             send(*clientsocket, &response[0], sizeof(response), 0);
             break;
     }
-    //return 0; //clears warning
+	return 0;
 }
 
 /***********************************************************
