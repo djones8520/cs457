@@ -337,11 +337,12 @@ string makeContentLengthHeader(int length){
 
 
 /**************************************************************
- * Check if the filename is valid. A positive integer 
- * indicates the file is valid and access is allowed, 0 
- * indicates the file does not exist, and a negative number 
- * means that the filename is not valid.
+ * Checks if the filename is valid. 
  *
+ * A positive integer indicates the file is valid
+ * 0 indicates the file does not exist
+ * A negative integer indicates that the filename is not valid.
+ * 
  * Valid file names are az AZ . - /
  * .. is invalid
  * ~ is invalid
@@ -355,15 +356,12 @@ int isValidFileName(string file_name)
 	for(i = 0; i < file_name.length(); i++)	
 	{
 		//a-z A-Z . - /
-		if (!(file_name.at(i) >= 45 && file_name.at(i) <=57) && (file_name.at(i) >= 65 && file_name.at(i) <= 90))
-		{
+		if (!(file_name.at(i) >= 45 && file_name.at(i) <=57) && (file_name.at(i) >= 65 && file_name.at(i) <= 90)){
 			return -1;
 		}  
     		//Check for ..
-		else if(file_name.at(i) == 46)
-		{
-			if(i != (file_name.length()-1))
-			{
+		else if(file_name.at(i) == 46){
+			if(i != (file_name.length()-1)){
 				if (file_name.at(i+1) == 46)
 					return -1;
 			}
