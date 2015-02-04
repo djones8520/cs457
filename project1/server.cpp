@@ -165,6 +165,7 @@ void* httpRequest(void* arg){
     responseHeader+=makeContentLengthHeader(sizeof(*fp));
     responseHeader+= "\r\n";
     cout << "Sending " << filename << "\n";
+    cout << "Header " << responseHeader << endl;
     write(req->clientsocket, responseHeader.c_str(), responseHeader.size());
     while(1){
         char buff[BYTES_TO_SEND]={0};
@@ -323,7 +324,7 @@ string makeContentTypeHeader(string filename){
     char *str1 = (char*)filename.c_str();
     strtok(str1,".");
     char *str2 = strtok(NULL,".");
-    string header = "Content-Type:";
+    string header = "Content-Type: ";
     if(strcmp(str2,"html")==0){
         header+="text/html\r\n";
     }else if(strcmp(str2,"jpeg")==0){
