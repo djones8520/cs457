@@ -46,10 +46,9 @@ string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
 int checkIfModifiedSince(string);
 vector<string> explode(const string& str, const char& ch);
+int getFileSize(string filename);
 
 int main(int argc, char **argv){
-    cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
-    cout << "Date: " << makeDateHeader() << endl;
     int port;
     char *logfile;
     port = 8080;
@@ -157,12 +156,15 @@ void* httpRequest(void* arg){
         sendErrorStatus(404, &req->clientsocket);
         exit(1);
     }
+
+    int fileSize = getFileSize(filename);
+    cout << "File size " << fileSize << endl;
     
     responseHeader = "HTTP/1.1 200 OK\r\n";
     responseHeader+=makeDateHeader();
     responseHeader+=makeLastModifiedHeader(filename);
     responseHeader+=makeContentTypeHeader(filename);
-    responseHeader+=makeContentLengthHeader(sizeof(*fp));
+    responseHeader+=makeContentLengthHeader(fileSize);
     responseHeader+= "\r\n";
     cout << "Sending " << filename << "\n";
     cout << "Header " << responseHeader << endl;
@@ -324,7 +326,7 @@ string makeContentTypeHeader(string filename){
     char *str1 = (char*)filename.c_str();
     strtok(str1,".");
     char *str2 = strtok(NULL,".");
-    string header = "Content-Type:";
+    string header = "Content-Type: ";
     if(strcmp(str2,"html")==0){
         header+="text/html\r\n";
     }else if(strcmp(str2,"jpeg")==0){
@@ -341,9 +343,11 @@ string makeContentTypeHeader(string filename){
  * Creates the Content-Length header for the response header.
  **************************************************************/
 string makeContentLengthHeader(int length){
-    string header = "Content-Length:";
+cout << "length: " << length << endl;
+    string header = "Content-Length: ";
     header+=length;
     header+="\r\n";
+
     return header;
 }
 
@@ -427,4 +431,14 @@ vector<string> explode(const string& str, const char& ch) {
     if (!next.empty())
         result.push_back(next);
     return result;
+}
+
+int getFileSize(string filename) // path to file
+{
+    FILE *p_file = fopen(filename.c_str(),"rb");
+    fseek(p_file,0,SEEK_END);
+    int size = ftell(p_file);
+    fclose(p_file);
+
+    return size;
 }
