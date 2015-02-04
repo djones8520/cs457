@@ -165,6 +165,7 @@ void* httpRequest(void* arg){
     responseHeader+=makeContentLengthHeader(sizeof(*fp));
     responseHeader+= "\r\n";
     cout << "Sending " << filename << "\n";
+    cout << "Header " << responseHeader << endl;
     write(req->clientsocket, responseHeader.c_str(), responseHeader.size());
     while(1){
         char buff[BYTES_TO_SEND]={0};
@@ -275,6 +276,7 @@ string makeDateHeader()
     
     complete_date = "Date: ";
     complete_date += buf;
+    complete_date += "\r\n";
     
     return complete_date;
 }
@@ -308,7 +310,7 @@ string makeLastModifiedHeader(string file_name)
     memcpy(buf+8, MONTH_NAMES[tm.tm_mon], 3);
     complete_date = "Last-Modified: ";
     complete_date += buf;
-    
+    complete_date += "\r\n";
     return complete_date;
 }
 
