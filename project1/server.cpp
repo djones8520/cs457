@@ -105,7 +105,7 @@ int main(int argc, char **argv){
 		requestParams *req = new requestParams;
 		
 		string requestData = line;
-		req->clientSocket = clientsocket;
+		req->clientsocket = clientsocket;
 		req->data = requestData;
 
 		//char str[INET_ADDRSTRLEN];
@@ -152,7 +152,7 @@ void* httpRequest(void* arg){
     FILE *fp = fopen(filepath,"rb");
 	if(fp == NULL){
 		cout << "IOError: could not open " << filepath << "\n";
-		sendErrorStatus(404,&clientsocket);
+		sendErrorStatus(404, &req->clientsocket);
 		exit(1);
 	}
 
@@ -171,7 +171,7 @@ void* httpRequest(void* arg){
 			response+= makeContentLengthHeader(bytesRead);
 			response+= "\r\n";
 			response+= buff;
-			send(req->clientSocket, response, sizeof(response), 0);
+			send(req->clientsocket, response, sizeof(response), 0);
 		}
 
 		if(bytesRead < BYTES_TO_SEND){
