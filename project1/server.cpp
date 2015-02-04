@@ -29,17 +29,17 @@ using namespace std;
 #define BYTES_TO_SEND 256
 
 typedef	struct requestParams{
-	int clientSocket;
+	int clientsocket;
 	string data;
 } request;
 
 void* httpRequest(void* arg);
+void* sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
 string makeContentLengthHeader(int length);
 int isValidFileName(string);
-int fileAccessAllowed(string);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -145,14 +145,18 @@ void* httpRequest(void* arg){
             exit(1);
         }
 */
-    FILE *fp = fopen(filename,"rb");
+    string filepath = docroot;
+    filepath+="/";
+    filepath+=filename;
+    string responseHeader;
+    FILE *fp = fopen(filepath,"rb");
 	if(fp == NULL){
-		cout << "IOError: could not open " << filename << "\n";
-		//send 404 error
+		cout << "IOError: could not open " << filepath << "\n";
+		sendErrorStatus(404,&clientsocket);
 		exit(1);
 	}
 
-	string responseHeader = "HTTP/1.1 200 OK";
+	responseHeader = "HTTP/1.1 200 OK\r\n";
 	responseHeader+=makeDateHeader();
 	responseHeader+=makeLastModifiedHeader(filename);
 	responseHeader+=makeContentTypeHeader(filename);
@@ -183,6 +187,26 @@ void* httpRequest(void* arg){
 	pthread_detach(pthread_self());
 }
 
+/***********************************************************
+ * Sends response header with appropriate status code.
+ ***********************************************************/
+void* sendErrorStatus(int statusCode,int* clientsocket){
+	string response;
+	switch(statusCode){
+		case 304:
+			response = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
+			send(*clientsocket,response,sizeof(response),0);
+			break;
+		case 404:
+			response = "HTTP/1.1 404 Page not found\r\n\r\n";
+			send(*clientsocket,response,sizeof(response),0);
+			break;
+		case 501:
+			response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
+			send(*clientsocket,response,sizeof(response),0);
+			break;	
+	}	
+}
 
 /***********************************************************
  * Returns the current time in RFC1123 formatting. All 
@@ -286,21 +310,13 @@ string makeContentLengthHeader(int length){
 
 
 /**************************************************************
- * Do not allow access to anyfiles higher than the doc_root 
- * folder.
+ * Check if the filename is valid. A positive integer 
+ * indicates the file is valid and access is allowed, 0 
+ * indicates the file does not exist, and a negative number 
+ * means that the filename is not valid.
  *
- * A return of 1 indicates file access is allowed
- * A return of 0 indicates file access is not permitted
- **************************************************************/
-int fileAccessAllowed(string file_name)
-{
-
-
-	return 0;
-}
-
-
-/**************************************************************
+ * Valid file names are az AZ . -
+ * .. is invalid
  **************************************************************/
 int isValidFileName(string file_name)
 {
