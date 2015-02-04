@@ -26,6 +26,8 @@
 
 using namespace std;
 
+#define BYTES_TO_SEND 256
+
 typedef	struct requestParams{
 	int clientSocket;
 	string data;
@@ -35,6 +37,7 @@ void* httpRequest(void* arg);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
+string makeContentLengthHeader(int length);
 
 int main(int argc, char **argv){
 	cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
@@ -137,6 +140,40 @@ void* httpRequest(void* arg){
             exit(1);
         }
 */
+    FILE *fp = fopen(filename,"rb");
+	if(fp == NULL){
+		cout << "IOError: could not open " << filename << "\n";
+		//send 404 error
+		exit(1);
+	}
+
+	string responseHeader = "HTTP/1.1 200 OK";
+	responseHeader+=makeDateHeader();
+	responseHeader+=makeLastModifiedHeader(filename);
+	responseHeader+=makeContentTypeHeader(filename);
+	
+	cout << "Sending " << filename << "\n";
+
+	while(1){
+		char buff[BYTES_TO_SEND]={0};
+		int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
+		string response = responseHeader;
+		if(bytesRead > 0){
+			response+=makeContentLengthHeader(bytesRead);
+			response+="\r\n";
+			response+=buff;
+			send(clientsocket,response,sizeof(response),0);
+		}
+
+		if(bytesRead < BYTES_TO_SEND){
+			if(feof(fp))
+				cout << "Reached end of file\n";
+			else if(ferror(fp))
+				cout << "Error while reading file\n";
+			break;
+		}
+	}
+
 	//close(sockfd);
 	pthread_detach(pthread_self());
 }
@@ -215,11 +252,21 @@ string makeContentTypeHeader(string filename){
 	if(strcmp(str2,"html")==0){
 		header+="text/html;";
 	}else if(strcmp(str2,"jpeg")==0){
-		header+="image;";
+		header+="image/jpeg;";
 	}else if(strcmp(str2,"pdf")==0){
 		header+="application/pdf;";
 	}else{
-		header+="text;";
+		header+="text/plain;";
 	}
+	return header;
+}
+
+/**************************************************************
+ * Creates the Content-Length header for the response header.
+ **************************************************************/
+string makeContentLengthHeader(int length){
+	string header = "Content-Length:";
+	header+=length;
+	header+=";"
 	return header;
 }
