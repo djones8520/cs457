@@ -166,7 +166,7 @@ void* httpRequest(void* arg){
     responseHeader+=makeContentLengthHeader(sizeof(*fp));
     responseHeader+= "\r\n";
     //cout << "Sending " << filename << "\n";
-    cout << "Response:" << endl << responseHeader << endl;
+    cout << "Response:" << endl << responseHeader;
     write(req->clientsocket, responseHeader.c_str(), responseHeader.size());
     while(1){
         char buff[BYTES_TO_SEND]={0};
@@ -197,7 +197,7 @@ void sendErrorStatus(int statusCode,int* clientsocket){
     switch(statusCode){
         case 304:
             responseHeader = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
-	    cout << "304Response:" << endl << responseHeader << endl;
+	    cout << "304Response:" << endl << responseHeader;
             write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
         case 404:
@@ -218,7 +218,7 @@ void sendErrorStatus(int statusCode,int* clientsocket){
 	    responseHeader+=makeContentLengthHeader(sizeof(*fp));
 	    responseHeader+= "\r\n";
 	    //cout << "Sending " << filename << "\n";
-	    cout << "404Response:" << endl << responseHeader << endl;
+	    cout << "404Response:" << endl << responseHeader;
 	    write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             
             while(1){
@@ -238,7 +238,7 @@ void sendErrorStatus(int statusCode,int* clientsocket){
             break;
         case 501:
             responseHeader = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
-	    cout << "501Response:" << endl << responseHeader << endl;
+	    cout << "501Response:" << endl << responseHeader;
             write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
     }
