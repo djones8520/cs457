@@ -137,7 +137,10 @@ int main(int argc, char **argv){
 
 
 /***********************************************************
- *
+ * Thread function that takes HTTP requests to the server,
+ * parses the request, and uses the parsed data to create an
+ * appropriate response header before sending the requested
+ * file.
  ***********************************************************/
 void* httpRequest(void* arg){
     requestParams* req = (requestParams*) arg;
