@@ -340,8 +340,8 @@ string makeContentTypeHeader(string filename){
  **************************************************************/
 string makeContentLengthHeader(long length){
     string header = "Content-Length:";
-    header+= to_string(length);
-    header+="\r\n";
+    header += to_string(length);
+    header +="\r\n";
 
     return header;
 }
