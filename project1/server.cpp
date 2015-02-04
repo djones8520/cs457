@@ -342,10 +342,9 @@ string makeContentTypeHeader(string filename){
  * Creates the Content-Length header for the response header.
  **************************************************************/
 string makeContentLengthHeader(long length){
-    string header = "Content-Length: ";
-    header += length;
-    header += "\r\n";
-cout << header << endl;
+    string header = "Content-Length:";
+    header+= to_string(length);
+    header+="\r\n";
 
     return header;
 }
