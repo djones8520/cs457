@@ -43,13 +43,12 @@ void sendErrorStatus(int statusCode,int* clientsocket);
 string makeDateHeader();
 string makeLastModifiedHeader(string);
 string makeContentTypeHeader(string filename);
-string makeContentLengthHeader(int length);
+string makeContentLengthHeader(long length);
 int checkIfModifiedSince(string);
 vector<string> explode(const string& str, const char& ch);
+long getFileSize(string filename);
 
 int main(int argc, char **argv){
-    cout << "Last edited: " << makeLastModifiedHeader("test.txt") << endl;
-    cout << "Date: " << makeDateHeader() << endl;
     int port;
     char *logfile;
     port = 8080;
@@ -158,12 +157,14 @@ void* httpRequest(void* arg){
         sendErrorStatus(404, &req->clientsocket);
         return 0;
     }
+
+    long fileSize = getFileSize(filename);
     
     responseHeader = "HTTP/1.1 200 OK\r\n";
     responseHeader+=makeDateHeader();
     responseHeader+=makeLastModifiedHeader(filename);
     responseHeader+=makeContentTypeHeader(filename);
-    responseHeader+=makeContentLengthHeader(sizeof(*fp));
+    responseHeader+=makeContentLengthHeader(fileSize);
     responseHeader+= "\r\n";
     //cout << "Sending " << filename << "\n";
     cout << "Response:" << endl << responseHeader;
@@ -337,11 +338,11 @@ string makeContentTypeHeader(string filename){
 /**************************************************************
  * Creates the Content-Length header for the response header.
  **************************************************************/
-string makeContentLengthHeader(int length){
-
+string makeContentLengthHeader(long length){
     string header = "Content-Length:";
     header+= to_string(length);
     header+="\r\n";
+
     return header;
 }
 
@@ -425,4 +426,11 @@ vector<string> explode(const string& str, const char& ch) {
     if (!next.empty())
         result.push_back(next);
     return result;
+}
+
+long getFileSize(string filename){
+    struct stat stat_buf;
+    int rc = stat(filename.c_str(), &stat_buf);
+
+    return rc == 0 ? stat_buf.st_size : -1;
 }
