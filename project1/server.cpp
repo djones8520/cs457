@@ -96,6 +96,12 @@ int main(int argc, char **argv){
     serveraddr.sin_port = htons(8080);
     serveraddr.sin_addr.s_addr = INADDR_ANY;
     
+    struct timeval to;
+    to.tv_sec=20;
+    to.tv_usec=0;
+
+    setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));
+
     bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
     listen(sockfd, 10);
     
