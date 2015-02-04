@@ -339,7 +339,7 @@ string makeContentTypeHeader(string filename){
 string makeContentLengthHeader(int length){
 	string header = "Content-Length:";
 	header+=length;
-	header+="\r\n"
+	header+="\r\n";
 	return header;
 }
 
