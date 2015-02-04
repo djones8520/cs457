@@ -111,7 +111,7 @@ int main(int argc, char **argv){
         
         char line[5000];
         recv(clientsocket, line, 5000, 0);
-        cout << "Requested file from client: " << line << endl;
+        cout << "Request:" << endl << line << endl;
         
         requestParams *req = new requestParams;
         
@@ -137,15 +137,16 @@ int main(int argc, char **argv){
 void* httpRequest(void* arg){
     requestParams* req = (requestParams*) arg;
     
-    string filename = "PLACEHOLDER";
-    
-    cout << "Thread created" << endl;
+    //cout << "Thread created" << endl;
     
     vector<string> parsed = explode(req->data, ' ');
-    
-    filename = parsed[1];
+    if(strcmp(parsed[0].c_str(),"GET")!=0){
+      sendErrorStatus(501,&req->clientsocket);
+      exit(1);
+    }
+    string filename = parsed[1];
     filename.erase(0,1);
-    cout << "FILE NAME: " << filename << endl;
+    //cout << "FILE NAME: " << filename << endl;
     
     string filepath;// = docroot;
     //filepath+="/";
@@ -164,8 +165,8 @@ void* httpRequest(void* arg){
     responseHeader+=makeContentTypeHeader(filename);
     responseHeader+=makeContentLengthHeader(sizeof(*fp));
     responseHeader+= "\r\n";
-    cout << "Sending " << filename << "\n";
-    cout << "Header " << responseHeader << endl;
+    //cout << "Sending " << filename << "\n";
+    cout << "Response:" << endl << responseHeader << endl;
     write(req->clientsocket, responseHeader.c_str(), responseHeader.size());
     while(1){
         char buff[BYTES_TO_SEND]={0};
@@ -175,17 +176,15 @@ void* httpRequest(void* arg){
         }
         
         if(bytesRead < BYTES_TO_SEND){
-            if(feof(fp))
-                cout << "Reached end of file\n";
-            else if(ferror(fp))
-                cout << "Error while reading file\n";
+            if(ferror(fp))
+	      cerr << "Error while reading file: " << filename << endl;;
             break;
         }
     }
     
     free(fp);
     pthread_detach(pthread_self());
-    
+
     return 0;
 }
 
@@ -194,11 +193,12 @@ void* httpRequest(void* arg){
  * If 404 error, will send 404.html to client.
  ***********************************************************/
 void* sendErrorStatus(int statusCode,int* clientsocket){
-    string response;
+    string responseHeader;
     switch(statusCode){
         case 304:
-            response = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
-            send(*clientsocket, &response[0], sizeof(response),0);
+            responseHeader = "HTTP/1.1 304 Page hasn't been modified\r\n\r\n";
+	    cout << "304Response:" << endl << responseHeader << endl;
+            write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
         case 404:
         {
@@ -210,14 +210,15 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
                 cout << "IOError: could not open " << filename << "\n";
                 break;
             }
-            string responseHeader;
+            
             responseHeader = "HTTP/1.1 404 Page_not_found\r\n";
             responseHeader+=makeDateHeader();
 	    responseHeader+=makeLastModifiedHeader(filename);
 	    responseHeader+=makeContentTypeHeader(filename);
 	    responseHeader+=makeContentLengthHeader(sizeof(*fp));
 	    responseHeader+= "\r\n";
-	    cout << "Sending " << filename << "\n";
+	    //cout << "Sending " << filename << "\n";
+	    cout << "404Response:" << endl << responseHeader << endl;
 	    write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             
             while(1){
@@ -238,8 +239,9 @@ void* sendErrorStatus(int statusCode,int* clientsocket){
         }
             break;
         case 501:
-            response = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
-            send(*clientsocket, &response[0], sizeof(response), 0);
+            responseHeader = "HTTP/1.1 501 POST requests not implemented\r\n\r\n";
+	    cout << "501Response:" << endl << responseHeader << endl;
+            write(*clientsocket, responseHeader.c_str(), responseHeader.size());
             break;
     }
 	return 0;
