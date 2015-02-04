@@ -230,9 +230,7 @@ void sendErrorStatus(int statusCode,int* clientsocket){
 	      }
         
 	      if(bytesRead < BYTES_TO_SEND){
-		if(feof(fp))
-		  cout << "Reached end of file\n";
-		else if(ferror(fp))
+		if(ferror(fp))
 		  cout << "Error while reading file\n";
 		break;
 	      }
