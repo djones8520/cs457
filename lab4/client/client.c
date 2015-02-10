@@ -72,8 +72,7 @@ int main(int argc, char** argv){
 	void *result1;
 	int status;
 	
-	requestParams req;
-        
+	struct requestParams req;        
     req->serveraddr = serveraddr;
     req->sockfd = sockfd;
 
