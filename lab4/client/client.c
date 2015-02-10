@@ -24,7 +24,7 @@ void strip_newline(char* s);
 typedef struct requestParams{
     int serveraddr;
     int sockfd;
-};
+} reqParam;
 
 int main(int argc, char** argv){
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv){
 	void *result1;
 	int status;
 	
-	struct requestParams req;        
+	struct reqParam req;        
     req->serveraddr = serveraddr;
     req->sockfd = sockfd;
 
