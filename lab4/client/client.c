@@ -21,6 +21,11 @@
 void* print_message(void* arg);
 void strip_newline(char* s);
 
+struct requestParams{
+    int serveraddr;
+    int sockfd;
+};
+
 int main(int argc, char** argv){
 
   	int sockfd = socket(AF_INET,SOCK_DGRAM,0);
@@ -66,8 +71,14 @@ int main(int argc, char** argv){
 	pthread_t thread1;
 	void *result1;
 	int status;
+	
+	requestParams *req = new requestParams;
+        
+    string requestData = line;
+    req->serveraddr = serveraddr;
+    req->sockfd = sockfd;
 
-	if((status = pthread_create(&thread1, NULL, print_message, &sockfd)) != 0){
+	if((status = pthread_create(&thread1, NULL, print_message, &req)) != 0){
 		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 	}
 
