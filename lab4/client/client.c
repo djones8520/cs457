@@ -21,10 +21,10 @@
 void* print_message(void* arg);
 void strip_newline(char* s);
 
-typedef struct requestParams{
-    int serveraddr;
+typedef struct {
+    struct sockaddr_in serveraddr;
     int sockfd;
-};
+}requestParams;
 
 int main(int argc, char** argv){
 
@@ -74,8 +74,8 @@ int main(int argc, char** argv){
 	
 	requestParams req;
         
-    req->serveraddr = serveraddr;
-    req->sockfd = sockfd;
+    	req.serveraddr = serveraddr;
+    	req.sockfd = sockfd;
 
 	if((status = pthread_create(&thread1, NULL, print_message, &req)) != 0){
 		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
@@ -115,7 +115,10 @@ int main(int argc, char** argv){
 
 void* print_message(void* arg){
 	char line[5000];
-	int sockfd = *(int *) arg;
+	requestParams req = *(requestParams*) arg;
+	int sockfd = req.sockfd;
+	struct sockaddr_in serveraddr = req.serveraddr;
+	
         int n;
         while(n = recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr))>0){
             printf("%s\n",line);
