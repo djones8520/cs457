@@ -74,7 +74,6 @@ int main(int argc, char** argv){
 	
 	requestParams req;
         
-    string requestData = line;
     req->serveraddr = serveraddr;
     req->sockfd = sockfd;
 
