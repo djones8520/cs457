@@ -76,7 +76,7 @@ int main(int argc, char** argv){
         
     	req.serveraddr = serveraddr;
     	req.sockfd = sockfd;
-
+	
 	if((status = pthread_create(&thread1, NULL, print_message, &req)) != 0){
 		fprintf(stderr, "thread create error %d: %s\n", status, strerror(status));
 	}
