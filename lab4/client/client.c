@@ -72,7 +72,7 @@ int main(int argc, char** argv){
 	void *result1;
 	int status;
 	
-	requestParams *req = new requestParams;
+	requestParams req = malloc(sizeof(requestParams));
         
     string requestData = line;
     req->serveraddr = serveraddr;
