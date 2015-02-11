@@ -30,7 +30,6 @@ int main(int argc, char **argv){
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
-	printf("Receiving...\n");
 
 	while(1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, &slen_temp) < 0){  
