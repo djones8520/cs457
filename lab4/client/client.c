@@ -55,11 +55,11 @@ int main(int argc, char** argv){
 		serverIP=argv[3];
 	}*/
 
-	struct timeval to;
-  	to.tv_sec = 5;
-  	to.tv_usec = 0;
+	//struct timeval to;
+  	//to.tv_sec = 5;
+  	//to.tv_usec = 0;
 
-  	setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));
+  	//setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));
 
   	struct sockaddr_in serveraddr;
   	serveraddr.sin_family=AF_INET;
@@ -119,18 +119,21 @@ void* print_message(void* arg){
 	int sockfd = req.sockfd;
 	struct sockaddr_in serveraddr = req.serveraddr;
 	
-        int n;
-        while(n = recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr))>0){
-            printf("%s\n",line);
-            memset(line,0,sizeof(line));
-        }
-        if(n<0){
-            printf("Sorry, had a problem receiving.\n");
-            exit(1);
-        } else {
-            printf("Server has disconnected.\n");
-            exit(1);
-        }
+  int n;
+  while(1){
+      n = recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
+      /*if(n<0){
+        printf("Sorry, had a problem receiving.\n");
+        exit(1);
+      }else{
+        printf("Server has disconnected.\n");
+        exit(1);
+      }*/
+      printf("%s\n",line);
+      memset(line,0,sizeof(line));
+  }
+  
+  
 	close(sockfd);
 	pthread_detach(pthread_self());
 }

@@ -35,19 +35,18 @@ int main(int argc, char **argv){
 	while(1){		
 		 //receive
 		 printf("Receiving...\n");
-		 if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, &slen_temp) > 0)  
+		 if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, &slen_temp) < 0)  
 			 printf("Receive error. \n");
 
 		 if (clients <= max) {
 			cli_addr[clients] = cli_temp;
 			client_port[clients] = ntohs(cli_addr[clients].sin_port);
 			clients++;
-			printf("Client added\n");
+			printf("%s\n",buf);
 			
 			int i;
 			for(i=0; i < max ;i++) {
 				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
-
 			}
 		 }
 	}
