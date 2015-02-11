@@ -58,8 +58,8 @@ int main(int argc, char **argv){
 					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 				}
 
-				memset(buf, 0, sizeof(buf));
 		 	}
+			memset(buf,0,sizeof(buf));
 		}
 	}
 	return 0;
