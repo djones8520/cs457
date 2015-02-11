@@ -34,12 +34,16 @@ int main(int argc, char **argv){
 
 	while(1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, &slen_temp) < 0){  
-			 printf("Receive error. \n");
+			printf("Receive error. \n");
 		}
 
 		if(strcmp(buf,"/hello")==0){
-			
+			printf("A client connected (IP=%s : Port=9010)\n", inet_ntoa(cli_temp.sin_addr));
+			cli_addr[clients] = cli_temp;
+			clients++;
+			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, sizeof(cli_temp));			
 		}else if(strcmp(buf,"/exit")==0){
+			printf("A client disconnected (IP=%s : Port=9010)\n", inet_ntoa(cli_temp.sin_addr)); 
 		}else{
 			int check = 1;
 			int j;
@@ -55,7 +59,7 @@ int main(int argc, char **argv){
 					clients++;
 				}
 
-				printf("Received from client (IP=%s : Port=9010):%s\n", inet_ntoa(cli_temp.sin_addr),buf);
+				printf("Received: %s\n",buf);
 
 				int i;
 				for(i=0; i < max ;i++) {
