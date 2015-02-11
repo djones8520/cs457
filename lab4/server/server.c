@@ -45,26 +45,12 @@ int main(int argc, char **argv){
 		}else if(strcmp(buf,"/exit")==0){
 			printf("A client disconnected (IP=%s : Port=9010)\n", inet_ntoa(cli_temp.sin_addr)); 
 		}else{
-			int check = 1;
-			int j;
-			for(j = 0; j < max; j++){
-				if(cli_addr[j].sin_addr.s_addr  == cli_temp.sin_addr.s_addr)
-					check = 0; 
-			}               
+			printf("Received: %s\n",buf);
 
-		 	if (clients <= max) {
-				if(check){
-					cli_addr[clients] = cli_temp;
-					client_port[clients] = ntohs(cli_addr[clients].sin_port);
-					clients++;
-				}
-
-				printf("Received: %s\n",buf);
-
-				int i;
-				for(i=0; i < max ;i++) {
-					if(cli_addr[i].sin_addr.s_addr  != cli_temp.sin_addr.s_addr)
-						sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+			int i;
+			for(i=0; i < max ;i++) {
+				if(cli_addr[i].sin_addr.s_addr != cli_temp.sin_addr.s_addr){
+					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 				}
 
 				memset(buf, 0, sizeof(buf));
