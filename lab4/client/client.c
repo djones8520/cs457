@@ -66,6 +66,10 @@ int main(int argc, char** argv){
   	serveraddr.sin_port=htons(atoi(serverPort));
   	serveraddr.sin_addr.s_addr=inet_addr(serverIP);
 
+
+	char hello[] = "/hello";
+	strip_newline(hello);
+	sendto(sockfd,hello,strlen(hello),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
   	printf("Connected to server. Welcome to the chat room!\n");
 
 	pthread_t thread1;
@@ -91,6 +95,8 @@ int main(int argc, char** argv){
         strip_newline(line);
         
         if (strcmp(line,"/exit") == 0) {
+	    strip_newline(line);
+	    sendto(sockfd,line,strlen(line),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));	
             exit(0);
         }
         
