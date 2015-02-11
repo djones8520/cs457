@@ -43,7 +43,13 @@ int main(int argc, char **argv){
 			clients++;
 			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, sizeof(cli_temp));			
 		}else if(strcmp(buf,"/exit")==0){
-			printf("A client disconnected (IP=%s : Port=9010)\n", inet_ntoa(cli_temp.sin_addr)); 
+			printf("A client disconnected (IP=%s : Port=9010)\n", inet_ntoa(cli_temp.sin_addr));
+
+			int j;
+			for(j = 0; j < max; j++){
+				if(cli_addr[j].sin_addr.s_addr  != cli_temp.sin_addr.s_addr)
+					close(cli_addr[j]);
+			}
 		}else{
 			printf("Received: %s\n",buf);
 
