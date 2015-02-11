@@ -45,6 +45,9 @@ int main(int argc, char **argv){
 				check = 0; 
 		}
 
+		if(strcmp(buf,"/exit") == 0)
+			printf("client disconnected\n");
+
 		 if (clients <= max) {
 			if(check){
 				cli_addr[clients] = cli_temp;

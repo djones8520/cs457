@@ -90,17 +90,17 @@ int main(int argc, char** argv){
         strip_newline(name);
         strip_newline(line);
         
+        if (strcmp(line,"/exit") == 0) {
+	    //sendto(sockfd,msg,strlen(msg),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
+	close(sockfd);
+            exit(0);
+        }
+        
         strcat(msg,name);
         strcat(msg,": ");
 	strip_newline(msg);
         strcat(msg,line);
 	strip_newline(msg);
-        
-        if (strcmp(line,"/exit") == 0) {
-	    sendto(sockfd,msg,strlen(msg),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
-	    close(sockfd);
-            exit(0);
-        }
 
         sendto(sockfd,msg,strlen(msg),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
         
