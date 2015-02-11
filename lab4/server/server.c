@@ -5,12 +5,20 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 
+int max = 10;
+int BUFLEN = 5000;
+
 int main(int argc, char **argv){
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	fd_set sockets;
-	FD_ZERO(&sockets);
+	struct sockaddr_in my_addr, cli_addr[max],cli_temp;  
+	 socklen_t slen[max],slen_temp;
 
+	 slen_temp = sizeof(cli_temp);
+	 char buf[BUFLEN];  
+	 int clients = 0;
+	 int client_port[max];
+	
 	if(sockfd<0){
 		printf("Problem creating socket\n");
 		return 1;
@@ -23,47 +31,25 @@ int main(int argc, char **argv){
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
-	FD_SET(sockfd, &sockets);
-
     char line[5000];
-	while(1){
-		int len = sizeof(clientaddr);
-		fd_set tmp_set = sockets;
-		select(FD_SETSIZE, &tmp_set, NULL, NULL, NULL);
+	while(1){		
+		 //receive
+		 printf("Receiving...\n");
+		 if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_temp, &slen_temp) > 0)  
+			 printf("Receive error. \n");
 
-		int i;
-		for(i=0; i<FD_SETSIZE; i++){
-			if(FD_ISSET(i, &tmp_set)){
-				if(i == sockfd){
-					
-                    char str[INET_ADDRSTRLEN];
-                    
-			//inet_ntop( AF_INET, &clientaddr, &str, INET_ADDRSTRLEN );
-                    	//int len;
-		
-			//len = sizeof(clientaddr);
-			//getpeername(i,&clientaddr,&len);
-			//str = inet_ntoa(clientaddr.sin_addr);
+		 if (clients <= max) {
+			cli_addr[clients] = cli_temp;
+			client_port[clients] = ntohs(cli_addr[clients].sin_port);
+			clients++;
+			printf("Client added\n");
+			
+			int i;
+			for(i=0; i < max ;i++) {
+				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 
-			printf("A client connected (IP=%s : Port=9010)\n", inet_ntoa(clientaddr.sin_addr));
-				}
-				else{
-                    if(recvfrom(i, line, 5000, 0,(struct sockaddr*)&clientaddr,&len)){
-                        printf("Got from client: %s\n", line);
-                        int j;
-                        for(j=4; j<FD_SETSIZE; j++){
-                            if(j != i)
-                                sendto(j, line, strlen(line), 0,(struct sockaddr*)&clientaddr,&len);
-                        }
-                        memset(line,0,sizeof(line));
-                    } else {
-                    	puts("Client disconnected.");
-                        close(i);
-                        FD_CLR(i, &sockets);
-                    }
-				}
 			}
-		}
+		 }
 	}
 
 	return 0;
