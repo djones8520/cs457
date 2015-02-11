@@ -37,24 +37,10 @@ int main(int argc, char **argv){
 			 printf("Receive error. \n");
 		}
 
-<<<<<<< HEAD
-		if(strcmp(buf,"/exit") == 0)
-			printf("client disconnected\n");
-
-		 if (clients <= max) {
-			if(check){
-				cli_addr[clients] = cli_temp;
-				client_port[clients] = ntohs(cli_addr[clients].sin_port);
-				clients++;
-			}
-
-			printf("%s\n",buf);
-=======
 		if(strcmp(buf,"/hello")==0){
->>>>>>> 1a46be0be1adff9769ae88cd9b76724493655082
 			
 		}else if(strcmp(buf,"/exit")==0){
-		
+			printf("client disconnected\n");
 		}else{
 			int check = 1;
 			int j;
@@ -74,7 +60,8 @@ int main(int argc, char **argv){
 
 				int i;
 				for(i=0; i < max ;i++) {
-					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+					if(cli_addr[i].sin_addr.s_addr  != cli_temp.sin_addr.s_addr)
+						sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 				}
 
 				memset(buf, 0, sizeof(buf));

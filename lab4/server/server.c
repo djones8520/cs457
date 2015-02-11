@@ -40,7 +40,6 @@ int main(int argc, char **argv){
 		if(strcmp(buf,"/hello")==0){
 			
 		}else if(strcmp(buf,"/exit")==0){
-		
 		}else{
 			int check = 1;
 			int j;
@@ -60,7 +59,8 @@ int main(int argc, char **argv){
 
 				int i;
 				for(i=0; i < max ;i++) {
-					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+					if(cli_addr[i].sin_addr.s_addr  != cli_temp.sin_addr.s_addr)
+						sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 				}
 
 				memset(buf, 0, sizeof(buf));
