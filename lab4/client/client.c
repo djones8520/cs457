@@ -70,8 +70,14 @@ int main(int argc, char** argv){
 	char hello[] = "/hello";
 	strip_newline(hello);
 	sendto(sockfd,hello,strlen(hello),0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
-  	printf("Connected to server. Welcome to the chat room!\n");
-
+	char connect[5000];
+  	recvfrom(sockfd,connect,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
+	if(strcmp(connect,hello)==0){
+		printf("Connected to server. Welcome to the chat room!\n");
+	}else{
+		printf("Unable to connect to server.\n");
+		exit(0);
+	}
 	pthread_t thread1;
 	void *result1;
 	int status;
@@ -127,14 +133,8 @@ void* print_message(void* arg){
 	
   int n;
   while(1){
-      n = recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
-      /*if(n<0){
-        printf("Sorry, had a problem receiving.\n");
-        exit(1);
-      }else{
-        printf("Server has disconnected.\n");
-        exit(1);
-      }*/
+      recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
+      
       printf("%s\n",line);
       memset(line,0,sizeof(line));
   }
