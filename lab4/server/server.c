@@ -58,7 +58,6 @@ int main(int argc, char **argv){
 
 				printf("Received from client (IP=%s : Port=9010):%s\n", inet_ntoa(cli_temp.sin_addr),buf);
 
-			
 				int i;
 				for(i=0; i < max ;i++) {
 					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
