@@ -26,10 +26,12 @@ struct dnsheader{
 };
 
 int main(int argc, char** argv){
+	string ipaddress;
+	
 	if(argc > 1)
-		string ipaddress = "argv[1]";
+		ipaddress = argv[1];
 	else
-		string ipaddress = "8.8.8.8";
+		ipaddress = "8.8.8.8";
 
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0){
@@ -40,7 +42,7 @@ int main(int argc, char** argv){
 	struct sockaddr_in serveraddr;
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(53);
-	serveraddr.sin_addr.s_addr = inet_addr(ipaddress);
+	serveraddr.sin_addr.s_addr = inet_addr(ipaddress.c_str());
 
 	struct timeval to;
 	to.tv_sec = 5;
