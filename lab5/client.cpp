@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cstring>
+#include <fstream>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -30,8 +31,29 @@ int main(int argc, char** argv){
 	
 	if(argc > 1)
 		ipaddress = argv[1];
-	else
-		ipaddress = "8.8.8.8";
+	else{
+		bool check = true;
+		
+		ifstream resolv ("/etc/resolv.conf");
+		
+		if(resolv.is_open()){
+			string line;
+			
+			while(getline(resolv, line)){
+				cout << line << endl;
+				if(line.find("nameserver") != string::npos)
+					ipaddress = line.substr(11);
+			}
+			
+			resolv.close();
+		}
+		else{
+			cout << "Error reading file." << endl;
+			return 0;
+		}
+	}
+	
+	cout << ipaddress << endl;
 
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0){
