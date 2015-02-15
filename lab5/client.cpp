@@ -49,6 +49,31 @@ string getName(uint8_t line[512], int pos);
  */
 
 int main(int argc, char** argv){
+	string ipaddress;
+	
+	if(argc > 1)
+		ipaddress = argv[1];
+	else{
+		bool check = true;
+		
+		ifstream resolv ("/etc/resolv.conf");
+		
+		if(resolv.is_open()){
+			string line;
+			
+			while(getline(resolv, line)){
+				cout << line << endl;
+				if(line.find("nameserver") != string::npos)
+					ipaddress = line.substr(11);
+			}
+			
+			resolv.close();
+		}
+		else{
+			cout << "Error reading file." << endl;
+			return 0;
+		}
+	}
 
   int sockfd = socket(AF_INET,SOCK_DGRAM,0);
   if(sockfd<0){
