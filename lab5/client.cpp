@@ -153,12 +153,12 @@ int main(int argc, char** argv){
   //gets response header information
   dnsheader rh;
   pos = 0;
-  rh.id = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.flags = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.qcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.ancount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.nscount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.arcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
+  rh.id = convertFrom8To16(line[pos++],line[pos++]);
+  rh.flags =convertFrom8To16(line[pos++],line[pos++]);
+  rh.qcount = convertFrom8To16(line[pos++],line[pos++]);
+  rh.ancount = convertFrom8To16(line[pos++],line[pos++]);
+  rh.nscount = convertFrom8To16(line[pos++],line[pos++]);
+  rh.arcount = convertFrom8To16(line[pos++],line[pos++]);
 
   cout << "Response Header" << endl;
   cout << "------------------------------------" << endl;
