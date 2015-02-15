@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cstring>
+#include <fstream>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -114,6 +115,15 @@ int main(int argc, char** argv){
   qh.nscount = htons(0);
   qh.arcount = htons(0);
 
+  cout << "Request Header" << endl;
+  cout << "------------------------------------" << endl;
+  cout << "ID: 0x" << hex << qh.id << endl;
+  cout << "Flags: 0x" << hex << qh.flags << endl;
+  cout << "QCOUNT: " << qh.qcount << endl;
+  cout << "ANCOUNT: " << qh.ancount << endl;
+  cout << "NSCOUNT: " << qh.nscount << endl;
+  cout << "ARCOUNT: " << qh.arcount << endl << endl;
+
   memcpy(buf,&qh,12);
   int pos=12;
   istringstream domainstream(domain);
@@ -130,7 +140,7 @@ int main(int argc, char** argv){
   buf[pos++]=CLASS_IN;
   sendto(sockfd,buf,pos,0,
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
-  cout<<"Sent our query"<<endl;
+  cout << "Sent our query" << endl << endl;
 
   uint8_t line[512];
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
@@ -144,6 +154,15 @@ int main(int argc, char** argv){
   rh.ancount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.nscount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.arcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
+
+  cout << "Response Header" << endl;
+  cout << "------------------------------------" << endl;
+  cout << "ID: 0x" << hex << rh.id << endl;
+  cout << "Flags: 0x" << hex << rh.flags << endl;
+  cout << "QCOUNT: " << rh.qcount << endl;
+  cout << "ANCOUNT: " << rh.ancount << endl;
+  cout << "NSCOUNT: " << rh.nscount << endl;
+  cout << "ARCOUNT: " << rh.arcount << endl << endl;
 
   int num_responses = rh.ancount + rh.nscount + rh.arcount;
   dnsresponse answer[num_responses];
@@ -169,7 +188,6 @@ int main(int argc, char** argv){
     r.rdata = data;
     answer[i] = r;
   }
-
 
   return 0;
 }
