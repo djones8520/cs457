@@ -144,11 +144,16 @@ int main(int argc, char** argv){
 
   uint8_t line[512];
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
+  pos = 0;
+  for(int i = 0; i < sizeof(line); i++){
+    cout << hex << ntohs(line[pos++]) << " ";
+  }
+  cout << endl << endl;
 
   //gets response header information
   dnsheader rh;
   pos = 0;
-  rh.id = ntohs(convertFrom8To16(line[pos],line[pos++]));
+  rh.id = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.flags = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.qcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.ancount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
