@@ -138,17 +138,19 @@ int main(int argc, char** argv){
   buf[pos++]=TYPE_A;
   buf[pos++]=0;
   buf[pos++]=CLASS_IN;
-  sendto(sockfd,buf,pos,0,
-	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
+  int temp = pos;
+  pos = 0;
+  for(int i = 0; i < sizeof(buf); i++){
+    cout << hex << ntohs(buf[pos++]) << " ";
+  }
+  cout << endl << endl;
   cout << "Sent our query" << endl << endl;
+
+  sendto(sockfd,buf,temp,0,
+	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
-  pos = 0;
-  for(int i = 0; i < sizeof(line); i++){
-    cout << hex << ntohs(line[pos++]) << " ";
-  }
-  cout << endl << endl;
 
   //gets response header information
   dnsheader rh;
@@ -168,6 +170,12 @@ int main(int argc, char** argv){
   cout << "ANCOUNT: " << rh.ancount << endl;
   cout << "NSCOUNT: " << rh.nscount << endl;
   cout << "ARCOUNT: " << rh.arcount << endl << endl;
+
+  pos = 0;
+  for(int i = 0; i < sizeof(line); i++){
+    cout << hex << ntohs(line[pos++]) << " ";
+  }
+  cout << endl << endl;
 
   int num_responses = rh.ancount + rh.nscount + rh.arcount;
   dnsresponse answer[num_responses];
