@@ -83,8 +83,9 @@ int main(int argc, char** argv){
   sendto(sockfd,buf,pos,0,
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
   cout<<"Sent our query"<<endl;
+  printf("%s\n",buf);
   char line[5000];
   recvfrom(sockfd,line,5000,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
-  cout << line;
+  cout << line << endl;
   return 0;
 }
