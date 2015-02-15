@@ -17,25 +17,26 @@
 using namespace std;
 
 struct dnsheader{
-  u_int16_t id;
-  u_int16_t flags;
-  u_int16_t qcount;
-  u_int16_t ancount;
-  u_int16_t nscount;
-  u_int16_t arcount;
+  uint16_t id;
+  uint16_t flags;
+  uint16_t qcount;
+  uint16_t ancount;
+  uint16_t nscount;
+  uint16_t arcount;
 };
 
 struct dnsresponse{
-  char[254] name;
-  u_int16_t type;
-  u_int16_t dns_class;
-  u_int32_t ttl;
-  u_int16_t rdlength;
-  char* rdata;
+  string name;
+  uint16_t type;
+  uint16_t dns_class;
+  uint32_t ttl;
+  uint16_t rdlength;
+  uint8_t* rdata;
 };
 
-u_int16_t convertFrom8To16(u_int8_t dataFirst, u_int8_t dataSecond);
-u_int32_t convertFrom16To32(u_int16_t dataFirst, u_int16_t dataSecond)
+uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond);
+uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond);
+string getName(uint8_t line[512], int pos);
 
 /*
  * Still left to do
@@ -80,7 +81,7 @@ int main(int argc, char** argv){
   char buf[512];
   dnsheader qh;
   qh.id = distribution(generator);
-  u_int16_t flags = 0;
+  uint16_t flags = 0;
   flags |= (1<<8);
   qh.flags = htons(flags);
   qh.qcount = htons(1);
@@ -106,7 +107,7 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
   cout<<"Sent our query"<<endl;
 
-  u_int8_t line[512];
+  uint8_t line[512];
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
 
   //gets response header information
@@ -114,7 +115,7 @@ int main(int argc, char** argv){
   pos = 0;
   rh.id = ntohs(convertFrom8To16(line[pos],line[pos++]));
   rh.flags = ntohs(convertFrom8To16(line[pos++],line[pos++]));
-  rh.qdcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
+  rh.qcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.ancount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.nscount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
   rh.arcount = ntohs(convertFrom8To16(line[pos++],line[pos++]));
@@ -136,7 +137,7 @@ int main(int argc, char** argv){
     r.ttl = convertFrom16To32(convertFrom8To16(line[pos++],line[pos++]),
                               convertFrom8To16(line[pos++],line[pos++]));
     r.rdlength = convertFrom8To16(line[pos++],line[pos++]);
-    char data[r.rdlength];
+    uint8_t data[r.rdlength];
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
     }
@@ -148,8 +149,20 @@ int main(int argc, char** argv){
   return 0;
 }
 
-u_int16_t convertFrom8To16(u_int8_t dataFirst, u_int8_t dataSecond) {
-  u_int16_t dataBoth = 0x0000;
+string getName(uint8_t line[512], int pos){
+  string name;
+  uint8_t length;
+  while((length = ntohs(line[pos++])) != 0){
+    for(uint8_t i = 0; i < length; i++){
+      name += (char)ntohs(line[pos++]);
+    }
+    name += ".";
+  }
+  return name;
+}
+
+uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond) {
+  uint16_t dataBoth = 0x0000;
 
   dataBoth = dataFirst;
   dataBoth = dataBoth << 8;
@@ -157,26 +170,11 @@ u_int16_t convertFrom8To16(u_int8_t dataFirst, u_int8_t dataSecond) {
   return dataBoth;
 }
 
-u_int32_t convertFrom16To32(u_int16_t dataFirst, u_int16_t dataSecond) {
-  u_int32_t dataBoth = 0x00000000;
+uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond) {
+  uint32_t dataBoth = 0x00000000;
 
   dataBoth = dataFirst;
   dataBoth = dataBoth << 16;
   dataBoth |= dataSecond;
   return dataBoth;
-}
-
-char[254] getName(u_int_8[512] line, int pos){
-  char name[254]; //max name size is 255
-  int namePos = 0;
-  u_int8_t length;
-  while((length = ntohs(line[pos++])) != 0){
-    for(u_int8_t i = 0; i < ntohs(line[pos++]); i++){
-      name[namePos] = ntohs(line[pos++]);
-      namePos++;
-    }
-    name[namePos++] = ".";
-  }
-  name[namePos--] = "";
-  return name;
 }
