@@ -1,6 +1,7 @@
 //note that this code relies on c++11 features, and thus must be
 //compiled with the -std=c++11 flag when using g++
 
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -141,8 +142,10 @@ int main(int argc, char** argv){
   int temp = pos;
   pos = 0;
   for(int i = 0; i < sizeof(buf); i++){
-    cout << hex << ntohs(buf[pos++]) << " ";
-  }
+    //cout << hex << ntohs(buf[pos++]) << " ";
+  
+   printf("%02X ",buf[pos++]);
+}
   cout << endl << endl;
   cout << "Sent our query" << endl << endl;
 
@@ -153,6 +156,7 @@ int main(int argc, char** argv){
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
 
   //gets response header information
+  //use memcpy to the buffer like in the request header
   dnsheader rh;
   pos = 0;
   rh.id = convertFrom8To16(line[pos++],line[pos++]);
@@ -173,7 +177,7 @@ int main(int argc, char** argv){
 
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
-    cout << hex << ntohs(line[pos++]) << " ";
+    cout << hex << line[pos++] << " ";
   }
   cout << endl << endl;
 
@@ -183,7 +187,7 @@ int main(int argc, char** argv){
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
-    if(ntohs(line[pos+1]) & 11000000 == 1100000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if(line[pos+1] & 11000000 == 1100000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       r.name = getName(line,line[pos+=2]);
     }else{
       r.name = getName(line,pos++);
@@ -208,9 +212,9 @@ int main(int argc, char** argv){
 string getName(uint8_t line[512], int pos){
   string name;
   uint8_t length;
-  while((length = ntohs(line[pos++])) != 0){
+  while((length = line[pos++]) != 0){
     for(uint8_t i = 0; i < length; i++){
-      name += (char)ntohs(line[pos++]);
+      name += (char)line[pos++];
     }
     name += ".";
   }
