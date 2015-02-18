@@ -172,6 +172,9 @@ int main(int argc, char** argv){
   }
   cout << endl << endl;
   int num_responses = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
+  
+  // count of entries in answer
+  int count = 0;
   dnsresponse answer[num_responses];
   pos = 12;
 
@@ -218,11 +221,12 @@ int main(int argc, char** argv){
 	r.rdata = data;
 	r.name = name;
 	answer[i] = r;
+	count++;
     }
     
   }
 
-  for (int i = 0; i < num_responses; i++){
+  for (int i = 0; i < count; i++){
     cout << "Name: "  << answer[i].name << endl;
     cout << "Type: "  << ntohs(answer[i].type) << endl;
     cout << "Class: "  << ntohs(answer[i].dns_class) << endl;
