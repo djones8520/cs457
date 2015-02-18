@@ -41,6 +41,7 @@ struct dnsresponse{
 uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond);
 uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond);
 string getName(uint8_t line[512], int* pos);
+void CatchAlarm(int);
 
 /*
  * Still left to do
@@ -88,7 +89,7 @@ int main(int argc, char** argv){
   struct sockaddr_in serveraddr;
   serveraddr.sin_family=AF_INET;
   serveraddr.sin_port=htons(53);
-  serveraddr.sin_addr.s_addr=inet_addr("8.8.8.8");
+  serveraddr.sin_addr.s_addr=inet_addr("ipaddress");
 
   struct timeval to;
   to.tv_sec=5;
@@ -155,6 +156,7 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
+  signal(SIGALRM, CatchAlarm);
   alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
   alarm(0);
@@ -298,6 +300,6 @@ uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond) {
 
 void CatchAlarm(int ignored)     /* Handler for SIGALRM */
 {
-    cout << "Server took too long to respond";
+    cout << "Server took too long to respond\nQuitting... \n";
     exit(1);
 }
