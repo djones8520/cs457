@@ -167,7 +167,7 @@ int main(int argc, char** argv){
   cout << "NSCOUNT: " << ntohs(rh.nscount) << endl;
   cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
   pos = 0;
-  for(int i = 0; i < sizeof(line); i++){
+  for(unsigned int i = 0; i < sizeof(line); i++){
     printf("%02X ",line[i]);
   }
   cout << endl << endl;
