@@ -168,7 +168,7 @@ int main(int argc, char** argv){
   cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
-    printf("%02X ",ntohs(line[i]));
+    printf("%02X ",line[i]);
   }
   cout << endl << endl;
   int num_responses = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
@@ -209,7 +209,10 @@ int main(int argc, char** argv){
     }
     memcpy(&r,&line[pos],10);
     pos += 10;
-
+    if(ntohs(r.type) != TYPE_A){
+      cerr << "Cannot validate anything but TYPE_A responses." << endl;
+      exit(1);
+    }
     uint8_t data[r.rdlength];
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
@@ -221,10 +224,10 @@ int main(int argc, char** argv){
 
   for (int i = 0; i < num_responses; i++){
     cout << "Name: "  << answer[i].name << endl;
-    cout << "Type: "  << answer[i].type << endl;
-    cout << "Class: "  << answer[i].dns_class << endl;
+    cout << "Type: "  << ntohs(answer[i].type) << endl;
+    cout << "Class: "  << ntohs(answer[i].dns_class) << endl;
     //cout << "TTL:"  << r.ttl << endl;
-    cout << "Data Length: "  << answer[i].rdlength << endl;
+    cout << "Data Length: "  << ntohs(answer[i].rdlength) << endl;
     //cout << "Data:"  << r.name << endl;
   }
 
