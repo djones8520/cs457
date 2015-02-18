@@ -39,6 +39,7 @@ struct dnsresponse{
 };
 
 //string getName(uint8_t line[512], int* pos);
+void CatchAlarm(int);
 
 /*
  * Still left to do
@@ -152,6 +153,7 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
+  signal(SIGALRM, CatchAlarm);
   alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
   alarm(0);
@@ -249,6 +251,6 @@ int main(int argc, char** argv){
 
 void CatchAlarm(int ignored)     /* Handler for SIGALRM */
 {
-    cout << "Server took too long to respond";
+    cout << "Server took too long to respond\nQuitting...\n";
     exit(1);
 }
