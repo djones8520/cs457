@@ -183,7 +183,7 @@ int main(int argc, char** argv){
     string name;
     short length;
     char tempchar;
-    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       pos = ntohs(line[pos]);
       memcpy(&length,&line[pos],1);
       pos++;
