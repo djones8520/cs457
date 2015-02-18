@@ -191,7 +191,7 @@ int main(int argc, char** argv){
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
     cerr << "Reached3" << endl;
-    if(line[pos] & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       pos++;
       int* temp = (int*)line[pos];
       r.name = getName(line,temp);
@@ -220,12 +220,19 @@ int main(int argc, char** argv){
 }
 
 string getName(uint8_t line[512], int* pos){
+  cerr << "Reached4" << endl;
   string name;
   uint8_t length;
   while((length = line[*pos++]) != 0){
-    for(uint8_t i = 0; i < length; i++){
+    cerr << "Reached5" << endl;
+    char buf[length];
+    memcpy(&buf,&line[*pos],length);
+    cerr << "Reached6" << endl;
+    /*for(uint8_t i = 0; i < length; i++){
+      cerr << "Reached6" << endl;
       name += (char)line[*pos++];
-    }
+    }*/
+    name += buf;
     name += ".";
   }
   return name;
