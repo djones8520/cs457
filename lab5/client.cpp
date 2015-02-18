@@ -211,6 +211,7 @@ int main(int argc, char** argv){
       }
     }
     memcpy(&question,&line[pos],4);
+    pos += 4;
     question.name = name;
     answer[i] = question;
   }
@@ -224,11 +225,13 @@ int main(int argc, char** argv){
 
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = ntohs(rh.qcount); i <= num_responses; i++){
+    cout << "Position=" << pos << endl;
     dnsresponse r;
     string name;
     short length;
     char tempchar;
     if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+      cout << "Reached compression" << endl;
       pos++;
       int temp = ntohs(line[pos]);
       memcpy(&length,&line[temp],1);
