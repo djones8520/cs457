@@ -193,7 +193,7 @@ int main(int argc, char** argv){
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
-    cerr << "Reached3" << endl;
+    cerr << "Reached3 length = " << ntohs(line[pos]) << endl;
     string name;
     short length;
     if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
@@ -218,16 +218,19 @@ int main(int argc, char** argv){
       r.name = getName(line,temp);*/
     }else{
       cerr << "Reached4 (non-compressed)" << endl;
-      length = ntohs(line[pos++]);
+      memcpy(&length,&line[pos],1);
+      pos = 13;
+      //length = ntohs(line[pos++]);
       cerr << "Length = " << length << endl;
-      while((length = ntohs(line[pos++])) != 0){
+      while(length != 0){
         cerr << "Reached5 length=" << length << endl;
         /*char buf[length];
         memcpy(&buf,&line[*pos],length);*/
         for(uint8_t i = 1; i < length; i++){
-          cerr << "Reached6 length = " << length << endl;
+          //cerr << "Reached6 length = " << length << endl;
           name += (char)ntohs(line[pos++]);
-          cerr << "Reached7" << endl;
+          cerr << name;
+          //cerr << "Reached7" << endl;
         }
         //name += buf;
         name += ".";
