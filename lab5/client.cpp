@@ -12,6 +12,8 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fstream>
+#include <signal.h>
+#include <unistd.h>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -145,7 +147,7 @@ int main(int argc, char** argv){
     //cout << hex << ntohs(buf[pos++]) << " ";
     printf("%02X ",ntohs(buf[i]));
   }
-  
+
   cout << endl << endl;
   cout << "Sent our query" << endl << endl;
 
@@ -153,8 +155,9 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
+  alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
-
+  alarm(0);
   //gets response header information
   //use memcpy to the buffer like in the request header
   dnsheader rh;
@@ -288,4 +291,10 @@ uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond) {
   dataBoth = dataBoth << 16;
   dataBoth |= dataSecond;
   return dataBoth;
+}
+
+void CatchAlarm(int ignored)     /* Handler for SIGALRM */
+{
+    cout << "Server took too long to respond";
+    exit(1);
 }
