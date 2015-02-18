@@ -12,13 +12,10 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fstream>
-<<<<<<< HEAD
 #include <stdio.h>
 #include <string.h>
-=======
 #include <signal.h>
 #include <unistd.h>
->>>>>>> ee400a9b755d6d155922c1a712bc8f63beb59ffb
 
 #define TYPE_A 1
 #define CLASS_IN 1
