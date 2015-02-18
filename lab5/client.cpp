@@ -177,8 +177,51 @@ int main(int argc, char** argv){
   dnsresponse answer[num_responses];
   pos = 12;
 
+  for(int i = 0; i < ntohs(rh.qcount); i++){
+    dnsresponse question;
+    string name;
+    short length;
+    char tempchar;
+    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+      pos = ntohs(line[pos]);
+      memcpy(&length,&line[pos],1);
+      pos++;
+      while(length != 0){
+        for(int i = 0; i < length; i++){
+          tempchar = (char)(ntohs(line[pos++]));
+          name += tempchar;
+        }
+        name += ".";
+        memcpy(&length,&line[pos],1);
+        pos++;
+      }
+    }else{
+      memcpy(&length,&line[pos],1);
+      pos++;
+      while(length != 0){
+        for(int i = 0; i < length; i++){
+          tempchar = (char)(line[pos++]);
+          name += tempchar;
+        }
+        name += ".";
+        memcpy(&length,&line[pos],1);
+        pos++;
+      }
+    }
+    memcpy(&question,&line[pos],4);
+    question.name = name;
+    answer[i] = question;
+  }
+
+  for (int i = 0; i < (rh.qcount); i++){
+    cout << "Question:" << endl;
+    cout << "Name: "  << answer[i].name << endl;
+    cout << "Type: "  << ntohs(answer[i].type) << endl;
+    cout << "Class: "  << ntohs(answer[i].dns_class) << endl;
+  }
+
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
-  for(int i = 0; i < num_responses; i++){
+  for(int i = ntohs(rh.qcount); i <= num_responses; i++){
     dnsresponse r;
     string name;
     short length;
@@ -211,10 +254,10 @@ int main(int argc, char** argv){
     }
     memcpy(&r,&line[pos],10);
     pos += 10;
-    if(ntohs(r.type) != TYPE_A){
+    /*if(ntohs(r.type) != TYPE_A){
       cerr << "Cannot validate anything but TYPE_A responses." << endl;
       exit(1);
-    }
+    }*/
     uint8_t data[r.rdlength];
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
@@ -224,7 +267,8 @@ int main(int argc, char** argv){
     answer[i] = r;
   }
 
-  for (int i = 0; i < num_responses; i++){
+  for (int i = ntohs(rh.qcount); i <= num_responses; i++){
+    cout << "Answer:" << endl;
     cout << "Name: "  << answer[i].name << endl;
     cout << "Type: "  << ntohs(answer[i].type) << endl;
     cout << "Class: "  << ntohs(answer[i].dns_class) << endl;
