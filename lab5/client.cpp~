@@ -210,6 +210,9 @@ int main(int argc, char** argv){
     memcpy(&r,&line[pos],10);
     pos += 10;
     if(ntohs(r.type) == TYPE_A){
+      cerr << "Cannot validate anything but TYPE_A responses." << endl;
+      exit(1);
+
 	uint8_t data[r.rdlength];
     	for(int j = 0; j < r.rdlength; j++){
       		data[j] = line[pos++];
