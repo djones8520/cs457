@@ -187,12 +187,9 @@ int main(int argc, char** argv){
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
     //cout << hex << line[pos++] << " ";
-<<<<<<< HEAD
     //printf("%02X ",ntohs(line[pos++]));
-    printf("%02X ",line[pos++]);
-=======
+    //printf("%02X ",line[pos++]);
     printf("%02X ",ntohs(line[i]));
->>>>>>> ee400a9b755d6d155922c1a712bc8f63beb59ffb
   }
   
   cout << endl << endl;
@@ -293,6 +290,7 @@ int main(int argc, char** argv){
       }
       /*pos++;
       r.name = getName(line,&pos);*/
+    }
         
     cerr << r.name << endl;
     
