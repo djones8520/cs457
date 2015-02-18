@@ -12,8 +12,13 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fstream>
+<<<<<<< HEAD
 #include <stdio.h>
 #include <string.h>
+=======
+#include <signal.h>
+#include <unistd.h>
+>>>>>>> ee400a9b755d6d155922c1a712bc8f63beb59ffb
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -41,6 +46,7 @@ struct dnsresponse{
 uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond);
 uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond);
 string getName(uint8_t line[512], int* pos);
+void CatchAlarm(int);
 
 /*
  * Still left to do
@@ -55,8 +61,10 @@ string getName(uint8_t line[512], int* pos);
 int main(int argc, char** argv){
 	string ipaddress;
 
-	if(argc > 1)
+	if(argc > 1){
 		ipaddress = argv[1];
+    cout << "||||||" << ipaddress << "|||||||" << endl;
+  }
 	else{
 		bool check = true;
 
@@ -88,7 +96,7 @@ int main(int argc, char** argv){
   struct sockaddr_in serveraddr;
   serveraddr.sin_family=AF_INET;
   serveraddr.sin_port=htons(53);
-  serveraddr.sin_addr.s_addr=inet_addr("8.8.8.8");
+  serveraddr.sin_addr.s_addr=inet_addr(&ipaddress[0]);
 
   struct timeval to;
   to.tv_sec=5;
@@ -141,21 +149,24 @@ int main(int argc, char** argv){
   buf[pos++]=TYPE_A;
   buf[pos++]=0;
   buf[pos++]=CLASS_IN;
-  int temp = pos;
+  int tmp = pos;
   pos = 0;
-  for(int i = 0; i < sizeof(buf); i++){
+  for(int i = 0; i < tmp; i++){
     //cout << hex << ntohs(buf[pos++]) << " ";
-    printf("%02X ",ntohs(buf[pos++]));
+    printf("%02X ",ntohs(buf[i]));
   }
+
   cout << endl << endl;
   cout << "Sent our query" << endl << endl;
 
-  sendto(sockfd,buf,temp,0,
+  sendto(sockfd,buf,tmp,0,
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
+  signal(SIGALRM, CatchAlarm);
+  alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
-
+  alarm(0);
   //gets response header information
   //use memcpy to the buffer like in the request header
   dnsheader rh;
@@ -176,12 +187,15 @@ int main(int argc, char** argv){
   cout << "ANCOUNT: " << ntohs(rh.ancount) << endl;
   cout << "NSCOUNT: " << ntohs(rh.nscount) << endl;
   cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
-
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
     //cout << hex << line[pos++] << " ";
+<<<<<<< HEAD
     //printf("%02X ",ntohs(line[pos++]));
     printf("%02X ",line[pos++]);
+=======
+    printf("%02X ",ntohs(line[i]));
+>>>>>>> ee400a9b755d6d155922c1a712bc8f63beb59ffb
   }
   
   cout << endl << endl;
@@ -204,6 +218,7 @@ int main(int argc, char** argv){
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
+/*
     cerr << "Reached3" << endl;
     
     int j;
@@ -231,13 +246,58 @@ int main(int argc, char** argv){
      	name += temp;
     }
     
-    //name += '.';
+    name += '.';
     
     r.name = name;
-        
-    cerr << r.name << endl;
     
     pos = stop2;
+*/
+    cerr << "Reached3 length = " << ntohs(line[pos]) << endl;
+    string name;
+    short length;
+    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+      cerr << "Reached4" << endl;
+      pos++;
+      pos = line[pos];
+      while((length = ntohs(line[pos++])) != 0){
+        cerr << "Reached5 length=" << length << endl;
+        /*char buf[length];
+        memcpy(&buf,&line[*pos],length);*/
+        cerr << "Reached6" << endl;
+        for(uint8_t i = 1; i < length; i++){
+          cerr << "Reached6" << endl;
+          name += (char)ntohs(line[pos++]);
+          cerr << "Reached7" << endl;
+        }
+        //name += buf;
+        name += ".";
+      }
+      /*pos++;
+      int* temp = (int*)line[pos];
+      r.name = getName(line,temp);*/
+    }else{
+      cerr << "Reached4 (non-compressed)" << endl;
+      memcpy(&length,&line[pos],1);
+      pos = 13;
+      //length = ntohs(line[pos++]);
+      cerr << "Length = " << length << endl;
+      while(length != 0){
+        cerr << "Reached5 length=" << length << endl;
+        /*char buf[length];
+        memcpy(&buf,&line[*pos],length);*/
+        for(uint8_t i = 1; i < length; i++){
+          //cerr << "Reached6 length = " << length << endl;
+          name += (char)ntohs(line[pos++]);
+          cerr << name;
+          //cerr << "Reached7" << endl;
+        }
+        //name += buf;
+        name += ".";
+      }
+      /*pos++;
+      r.name = getName(line,&pos);*/
+        
+    cerr << r.name << endl;
     
     memcpy(&r,&line[pos],10);
     /*r.type = convertFrom8To16(line[pos++],line[pos++]);
@@ -262,16 +322,17 @@ string getName(uint8_t line[512], int* pos){
   cerr << "Reached4" << endl;
   string name;
   uint8_t length;
-  while((length = line[*pos++]) != 0){
-    cerr << "Reached5" << endl;
-    char buf[length];
-    memcpy(&buf,&line[*pos],length);
+  while((length = ntohs(line[*pos++])) != 0){
+    cerr << "Reached5 length=" << length << endl;
+    /*char buf[length];
+    memcpy(&buf,&line[*pos],length);*/
     cerr << "Reached6" << endl;
-    /*for(uint8_t i = 0; i < length; i++){
+    for(uint8_t i = 1; i < length; i++){
       cerr << "Reached6" << endl;
-      name += (char)line[*pos++];
-    }*/
-    name += buf;
+      name += (char)ntohs(line[*pos++]);
+      cerr << "Reached7" << endl;
+    }
+    //name += buf;
     name += ".";
   }
   return name;
@@ -293,4 +354,10 @@ uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond) {
   dataBoth = dataBoth << 16;
   dataBoth |= dataSecond;
   return dataBoth;
+}
+
+void CatchAlarm(int ignored)     /* Handler for SIGALRM */
+{
+    cout << "Server took too long to respond\nQuitting... \n";
+    exit(1);
 }
