@@ -52,23 +52,23 @@ string getName(uint8_t line[512], int* pos);
 
 int main(int argc, char** argv){
 	string ipaddress;
-	
+
 	if(argc > 1)
 		ipaddress = argv[1];
 	else{
 		bool check = true;
-		
+
 		ifstream resolv ("/etc/resolv.conf");
-		
+
 		if(resolv.is_open()){
 			string line;
-			
+
 			while(getline(resolv, line)){
 				cout << line << endl;
 				if(line.find("nameserver") != string::npos)
 					ipaddress = line.substr(11);
 			}
-			
+
 			resolv.close();
 		}
 		else{
@@ -92,9 +92,9 @@ int main(int argc, char** argv){
   to.tv_sec=5;
   to.tv_usec=0;
   setsockopt(sockfd,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to));
-  
+
   cout <<"Enter a domain name: ";
-				
+
   string domain;
   getline(cin,domain);
   if(domain.back()!='.'){
@@ -207,6 +207,7 @@ int main(int argc, char** argv){
                               convertFrom8To16(line[pos++],line[pos++]));
     r.rdlength = convertFrom8To16(line[pos++],line[pos++]);*/
     pos += 10;
+
     uint8_t data[r.rdlength];
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
