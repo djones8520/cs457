@@ -214,11 +214,11 @@ int main(int argc, char** argv){
     answer[i] = question;
   }
 
-  for (int i = 0; i < (rh.qcount); i++){
+  for (int i = 0; i < ntohs(rh.qcount); i++){
     cout << "Question:" << endl;
     cout << "Name: "  << answer[i].name << endl;
     cout << "Type: "  << ntohs(answer[i].type) << endl;
-    cout << "Class: "  << ntohs(answer[i].dns_class) << endl;
+    cout << "Class: "  << ntohs(answer[i].dns_class) << endl << endl;
   }
 
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
