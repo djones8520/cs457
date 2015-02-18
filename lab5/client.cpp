@@ -191,13 +191,47 @@ int main(int argc, char** argv){
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
     cerr << "Reached3" << endl;
+    string name;
+    int length;
     if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+      cerr << "Reached4" << endl;
       pos++;
+      pos = line[pos];
+      while((length = ntohs(line[pos++])) != 0){
+        cerr << "Reached5 length=" << length << endl;
+        /*char buf[length];
+        memcpy(&buf,&line[*pos],length);*/
+        cerr << "Reached6" << endl;
+        for(uint8_t i = 1; i < length; i++){
+          cerr << "Reached6" << endl;
+          name += (char)ntohs(line[pos++]);
+          cerr << "Reached7" << endl;
+        }
+        //name += buf;
+        name += ".";
+      }
+      /*pos++;
       int* temp = (int*)line[pos];
-      r.name = getName(line,temp);
+      r.name = getName(line,temp);*/
     }else{
-      pos++;
-      r.name = getName(line,&pos);
+      cerr << "Reached4 (non-compressed)" << endl;
+      length = ntohs(line[pos++]);
+      cerr << "Length = " << length << endl;
+      while((length = ntohs(line[pos++])) != 0){
+        cerr << "Reached5 length=" << length << endl;
+        /*char buf[length];
+        memcpy(&buf,&line[*pos],length);*/
+        cerr << "Reached6" << endl;
+        for(uint8_t i = 1; i < length; i++){
+          cerr << "Reached6" << endl;
+          name += (char)ntohs(line[pos++]);
+          cerr << "Reached7" << endl;
+        }
+        //name += buf;
+        name += ".";
+      }
+      /*pos++;
+      r.name = getName(line,&pos);*/
     }
     cerr << r.name << endl;
     memcpy(&r,&line[pos],10);
