@@ -89,7 +89,7 @@ int main(int argc, char** argv){
   struct sockaddr_in serveraddr;
   serveraddr.sin_family=AF_INET;
   serveraddr.sin_port=htons(53);
-  serveraddr.sin_addr.s_addr=inet_addr("ipaddress");
+  serveraddr.sin_addr.s_addr=inet_addr("8.8.8.8");
 
   struct timeval to;
   to.tv_sec=5;
@@ -221,22 +221,21 @@ int main(int argc, char** argv){
     }else{
       cerr << "Reached4 (non-compressed)" << endl;
       memcpy(&length,&line[pos],1);
-      pos++;
+      pos = 13;
       //length = ntohs(line[pos++]);
+      cerr << "Length = " << length << endl;
       while(length != 0){
-        cerr << "Length = " << length << endl;
+        cerr << "Reached5 length=" << length << endl;
         /*char buf[length];
         memcpy(&buf,&line[*pos],length);*/
-        for(int i = 0; i < length; i++){
+        for(uint8_t i = 1; i < length; i++){
           //cerr << "Reached6 length = " << length << endl;
           name += (char)ntohs(line[pos++]);
+          cerr << name;
           //cerr << "Reached7" << endl;
         }
         //name += buf;
         name += ".";
-        cout << name << endl;
-        memcpy(&length,&line[pos],1);
-        pos++;
       }
       /*pos++;
       r.name = getName(line,&pos);*/
