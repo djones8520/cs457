@@ -17,6 +17,7 @@
 
 #define TYPE_A 1
 #define CLASS_IN 1
+#define COMPRESSION 192
 
 using namespace std;
 
@@ -178,12 +179,13 @@ int main(int argc, char** argv){
   dnsresponse answer[num_responses];
   pos = 12;
 
+  //gets info from QCOUNT
   for(int i = 0; i < ntohs(rh.qcount); i++){
     dnsresponse question;
     string name;
     short length;
     char tempchar;
-    if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if(line[pos] == COMPRESSION){ //if the length octet starts with 1 1, then the following value is an offset pointer
       pos++;
       int temp = ntohs(line[pos]);
       memcpy(&length,&line[temp],1);
@@ -215,7 +217,8 @@ int main(int argc, char** argv){
     question.name = name;
     answer[i] = question;
   }
-
+ 
+  //prints out question info
   for (int i = 0; i < ntohs(rh.qcount); i++){
     cout << "Question:" << endl;
     cout << "Name: "  << answer[i].name << endl;
@@ -230,10 +233,11 @@ int main(int argc, char** argv){
     string name;
     short length;
     char tempchar;
-    if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if(line[pos] == COMPRESSION){ //if the length octet starts with 1 1, then the following value is an offset pointer
       cout << "Reached compression" << endl;
       pos++;
       int temp = ntohs(line[pos]);
+      cout << "Position=" << temp << endl;
       memcpy(&length,&line[temp],1);
       temp++;
       while(length != 0){
@@ -246,11 +250,13 @@ int main(int argc, char** argv){
         temp++;
       }
     }else{
+      cout << "Reached non-compression" << endl;
       memcpy(&length,&line[pos],1);
       pos++;
       while(length != 0){
         for(int i = 0; i < length; i++){
           tempchar = (char)(line[pos++]);
+
           name += tempchar;
         }
         name += ".";
@@ -272,9 +278,9 @@ int main(int argc, char** argv){
 	answer[i] = r;
 	count++;
     }
-    
   }
-
+ 
+  //prints out answer info
   for (int i = 0; i < count; i++){
     cout << "Answer:" << endl;
     cout << "Name: "  << answer[i].name << endl;
