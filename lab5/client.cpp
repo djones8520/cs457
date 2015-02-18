@@ -86,7 +86,7 @@ int main(int argc, char** argv){
   struct sockaddr_in serveraddr;
   serveraddr.sin_family=AF_INET;
   serveraddr.sin_port=htons(53);
-  serveraddr.sin_addr.s_addr=inet_addr("8.8.8.8");
+  serveraddr.sin_addr.s_addr=inet_addr(&ipaddress[0]);
 
   struct timeval to;
   to.tv_sec=5;
