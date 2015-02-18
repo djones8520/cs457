@@ -219,21 +219,22 @@ int main(int argc, char** argv){
     }else{
       cerr << "Reached4 (non-compressed)" << endl;
       memcpy(&length,&line[pos],1);
-      pos = 13;
+      pos++;
       //length = ntohs(line[pos++]);
-      cerr << "Length = " << length << endl;
       while(length != 0){
-        cerr << "Reached5 length=" << length << endl;
+        cerr << "Length = " << length << endl;
         /*char buf[length];
         memcpy(&buf,&line[*pos],length);*/
-        for(uint8_t i = 1; i < length; i++){
+        for(int i = 0; i < length; i++){
           //cerr << "Reached6 length = " << length << endl;
           name += (char)ntohs(line[pos++]);
-          cerr << name;
           //cerr << "Reached7" << endl;
         }
         //name += buf;
         name += ".";
+        cout << name << endl;
+        memcpy(&length,&line[pos],1);
+        pos++;
       }
       /*pos++;
       r.name = getName(line,&pos);*/
