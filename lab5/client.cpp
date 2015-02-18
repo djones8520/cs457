@@ -158,13 +158,14 @@ int main(int argc, char** argv){
   //gets response header information
   //use memcpy to the buffer like in the request header
   dnsheader rh;
-  pos = 0;
+  memcpy(&rh,line,12);
+  /*pos = 0;
   rh.id = convertFrom8To16(line[pos++],line[pos++]);
-  rh.flags =convertFrom8To16(line[pos++],line[pos++]);
+  rh.flags = convertFrom8To16(line[pos++],line[pos++]);
   rh.qcount = convertFrom8To16(line[pos++],line[pos++]);
   rh.ancount = convertFrom8To16(line[pos++],line[pos++]);
   rh.nscount = convertFrom8To16(line[pos++],line[pos++]);
-  rh.arcount = convertFrom8To16(line[pos++],line[pos++]);
+  rh.arcount = convertFrom8To16(line[pos++],line[pos++]);*/
 
   cout << "Response Header" << endl;
   cout << "------------------------------------" << endl;
