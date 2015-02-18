@@ -12,8 +12,6 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fstream>
-#include <stdio.h>
-#include <string.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -32,18 +30,17 @@ struct dnsheader{
 };
 
 struct dnsresponse{
-  string name;
   uint16_t type;
   uint16_t dns_class;
   uint32_t ttl;
   uint16_t rdlength;
   uint8_t* rdata;
+  string name;
 };
 
 uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond);
 uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond);
 string getName(uint8_t line[512], int* pos);
-void CatchAlarm(int);
 
 /*
  * Still left to do
@@ -58,10 +55,8 @@ void CatchAlarm(int);
 int main(int argc, char** argv){
 	string ipaddress;
 
-	if(argc > 1){
+	if(argc > 1)
 		ipaddress = argv[1];
-    cout << "||||||" << ipaddress << "|||||||" << endl;
-  }
 	else{
 		bool check = true;
 
@@ -93,7 +88,7 @@ int main(int argc, char** argv){
   struct sockaddr_in serveraddr;
   serveraddr.sin_family=AF_INET;
   serveraddr.sin_port=htons(53);
-  serveraddr.sin_addr.s_addr=inet_addr(&ipaddress[0]);
+  serveraddr.sin_addr.s_addr=inet_addr("8.8.8.8");
 
   struct timeval to;
   to.tv_sec=5;
@@ -160,7 +155,6 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
-  signal(SIGALRM, CatchAlarm);
   alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
   alarm(0);
@@ -187,21 +181,8 @@ int main(int argc, char** argv){
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
     //cout << hex << line[pos++] << " ";
-    //printf("%02X ",ntohs(line[pos++]));
-    //printf("%02X ",line[pos++]);
     printf("%02X ",ntohs(line[i]));
   }
-  
-  cout << endl << endl;
-  
-  pos = 0;
-  for(int i = 0; i < sizeof(line); i++){
-    cout << hex << line[pos++] << " ";
-    //printf("%02X ",ntohs(line[pos++]));
-    //printf("%02X ",line[pos++]);
-  }
-  
-  
   cout << endl << endl;
   cerr << "Reached1" << endl;
   int num_responses = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
@@ -212,43 +193,10 @@ int main(int argc, char** argv){
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
-/*
-    cerr << "Reached3" << endl;
-    
-    int j;
-    int length = line[12];
-    int start = 13;
-    int stop = length + start;
-    
-    char temp;
-    string name;
-	for (j = start; j < stop; j++) {
-     	//cout << "LETTER: " << hex << line[j] << endl;
-     	temp = (char)line[j];
-     	name += temp;
-    }
-    
-    name += '.';
-    
-    int length2 = line[start + length];
-    int start2 = start + length + 1;
-    int stop2 = start2 + length2;
-    
-	for (j = start2; j < stop2; j++) {
-     	//cout << "LETTER: " << hex << line[j] << endl;
-     	temp = (char)line[j];
-     	name += temp;
-    }
-    
-    name += '.';
-    
-    r.name = name;
-    
-    pos = stop2;
-*/
     cerr << "Reached3 length = " << ntohs(line[pos]) << endl;
     string name;
     short length;
+    char tempchar;
     if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       cerr << "Reached4" << endl;
       pos++;
@@ -272,28 +220,26 @@ int main(int argc, char** argv){
     }else{
       cerr << "Reached4 (non-compressed)" << endl;
       memcpy(&length,&line[pos],1);
-      pos = 13;
+      pos++;
       //length = ntohs(line[pos++]);
-      cerr << "Length = " << length << endl;
       while(length != 0){
-        cerr << "Reached5 length=" << length << endl;
+        cerr << "Length = " << length << endl;
         /*char buf[length];
         memcpy(&buf,&line[*pos],length);*/
-        for(uint8_t i = 1; i < length; i++){
+        for(int i = 0; i < length; i++){
           //cerr << "Reached6 length = " << length << endl;
-          name += (char)ntohs(line[pos++]);
-          cerr << name;
+          tempchar = (char)(line[pos++]);
+          name += tempchar;
           //cerr << "Reached7" << endl;
         }
         //name += buf;
         name += ".";
+        cout << name << endl;
+        memcpy(&length,&line[pos],1);
+        pos++;
       }
-      /*pos++;
-      r.name = getName(line,&pos);*/
     }
-        
-    cerr << r.name << endl;
-    
+    cerr << "Reached end of name loop" << endl;
     memcpy(&r,&line[pos],10);
     /*r.type = convertFrom8To16(line[pos++],line[pos++]);
     r.dns_class = convertFrom8To16(line[pos++],line[pos++]);
@@ -306,9 +252,14 @@ int main(int argc, char** argv){
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
     }
+    cerr << "Reached end of data loop" << endl;
     r.rdata = data;
     answer[i] = r;
+    r.name = name;
+    cerr << "Reached end of answer loop" << endl;
   }
+
+
 
   return 0;
 }
@@ -353,6 +304,6 @@ uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond) {
 
 void CatchAlarm(int ignored)     /* Handler for SIGALRM */
 {
-    cout << "Server took too long to respond\nQuitting... \n";
+    cout << "Server took too long to respond";
     exit(1);
 }
