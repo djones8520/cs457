@@ -184,17 +184,18 @@ int main(int argc, char** argv){
     short length;
     char tempchar;
     if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
-      pos = ntohs(line[pos]);
-      memcpy(&length,&line[pos],1);
       pos++;
+      int temp = ntohs(line[pos]);
+      memcpy(&length,&line[temp],1);
+      temp++;
       while(length != 0){
         for(int i = 0; i < length; i++){
-          tempchar = (char)(ntohs(line[pos++]));
+          tempchar = (char)(ntohs(line[temp++]));
           name += tempchar;
         }
         name += ".";
-        memcpy(&length,&line[pos],1);
-        pos++;
+        memcpy(&length,&line[temp],1);
+        temp++;
       }
     }else{
       memcpy(&length,&line[pos],1);
@@ -228,17 +229,18 @@ int main(int argc, char** argv){
     short length;
     char tempchar;
     if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
-      pos = ntohs(line[pos]);
-      memcpy(&length,&line[pos],1);
       pos++;
+      int temp = ntohs(line[pos]);
+      memcpy(&length,&line[temp],1);
+      temp++;
       while(length != 0){
         for(int i = 0; i < length; i++){
-          tempchar = (char)(ntohs(line[pos++]));
+          tempchar = (char)(ntohs(line[temp++]));
           name += tempchar;
         }
         name += ".";
-        memcpy(&length,&line[pos],1);
-        pos++;
+        memcpy(&length,&line[temp],1);
+        temp++;
       }
     }else{
       memcpy(&length,&line[pos],1);
