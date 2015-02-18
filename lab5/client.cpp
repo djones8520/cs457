@@ -272,7 +272,7 @@ int main(int argc, char** argv){
     
   }
 
-  for (int i = ntohs(rh.qcount); i <= num_responses; i++){
+  for (int i = 0; i < count; i++){
     cout << "Answer:" << endl;
     cout << "Name: "  << answer[i].name << endl;
     cout << "Type: "  << ntohs(answer[i].type) << endl;
