@@ -39,6 +39,7 @@ struct dnsresponse{
 };
 
 //string getName(uint8_t line[512], int* pos);
+void CatchAlarm(int);
 
 /*
  * Still left to do
@@ -56,8 +57,6 @@ int main(int argc, char** argv){
 	if(argc > 1)
 		ipaddress = argv[1];
 	else{
-		bool check = true;
-
 		ifstream resolv ("/etc/resolv.conf");
 
 		if(resolv.is_open()){
@@ -152,6 +151,7 @@ int main(int argc, char** argv){
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
+  signal(SIGALRM, CatchAlarm);
   alarm(2);
   recvfrom(sockfd,line,512,0,(struct sockaddr*)&serveraddr,(unsigned int*)sizeof(serveraddr));
   alarm(0);
@@ -167,7 +167,7 @@ int main(int argc, char** argv){
   cout << "NSCOUNT: " << ntohs(rh.nscount) << endl;
   cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
   pos = 0;
-  for(int i = 0; i < sizeof(line); i++){
+  for(unsigned int i = 0; i < sizeof(line); i++){
     printf("%02X ",line[i]);
   }
   cout << endl << endl;
@@ -181,7 +181,7 @@ int main(int argc, char** argv){
     string name;
     short length;
     char tempchar;
-    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+    if((ntohs(line[pos]) & 11000000) == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       pos = ntohs(line[pos]);
       memcpy(&length,&line[pos],1);
       pos++;
@@ -234,21 +234,9 @@ int main(int argc, char** argv){
   return 0;
 }
 
-/*string getName(uint8_t line[512], int* pos){
-  cerr << "Reached4" << endl;
-  string name;
-  uint8_t length;
-  while((length = ntohs(line[*pos++])) != 0){
-    for(uint8_t i = 1; i < length; i++){
-      name += (char)ntohs(line[*pos++]);
-    }
-    name += ".";
-  }
-  return name;
-}*/
 
 void CatchAlarm(int ignored)     /* Handler for SIGALRM */
 {
-    cout << "Server took too long to respond";
+    cout << "Server took too long to respond\nQuitting...\n";
     exit(1);
 }
