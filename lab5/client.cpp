@@ -139,16 +139,17 @@ int main(int argc, char** argv){
   buf[pos++]=TYPE_A;
   buf[pos++]=0;
   buf[pos++]=CLASS_IN;
-  int temp = pos;
+  int tmp = pos;
   pos = 0;
-  for(int i = 0; i < sizeof(buf); i++){
+  for(int i = 0; i < tmp; i++){
     //cout << hex << ntohs(buf[pos++]) << " ";
-    printf("%02X ",ntohs(buf[pos++]));
+    printf("%02X ",ntohs(buf[i]));
   }
+  
   cout << endl << endl;
   cout << "Sent our query" << endl << endl;
 
-  sendto(sockfd,buf,temp,0,
+  sendto(sockfd,buf,tmp,0,
 	 (struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
   uint8_t line[512];
@@ -174,11 +175,10 @@ int main(int argc, char** argv){
   cout << "ANCOUNT: " << ntohs(rh.ancount) << endl;
   cout << "NSCOUNT: " << ntohs(rh.nscount) << endl;
   cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
-
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
     //cout << hex << line[pos++] << " ";
-    printf("%02X ",ntohs(line[pos++]));
+    printf("%02X ",ntohs(line[i]));
   }
   cout << endl << endl;
   cerr << "Reached1" << endl;
@@ -223,16 +223,17 @@ string getName(uint8_t line[512], int* pos){
   cerr << "Reached4" << endl;
   string name;
   uint8_t length;
-  while((length = line[*pos++]) != 0){
-    cerr << "Reached5" << endl;
-    char buf[length];
-    memcpy(&buf,&line[*pos],length);
+  while((length = ntohs(line[*pos++])) != 0){
+    cerr << "Reached5 length=" << length << endl;
+    /*char buf[length];
+    memcpy(&buf,&line[*pos],length);*/
     cerr << "Reached6" << endl;
-    /*for(uint8_t i = 0; i < length; i++){
+    for(uint8_t i = 1; i < length; i++){
       cerr << "Reached6" << endl;
-      name += (char)line[*pos++];
-    }*/
-    name += buf;
+      name += (char)ntohs(line[*pos++]);
+      cerr << "Reached7" << endl;
+    }
+    //name += buf;
     name += ".";
   }
   return name;
