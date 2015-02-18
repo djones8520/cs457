@@ -118,12 +118,12 @@ int main(int argc, char** argv){
 
   cout << "Request Header" << endl;
   cout << "------------------------------------" << endl;
-  cout << "ID: 0x" << hex << qh.id << endl;
-  cout << "Flags: 0x" << hex << qh.flags << endl;
-  cout << "QCOUNT: " << qh.qcount << endl;
-  cout << "ANCOUNT: " << qh.ancount << endl;
-  cout << "NSCOUNT: " << qh.nscount << endl;
-  cout << "ARCOUNT: " << qh.arcount << endl << endl;
+  cout << "ID: 0x" << hex << ntohs(qh.id) << endl;
+  cout << "Flags: 0x" << hex << ntohs(qh.flags) << endl;
+  cout << "QCOUNT: " << ntohs(qh.qcount) << endl;
+  cout << "ANCOUNT: " << ntohs(qh.ancount) << endl;
+  cout << "NSCOUNT: " << ntohs(qh.nscount) << endl;
+  cout << "ARCOUNT: " << ntohs(qh.arcount) << endl << endl;
 
   memcpy(buf,&qh,12);
   int pos=12;
@@ -143,9 +143,8 @@ int main(int argc, char** argv){
   pos = 0;
   for(int i = 0; i < sizeof(buf); i++){
     //cout << hex << ntohs(buf[pos++]) << " ";
-  
-   printf("%02X ",buf[pos++]);
-}
+    printf("%02X ",ntohs(buf[pos++]));
+  }
   cout << endl << endl;
   cout << "Sent our query" << endl << endl;
 
@@ -169,16 +168,17 @@ int main(int argc, char** argv){
 
   cout << "Response Header" << endl;
   cout << "------------------------------------" << endl;
-  cout << "ID: 0x" << hex << rh.id << endl;
-  cout << "Flags: 0x" << hex << rh.flags << endl;
-  cout << "QCOUNT: " << rh.qcount << endl;
-  cout << "ANCOUNT: " << rh.ancount << endl;
-  cout << "NSCOUNT: " << rh.nscount << endl;
-  cout << "ARCOUNT: " << rh.arcount << endl << endl;
+  cout << "ID: 0x" << hex << ntohs(rh.id) << endl;
+  cout << "Flags: 0x" << hex << ntohs(rh.flags) << endl;
+  cout << "QCOUNT: " << ntohs(rh.qcount) << endl;
+  cout << "ANCOUNT: " << ntohs(rh.ancount) << endl;
+  cout << "NSCOUNT: " << ntohs(rh.nscount) << endl;
+  cout << "ARCOUNT: " << ntohs(rh.arcount) << endl << endl;
 
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
-    cout << hex << line[pos++] << " ";
+    //cout << hex << line[pos++] << " ";
+    printf("%02X ",ntohs(line[pos++]));
   }
   cout << endl << endl;
 
