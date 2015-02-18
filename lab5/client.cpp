@@ -12,6 +12,8 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <fstream>
+#include <stdio.h>
+#include <string.h>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -178,8 +180,20 @@ int main(int argc, char** argv){
   pos = 0;
   for(int i = 0; i < sizeof(line); i++){
     //cout << hex << line[pos++] << " ";
-    printf("%02X ",ntohs(line[pos++]));
+    //printf("%02X ",ntohs(line[pos++]));
+    printf("%02X ",line[pos++]);
   }
+  
+  cout << endl << endl;
+  
+  pos = 0;
+  for(int i = 0; i < sizeof(line); i++){
+    cout << hex << line[pos++] << " ";
+    //printf("%02X ",ntohs(line[pos++]));
+    //printf("%02X ",line[pos++]);
+  }
+  
+  
   cout << endl << endl;
   cerr << "Reached1" << endl;
   int num_responses = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
@@ -191,15 +205,40 @@ int main(int argc, char** argv){
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
     cerr << "Reached3" << endl;
-    if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
-      pos++;
-      int* temp = (int*)line[pos];
-      r.name = getName(line,temp);
-    }else{
-      pos++;
-      r.name = getName(line,&pos);
+    
+    int j;
+    int length = line[12];
+    int start = 13;
+    int stop = length + start;
+    
+    char temp;
+    string name;
+	for (j = start; j < stop; j++) {
+     	//cout << "LETTER: " << hex << line[j] << endl;
+     	temp = (char)line[j];
+     	name += temp;
     }
+    
+    name += '.';
+    
+    int length2 = line[start + length];
+    int start2 = start + length + 1;
+    int stop2 = start2 + length2;
+    
+	for (j = start2; j < stop2; j++) {
+     	//cout << "LETTER: " << hex << line[j] << endl;
+     	temp = (char)line[j];
+     	name += temp;
+    }
+    
+    //name += '.';
+    
+    r.name = name;
+        
     cerr << r.name << endl;
+    
+    pos = stop2;
+    
     memcpy(&r,&line[pos],10);
     /*r.type = convertFrom8To16(line[pos++],line[pos++]);
     r.dns_class = convertFrom8To16(line[pos++],line[pos++]);
