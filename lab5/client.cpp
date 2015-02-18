@@ -38,7 +38,7 @@ struct dnsresponse{
 
 uint16_t convertFrom8To16(uint8_t dataFirst, uint8_t dataSecond);
 uint32_t convertFrom16To32(uint16_t dataFirst, uint16_t dataSecond);
-string getName(uint8_t line[512], int pos);
+string getName(uint8_t line[512], int* pos);
 
 /*
  * Still left to do
@@ -181,24 +181,32 @@ int main(int argc, char** argv){
     printf("%02X ",ntohs(line[pos++]));
   }
   cout << endl << endl;
-
-  int num_responses = rh.ancount + rh.nscount + rh.arcount;
+  cerr << "Reached1" << endl;
+  int num_responses = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
   dnsresponse answer[num_responses];
+  pos = 12;
+  cerr << "Reached2" << endl;
 
   //loops through the responses creating a dnsresponse struct for each and puts them all into an array
   for(int i = 0; i < num_responses; i++){
     dnsresponse r;
-    if(line[pos+1] & 11000000 == 1100000){ //if the length octet starts with 1 1, then the following value is an offset pointer
-      r.name = getName(line,line[pos+=2]);
+    cerr << "Reached3" << endl;
+    if(line[pos] & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
+      pos++;
+      int* temp = (int*)line[pos];
+      r.name = getName(line,temp);
     }else{
-      r.name = getName(line,pos++);
+      pos++;
+      r.name = getName(line,&pos);
     }
-
-    r.type = convertFrom8To16(line[pos++],line[pos++]);
+    cerr << r.name << endl;
+    memcpy(&r,&line[pos],10);
+    /*r.type = convertFrom8To16(line[pos++],line[pos++]);
     r.dns_class = convertFrom8To16(line[pos++],line[pos++]);
     r.ttl = convertFrom16To32(convertFrom8To16(line[pos++],line[pos++]),
                               convertFrom8To16(line[pos++],line[pos++]));
-    r.rdlength = convertFrom8To16(line[pos++],line[pos++]);
+    r.rdlength = convertFrom8To16(line[pos++],line[pos++]);*/
+    pos += 10;
     uint8_t data[r.rdlength];
     for(int j = 0; j < r.rdlength; j++){
       data[j] = line[pos++];
@@ -210,12 +218,12 @@ int main(int argc, char** argv){
   return 0;
 }
 
-string getName(uint8_t line[512], int pos){
+string getName(uint8_t line[512], int* pos){
   string name;
   uint8_t length;
-  while((length = line[pos++]) != 0){
+  while((length = line[*pos++]) != 0){
     for(uint8_t i = 0; i < length; i++){
-      name += (char)line[pos++];
+      name += (char)line[*pos++];
     }
     name += ".";
   }
