@@ -254,12 +254,19 @@ int main(int argc, char** argv){
     }
     cerr << "Reached end of data loop" << endl;
     r.rdata = data;
-    answer[i] = r;
     r.name = name;
+    answer[i] = r;
     cerr << "Reached end of answer loop" << endl;
   }
 
-
+  for (int i = 0; i < num_responses; i++){
+    cout << "Name: "  << answer[i].name << endl;
+    cout << "Type: "  << answer[i].type << endl;
+    cout << "Class: "  << answer[i].dns_class << endl;
+    //cout << "TTL:"  << r.ttl << endl;
+    cout << "Data Length: "  << answer[i].rdlength << endl;
+    //cout << "Data:"  << r.name << endl;
+  }
 
   return 0;
 }
