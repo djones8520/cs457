@@ -192,7 +192,7 @@ int main(int argc, char** argv){
     dnsresponse r;
     cerr << "Reached3" << endl;
     string name;
-    int length;
+    short length;
     if(ntohs(line[pos]) & 11000000 == 11000000){ //if the length octet starts with 1 1, then the following value is an offset pointer
       cerr << "Reached4" << endl;
       pos++;
@@ -221,9 +221,8 @@ int main(int argc, char** argv){
         cerr << "Reached5 length=" << length << endl;
         /*char buf[length];
         memcpy(&buf,&line[*pos],length);*/
-        cerr << "Reached6" << endl;
         for(uint8_t i = 1; i < length; i++){
-          cerr << "Reached6" << endl;
+          cerr << "Reached6 length = " << length << endl;
           name += (char)ntohs(line[pos++]);
           cerr << "Reached7" << endl;
         }
