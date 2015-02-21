@@ -171,21 +171,21 @@ int get_query(void* q, char * buf){
     memcpy(&length,&buffer[pos],1);
     pos++;
   }
-  q->qname = name;
-  memcpy(query->qtype,buffer,2);
-  memcpy(query->qclass,buffer,2);
+  query->qname = name;
+  memcpy((void*)query->qtype,buffer,2);
+  memcpy((void*)query->qclass,buffer,2);
 
   cout << "Request Header" << endl;
   cout << "------------------------------------" << endl;
-  cout << "ID: 0x" << hex << ntohs(query.id) << endl;
-  cout << "Flags: 0x" << hex << ntohs(query.flags) << endl;
-  cout << "QCOUNT: " << ntohs(query.qcount) << endl;
-  cout << "ANCOUNT: " << ntohs(query.ancount) << endl;
-  cout << "NSCOUNT: " << ntohs(query.nscount) << endl;
-  cout << "ARCOUNT: " << ntohs(query.arcount) << endl;
-  cout << "QNAME: " << ntohs(query.qname) << endl;
-  cout << "QTYPE: " << ntohs(query.qtype) << endl;
-  cout << "QCLASS: " << ntohs(query.qclass) << endl << endl;
+  cout << "ID: 0x" << hex << ntohs(query->id) << endl;
+  cout << "Flags: 0x" << hex << ntohs(query->flags) << endl;
+  cout << "QCOUNT: " << ntohs(query->qcount) << endl;
+  cout << "ANCOUNT: " << ntohs(query->ancount) << endl;
+  cout << "NSCOUNT: " << ntohs(query->nscount) << endl;
+  cout << "ARCOUNT: " << ntohs(query->arcount) << endl;
+  cout << "QNAME: " << ntohs(query->qname) << endl;
+  cout << "QTYPE: " << ntohs(query->qtype) << endl;
+  cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
 
   /*int tmp = pos + 4;
   pos = 0;
@@ -200,5 +200,7 @@ int check_cache(void* q){
 
 void unset_recursion_bit(void* q){
   uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
-  q->flags &= temp;
+  dnsquery* query = (dnsquery*) q;
+
+  query->flags &= temp;
 }
