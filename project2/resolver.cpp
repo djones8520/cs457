@@ -31,7 +31,7 @@
 
 #define TYPE_A 1
 #define CLASS_IN 1
-#define BUFLEN = 512;
+#define BUFLEN 512
 
 using namespace std;
 
@@ -115,18 +115,19 @@ int main(int argc, char** argv){
   //there probably is a better way to do this
   rootaddr[0].sin_family = AF_INET;
   rootaddr[0].sin_port=htons(53); //apparently this is the port DNS servers use?
-  rootaddr[0].sin_addr.s_addr = "192.203.230.10"; //E.ROOT-SERVERS.NET. one of the two that uses IPv4 still
+  rootaddr[0].sin_addr.s_addr = inet_addr("192.203.230.10"); //E.ROOT-SERVERS.NET. one of the two that uses IPv4 still
 
   rootaddr[1].sin_family = AF_INET;
   rootaddr[1].sin_port=htons(53);
-  rootaddr[1].sin_addr.s_addr = "192.112.36.4"; //G.ROOT-SERVERS.NET.
+  rootaddr[1].sin_addr.s_addr = inet_addr("192.112.36.4"); //G.ROOT-SERVERS.NET.
   
   bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
   char buf[BUFLEN];
+  socklen_t socketLength = sizeof(clientaddr);;
 
   while(1){
-    if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, sizeof(clientaddr)) < 0){  
+    if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){  
       cerr << "Receive error" << endl;
     }
 
@@ -150,38 +151,41 @@ int main(int argc, char** argv){
 }
 
 int get_query(void* q, void* buf){
-  memcpy(q,buf,12);
+	dnsquery* query = (dnsquery*) q;
+	char* buffer[BUFLEN] = buf;
+	
+  memcpy(query,buffer,12);
   int pos = 12;
   string name;
   short length;
   char tempchar;
 
-  memcpy(&length,buf[pos],1);
+  memcpy(&length,buffer[pos],1);
   pos++;
   while(length != 0){
     for(int i = 0; i < length; i++){
-      tempchar = (char)(*buf[pos++]);
+      tempchar = (char)(*buffer[pos++]);
       name += tempchar;
     }
     name += ".";
-    memcpy(&length,buf[pos],1);
+    memcpy(&length,buffer[pos],1);
     pos++;
   }
   q->qname = name;
-  memcpy(q->qtype,buf,2);
-  memcpy(q->qclass,buf,2);
+  memcpy(query->qtype,buffer,2);
+  memcpy(query->qclass,buffer,2);
 
   cout << "Request Header" << endl;
   cout << "------------------------------------" << endl;
-  cout << "ID: 0x" << hex << ntohs(q.id) << endl;
-  cout << "Flags: 0x" << hex << ntohs(q.flags) << endl;
-  cout << "QCOUNT: " << ntohs(q.qcount) << endl;
-  cout << "ANCOUNT: " << ntohs(q.ancount) << endl;
-  cout << "NSCOUNT: " << ntohs(q.nscount) << endl;
-  cout << "ARCOUNT: " << ntohs(q.arcount) << endl;
-  cout << "QNAME: " << ntohs(q.qname) << endl;
-  cout << "QTYPE: " << ntohs(q.qtype) << endl;
-  cout << "QCLASS: " << ntohs(q.qclass) << endl << endl;
+  cout << "ID: 0x" << hex << ntohs(query.id) << endl;
+  cout << "Flags: 0x" << hex << ntohs(query.flags) << endl;
+  cout << "QCOUNT: " << ntohs(query.qcount) << endl;
+  cout << "ANCOUNT: " << ntohs(query.ancount) << endl;
+  cout << "NSCOUNT: " << ntohs(query.nscount) << endl;
+  cout << "ARCOUNT: " << ntohs(query.arcount) << endl;
+  cout << "QNAME: " << ntohs(query.qname) << endl;
+  cout << "QTYPE: " << ntohs(query.qtype) << endl;
+  cout << "QCLASS: " << ntohs(query.qclass) << endl << endl;
 
   /*int tmp = pos + 4;
   pos = 0;
