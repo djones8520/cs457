@@ -56,7 +56,7 @@ struct dnsresponse{
   string name;
 };
 
-int get_query(void* q, void* buf);
+int get_query(void* q, char* buf);
 int check_cache(void* q);
 void unset_recursion_bit(void* q);
 
@@ -133,7 +133,7 @@ int main(int argc, char** argv){
 
     dnsquery q;
 
-    if(get_query(&q,&buf) < 0){
+    if(get_query(&q,(char*)&buf) < 0){
       cerr << "Unable to get query info" << endl;
     }
 
@@ -150,9 +150,9 @@ int main(int argc, char** argv){
   return 0;
 }
 
-int get_query(void* q, char * buf){
+int get_query(void* q, char* buf){
 	dnsquery* query = (dnsquery*) q;
-	char* buffer = buf;
+	char * buffer = (char*) buf;
 
   memcpy(query,buffer,12);
   int pos = 12;
@@ -172,8 +172,8 @@ int get_query(void* q, char * buf){
     pos++;
   }
   query->qname = name;
-  memcpy((void*)query->qtype,buffer,2);
-  memcpy((void*)query->qclass,buffer,2);
+  memcpy((void*)(intptr_t)query->qtype,buffer,2);
+  memcpy((void*)(intptr_t)query->qclass,buffer,2);
 
   cout << "Request Header" << endl;
   cout << "------------------------------------" << endl;
@@ -183,7 +183,7 @@ int get_query(void* q, char * buf){
   cout << "ANCOUNT: " << ntohs(query->ancount) << endl;
   cout << "NSCOUNT: " << ntohs(query->nscount) << endl;
   cout << "ARCOUNT: " << ntohs(query->arcount) << endl;
-  cout << "QNAME: " << ntohs(query->qname) << endl;
+  cout << "QNAME: " << query->qname << endl;
   cout << "QTYPE: " << ntohs(query->qtype) << endl;
   cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
 
