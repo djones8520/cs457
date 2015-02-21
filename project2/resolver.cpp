@@ -60,7 +60,7 @@ int get_query(void* q, void* buf);
 int check_cache(void* q);
 void unset_recursion_bit(void* q);
 
-/* 
+/*
  * Link to RFC 1034: https://www.ietf.org/rfc/rfc1034.txt
  * Link to RFC 1035: https://www.ietf.org/rfc/rfc1035.txt section 7 is extremely relevant
  *
@@ -83,7 +83,7 @@ int main(int argc, char** argv){
 
   int port = 9010;
   string logfile;
-  
+
   //only need -p, but maybe we could use the others?
   if (argc > 1){
       for (int i = 1; i < argc; i++){
@@ -101,7 +101,7 @@ int main(int argc, char** argv){
       }
   }
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  
+
   if(sockfd<0){
     printf("Problem creating socket\n");
     return 1;
@@ -120,14 +120,14 @@ int main(int argc, char** argv){
   rootaddr[1].sin_family = AF_INET;
   rootaddr[1].sin_port=htons(53);
   rootaddr[1].sin_addr.s_addr = inet_addr("192.112.36.4"); //G.ROOT-SERVERS.NET.
-  
+
   bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
   char buf[BUFLEN];
   socklen_t socketLength = sizeof(clientaddr);;
 
   while(1){
-    if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){  
+    if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
       cerr << "Receive error" << endl;
     }
 
@@ -150,25 +150,25 @@ int main(int argc, char** argv){
   return 0;
 }
 
-int get_query(void* q, void* buf){
+int get_query(void* q, char * buf){
 	dnsquery* query = (dnsquery*) q;
-	char* buffer[BUFLEN] = buf;
-	
+	char* buffer = buf;
+
   memcpy(query,buffer,12);
   int pos = 12;
   string name;
   short length;
   char tempchar;
 
-  memcpy(&length,buffer[pos],1);
+  memcpy(&length,&buffer[pos],1);
   pos++;
   while(length != 0){
     for(int i = 0; i < length; i++){
-      tempchar = (char)(*buffer[pos++]);
+      tempchar = (char)(buffer[pos++]);
       name += tempchar;
     }
     name += ".";
-    memcpy(&length,buffer[pos],1);
+    memcpy(&length,&buffer[pos],1);
     pos++;
   }
   q->qname = name;
