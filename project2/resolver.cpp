@@ -36,24 +36,24 @@
 using namespace std;
 
 struct dnsquery{
-  uint16_t id;
-  uint16_t flags;
-  uint16_t qcount;
-  uint16_t ancount;
-  uint16_t nscount;
-  uint16_t arcount;
-  string qname;
-  uint16_t qtype;
-  uint16_t qclass;
+	uint16_t id;
+	uint16_t flags;
+	uint16_t qcount;
+	uint16_t ancount;
+	uint16_t nscount;
+	uint16_t arcount;
+	string qname;
+	uint16_t qtype;
+	uint16_t qclass;
 };
 
 struct dnsresponse{
-  uint16_t type;
-  uint16_t dns_class;
-  uint32_t ttl;
-  uint16_t rdlength;
-  uint8_t* rdata;
-  string name;
+	uint16_t type;
+	uint16_t dns_class;
+	uint32_t ttl;
+	uint16_t rdlength;
+	uint8_t* rdata;
+	string name;
 };
 
 int get_query(void* q, char* buf);
@@ -81,117 +81,120 @@ void unset_recursion_bit(void* q);
 
 int main(int argc, char** argv){
 
-  int port = 9010;
-  string logfile;
+	int port = 9010;
+	string logfile;
 
-  //only need -p, but maybe we could use the others?
-  if (argc > 1){
-      for (int i = 1; i < argc; i++){
-          if (strcmp(argv[i], "-p") == 0){
-              i++;
-              port = atoi(argv[i]);
-              if(port < 0 || port > 61000){
-                cerr << "Invalid port\n"; //I'm pretty sure there is more to validating a port number?
-                return 1;
-              }
-          }else{
-              cerr << "Invalid option. Only valid option is -p\n";
-              return 1;
-          }
-      }
-  }
-  int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	//only need -p, but maybe we could use the others?
+	if (argc > 1){
+		for (int i = 1; i < argc; i++){
+			if (strcmp(argv[i], "-p") == 0){
+				i++;
+				port = atoi(argv[i]);
+				if (port < 0 || port > 61000){
+					cerr << "Invalid port\n"; //I'm pretty sure there is more to validating a port number?
+					return 1;
+				}
+			}
+			else{
+				cerr << "Invalid option. Only valid option is -p\n";
+				return 1;
+			}
+		}
+	}
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-  if(sockfd<0){
-    printf("Problem creating socket\n");
-    return 1;
-  }
+	if (sockfd < 0){
+		printf("Problem creating socket\n");
+		return 1;
+	}
 
-  struct sockaddr_in serveraddr, clientaddr, rootaddr[2];
-  serveraddr.sin_family = AF_INET;
-  serveraddr.sin_port=htons(port);
-  serveraddr.sin_addr.s_addr = INADDR_ANY;
+	struct sockaddr_in serveraddr, clientaddr, rootaddr[2];
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(port);
+	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
-  //there probably is a better way to do this
-  rootaddr[0].sin_family = AF_INET;
-  rootaddr[0].sin_port=htons(53); //apparently this is the port DNS servers use?
-  rootaddr[0].sin_addr.s_addr = inet_addr("192.203.230.10"); //E.ROOT-SERVERS.NET. one of the two that uses IPv4 still
+	//there probably is a better way to do this
+	rootaddr[0].sin_family = AF_INET;
+	rootaddr[0].sin_port = htons(53); //apparently this is the port DNS servers use?
+	rootaddr[0].sin_addr.s_addr = inet_addr("192.203.230.10"); //E.ROOT-SERVERS.NET. one of the two that uses IPv4 still
 
-  rootaddr[1].sin_family = AF_INET;
-  rootaddr[1].sin_port=htons(53);
-  rootaddr[1].sin_addr.s_addr = inet_addr("192.112.36.4"); //G.ROOT-SERVERS.NET.
+	rootaddr[1].sin_family = AF_INET;
+	rootaddr[1].sin_port = htons(53);
+	rootaddr[1].sin_addr.s_addr = inet_addr("192.112.36.4"); //G.ROOT-SERVERS.NET.
 
-  bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
+	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
-  char buf[BUFLEN];
-  socklen_t socketLength = sizeof(clientaddr);;
+	char buf[BUFLEN];
+	socklen_t socketLength = sizeof(clientaddr);;
 
-  while(1){
-    if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
-      cerr << "Receive error" << endl;
-    }
+	while (1){
+		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
+			cerr << "Receive error" << endl;
+		}
 
-    dnsquery q;
+		dnsquery q;
 
-    if(get_query(&q,(char*)&buf) < 0){
-      cerr << "Unable to get query info" << endl;
-    }
+		if (get_query(&q, (char*)&buf) < 0){
+			cerr << "Unable to get query info" << endl;
+		}
 
-    if(check_cache(&q) != 0){
-      //return IP
-    }else{
-      unset_recursion_bit(&q);
-    }
+		if (check_cache(&q) != 0){
+			//return IP
+		}
+		else{
+			unset_recursion_bit(&q);
+		}
 
-    //insert code to receive name root response and parse it here
+		//insert code to receive name root response and parse it here
 
-    memset(buf,0,sizeof(buf));
-  }
-  return 0;
+		memset(buf, 0, sizeof(buf));
+	}
+	return 0;
 }
 
 int get_query(void* q, char* buf){
-	dnsquery* query = (dnsquery*) q;
-	char * buffer = (char*) buf;
+	dnsquery* query = (dnsquery*)q;
+	char * buffer = (char*)buf;
 
-  memcpy(query,buffer,12);
-  int pos = 12;
-  string name;
-  short length;
-  char tempchar;
+	memcpy(query, buffer, 12);
+	int pos = 12;
+	string name;
+	short length;
+	char tempchar;
 
-  memcpy(&length,&buffer[pos],1);
-  pos++;
-  while(length != 0){
-    for(int i = 0; i < length; i++){
-      tempchar = (char)(buffer[pos++]);
-      name += tempchar;
-    }
-    name += ".";
-    memcpy(&length,&buffer[pos],1);
-    pos++;
-  }
-  query->qname = name;
-  memcpy((void*)(intptr_t)query->qtype,buffer,2);
-  memcpy((void*)(intptr_t)query->qclass,buffer,2);
+	memcpy(&length, &buffer[pos], 1);
+	pos++;
+	while (length != 0){
+		for (int i = 0; i < length; i++){
+			tempchar = (char)(buffer[pos++]);
+			name += tempchar;
+		}
 
-  cout << "Request Header" << endl;
-  cout << "------------------------------------" << endl;
-  cout << "ID: 0x" << hex << ntohs(query->id) << endl;
-  cout << "Flags: 0x" << hex << ntohs(query->flags) << endl;
-  cout << "QCOUNT: " << ntohs(query->qcount) << endl;
-  cout << "ANCOUNT: " << ntohs(query->ancount) << endl;
-  cout << "NSCOUNT: " << ntohs(query->nscount) << endl;
-  cout << "ARCOUNT: " << ntohs(query->arcount) << endl;
-  cout << "QNAME: " << query->qname << endl;
-  cout << "QTYPE: " << ntohs(query->qtype) << endl;
-  cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
+		name += ".";
+		memcpy(&length, &buffer[pos], 1);
+		pos++;
+	}
+	query->qname = name;
+	memcpy((void*)(intptr_t)query->qtype, buffer, 2);
+	memcpy((void*)(intptr_t)query->qclass, buffer, 2);
 
-  /*int tmp = pos + 4;
-  pos = 0;
-  for(int i = 0; i < tmp; i++){
-    printf("%02X ",ntohs(buf[i]));
-  }*/
+	cout << "Request Header" << endl;
+	cout << "------------------------------------" << endl;
+	cout << "ID: 0x" << hex << ntohs(query->id) << endl;
+	cout << "Flags: 0x" << hex << ntohs(query->flags) << endl;
+	cout << "QCOUNT: " << ntohs(query->qcount) << endl;
+	cout << "ANCOUNT: " << ntohs(query->ancount) << endl;
+	cout << "NSCOUNT: " << ntohs(query->nscount) << endl;
+	cout << "ARCOUNT: " << ntohs(query->arcount) << endl;
+	cout << "QNAME: " << query->qname << endl;
+	cout << "QTYPE: " << ntohs(query->qtype) << endl;
+	cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
+
+	/*int tmp = pos + 4;
+	pos = 0;
+	for(int i = 0; i < tmp; i++){
+	printf("%02X ",ntohs(buf[i]));
+	}*/
 }
 
 int check_cache(void* q){
@@ -199,8 +202,8 @@ int check_cache(void* q){
 }
 
 void unset_recursion_bit(void* q){
-  uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
-  dnsquery* query = (dnsquery*) q;
+	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
+	dnsquery* query = (dnsquery*)q;
 
-  query->flags &= temp;
+	query->flags &= temp;
 }
