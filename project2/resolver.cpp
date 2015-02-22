@@ -77,6 +77,8 @@ void unset_recursion_bit(void* q);
  * 6. Send query to name server
  * 7. When we receive a successful response back, cache the response and forward response packet to client
  * 8. Keep track of TTL in cache
+ * 
+ * dig @127.0.0.1 -p 9010 gvsu.edu
  */
 
 int main(int argc, char** argv){
