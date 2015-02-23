@@ -48,6 +48,12 @@ struct dnsquery{
 };
 
 struct dnsresponse{
+	uint16_t id;
+	uint16_t flags;
+	uint16_t qcount;
+	uint16_t ancount;
+	uint16_t nscount;
+	uint16_t arcount;
 	uint16_t type;
 	uint16_t dns_class;
 	uint32_t ttl;
@@ -147,7 +153,8 @@ int main(int argc, char** argv){
 			unset_recursion_bit(&q);
 		}
 
-		//insert code to receive name root response and parse it here
+		//insert code to send query to name server, receive response, parse it, and
+		//either forward to client or additional name server
 
 		memset(buf, 0, sizeof(buf));
 	}
@@ -196,7 +203,8 @@ int get_query(void* q, char* buf){
 	pos = 0;
 	for(int i = 0; i < tmp; i++){
 	printf("%02X ",ntohs(buf[i]));
-	}*/
+	}
+	pos = temp;*/
 }
 
 int check_cache(void* q){
