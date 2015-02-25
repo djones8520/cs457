@@ -144,7 +144,9 @@ int main(int argc, char** argv){
 			cerr << "Unable to get query info" << endl;
 		}
 
-		if (check_cache(q.qname) != 0){
+		if (check_cache(q.qname)){
+			sendto(sockfd, &cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}
 		else{
