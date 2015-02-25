@@ -63,7 +63,7 @@ struct dnsresponse{
 	string name;
 };
 
-int get_query(void* q, char* buf);
+int get_query(dnsquery* q, char* buf);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 map<string, dnsresponse> cache;
@@ -145,6 +145,8 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
+			
+			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}
 		else{
@@ -161,10 +163,8 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-int get_query(void* q, char* buf){
-	dnsquery* query = (dnsquery*)q;
-
-	memcpy(query, buf, 12);
+int get_query(dnsquery* q, char* buf){
+	memcpy(q, &buf, 12);
 	int pos = 12;
 	string name;
 	short length;
@@ -181,6 +181,7 @@ int get_query(void* q, char* buf){
 		memcpy(&length, &buf[pos], 1);
 		pos++;
 	}
+<<<<<<< HEAD
 	query->qname = name;
 
 	char *tmp;
@@ -191,22 +192,29 @@ int get_query(void* q, char* buf){
 	//memcpy(query->qclass, &buf[pos], 2);
 	query->qclass = (uint16_t)*tmp;
 	pos+=2;
+=======
+	q->qname = name;
+	
+	memcpy(q, &buf[pos], 4);
+	pos += 4;
+>>>>>>> e170c1354af11aba809be9e2fc2018ec6a54c82f
 
 	cout << "Request Header" << endl;
 	cout << "------------------------------------" << endl;
-	cout << "ID: 0x" << hex << ntohs(query->id) << endl;
-	cout << "Flags: 0x" << hex << ntohs(query->flags) << endl;
-	cout << "QCOUNT: " << ntohs(query->qcount) << endl;
-	cout << "ANCOUNT: " << ntohs(query->ancount) << endl;
-	cout << "NSCOUNT: " << ntohs(query->nscount) << endl;
-	cout << "ARCOUNT: " << ntohs(query->arcount) << endl;
-	cout << "QNAME: " << query->qname << endl;
-	cout << "QTYPE: " << ntohs(query->qtype) << endl;
-	cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
+	cout << "ID: 0x" << hex << ntohs(q->id) << endl;
+	cout << "Flags: 0x" << hex << ntohs(q->flags) << endl;
+	cout << "QCOUNT: " << ntohs(q->qcount) << endl;
+	cout << "ANCOUNT: " << ntohs(q->ancount) << endl;
+	cout << "NSCOUNT: " << ntohs(q->nscount) << endl;
+	cout << "ARCOUNT: " << ntohs(q->arcount) << endl;
+	cout << "QNAME: " << q->qname << endl;
+	cout << "QTYPE: " << ntohs(q->qtype) << endl;
+	cout << "QCLASS: " << ntohs(q->qclass) << endl << endl;
 	pos += 4;
 	for(int i = 0; i < pos; i++){
 		printf("%02X ",buf[i]);
 	}
+	cout << endl << endl;
 }
 
 // Check if name is in cache
