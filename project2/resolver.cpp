@@ -145,7 +145,7 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			
+			sendto(sockfd, &cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}

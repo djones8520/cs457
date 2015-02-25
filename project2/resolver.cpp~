@@ -145,7 +145,7 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			
+			sendto(sockfd, (void *)cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}
@@ -181,23 +181,10 @@ int get_query(dnsquery* q, char* buf){
 		memcpy(&length, &buf[pos], 1);
 		pos++;
 	}
-<<<<<<< HEAD
-	query->qname = name;
-
-	char *tmp;
-	memcpy(tmp, &buf[pos], 2);
-	query->qtype = (uint16_t)*tmp;
-	pos+=2;
-	memcpy(tmp, &buf[pos], 2);
-	//memcpy(query->qclass, &buf[pos], 2);
-	query->qclass = (uint16_t)*tmp;
-	pos+=2;
-=======
 	q->qname = name;
 	
 	memcpy(q, &buf[pos], 4);
 	pos += 4;
->>>>>>> e170c1354af11aba809be9e2fc2018ec6a54c82f
 
 	cout << "Request Header" << endl;
 	cout << "------------------------------------" << endl;
