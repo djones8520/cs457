@@ -131,7 +131,8 @@ int main(int argc, char** argv){
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
 	char buf[BUFLEN];
-	socklen_t socketLength = sizeof(clientaddr);;
+	char recBuf[BUFLEN];
+	socklen_t socketLength = sizeof(clientaddr);
 
 	while (1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
@@ -151,11 +152,13 @@ int main(int argc, char** argv){
 		}
 		else{
 			unset_recursion_bit(&q);
+			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootadr,sizeof(struct sockaddr_in));
+			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootadr, sizeof(rootadr)) < 0){
+				cerr << "Receive error" << endl;
+			}
+			//code here to analyze response and determine if we should forward the 
+			//answer to another nameserver or back to the client
 		}
-
-		//insert code to send query to name server, receive response, parse it, and
-		//either forward to client or additional name server
-
 		
 
 		memset(buf, 0, sizeof(buf));
