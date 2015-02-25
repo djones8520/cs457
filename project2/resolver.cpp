@@ -162,7 +162,7 @@ int main(int argc, char** argv){
 }
 
 int get_query(dnsquery* q, char* buf){
-	memcpy(q, &buf, 12);
+	memcpy(q, buf, 12);
 	int pos = 12;
 	string name;
 	short length;
@@ -180,8 +180,8 @@ int get_query(dnsquery* q, char* buf){
 		pos++;
 	}
 	q->qname = name;
-	
-	memcpy(q, &buf[pos], 4);
+	buf += pos;
+	memcpy(q, buf, 4);
 	pos += 4;
 
 	cout << "Request Header" << endl;
