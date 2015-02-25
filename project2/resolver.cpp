@@ -116,19 +116,15 @@ int main(int argc, char** argv){
 		return 1;
 	}
 
-	struct sockaddr_in serveraddr, clientaddr, rootaddr[2];
+	struct sockaddr_in serveraddr, clientaddr, rootaddr;
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(port);
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
-	//there probably is a better way to do this
-	rootaddr[0].sin_family = AF_INET;
-	rootaddr[0].sin_port = htons(53); //apparently this is the port DNS servers use?
-	rootaddr[0].sin_addr.s_addr = inet_addr("192.203.230.10"); //E.ROOT-SERVERS.NET. one of the two that uses IPv4 still
-
-	rootaddr[1].sin_family = AF_INET;
-	rootaddr[1].sin_port = htons(53);
-	rootaddr[1].sin_addr.s_addr = inet_addr("192.112.36.4"); //G.ROOT-SERVERS.NET.
+	//later might want to add the rest of the name servers in case we don't receive a response back
+	rootaddr.sin_family = AF_INET;
+	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
+	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
@@ -142,7 +138,7 @@ int main(int argc, char** argv){
 
 		dnsquery q;
 
-		if (get_query(&q, (char*)&buf) < 0){
+		if (get_query(&q, &buf) < 0){
 			cerr << "Unable to get query info" << endl;
 		}
 
@@ -156,6 +152,8 @@ int main(int argc, char** argv){
 		//insert code to send query to name server, receive response, parse it, and
 		//either forward to client or additional name server
 
+		
+
 		memset(buf, 0, sizeof(buf));
 	}
 	return 0;
@@ -163,29 +161,33 @@ int main(int argc, char** argv){
 
 int get_query(void* q, char* buf){
 	dnsquery* query = (dnsquery*)q;
-	char * buffer = (char*)buf;
 
-	memcpy(query, buffer, 12);
+	memcpy(query, buf, 12);
 	int pos = 12;
 	string name;
 	short length;
 	char tempchar;
-
-	memcpy(&length, &buffer[pos], 1);
+	cout << "Reached 1" << endl;
+	memcpy(&length, &buf[pos], 1);
 	pos++;
 	while (length != 0){
 		for (int i = 0; i < length; i++){
-			tempchar = (char)(buffer[pos++]);
+			tempchar = (char)(buf[pos++]);
 			name += tempchar;
 		}
 
 		name += ".";
-		memcpy(&length, &buffer[pos], 1);
+		memcpy(&length, &buf[pos], 1);
 		pos++;
 	}
+	cout << "Reached 2" << endl;
 	query->qname = name;
-	memcpy((void*)(intptr_t)query->qtype, buffer, 2);
-	memcpy((void*)(intptr_t)query->qclass, buffer, 2);
+	memcpy(query->qtype, &buf[pos], 2);
+	pos+=2;
+	memcpy(query->qclass, &buf[pos], 2);
+	pos+=2;
+	cout << "Reached 3" << endl;
+	
 
 	cout << "Request Header" << endl;
 	cout << "------------------------------------" << endl;
@@ -198,13 +200,14 @@ int get_query(void* q, char* buf){
 	cout << "QNAME: " << query->qname << endl;
 	cout << "QTYPE: " << ntohs(query->qtype) << endl;
 	cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
-
-	/*int tmp = pos + 4;
+	cout << "Reached 4" << endl;
+	int tmp = pos + 4;
 	pos = 0;
 	for(int i = 0; i < tmp; i++){
-	printf("%02X ",ntohs(buf[i]));
+		printf("%02X ",ntohs(buf[i]));
 	}
-	pos = temp;*/
+	pos = tmp;
+	cout << "Reached 5" << endl;
 }
 
 int check_cache(void* q){
