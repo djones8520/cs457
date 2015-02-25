@@ -140,7 +140,7 @@ int main(int argc, char** argv){
 
 		dnsquery q;
 
-		if (get_query(&q, &buf) < 0){
+		if (get_query(&q, buf) < 0){
 			cerr << "Unable to get query info" << endl;
 		}
 
@@ -169,7 +169,6 @@ int get_query(void* q, char* buf){
 	string name;
 	short length;
 	char tempchar;
-	cout << "Reached 1" << endl;
 	memcpy(&length, &buf[pos], 1);
 	pos++;
 	while (length != 0){
@@ -182,13 +181,15 @@ int get_query(void* q, char* buf){
 		memcpy(&length, &buf[pos], 1);
 		pos++;
 	}
-	cout << "Reached 2" << endl;
 	query->qname = name;
-	memcpy(query->qtype, &buf[pos], 2);
+	char *tmp;
+	memcpy(tmp, &buf[pos], 2);
+	query->qtype = (uint16_t)*tmp;
 	pos+=2;
-	memcpy(query->qclass, &buf[pos], 2);
+	memcpy(tmp, &buf[pos], 2);
+	//memcpy(query->qclass, &buf[pos], 2);
+	query->qclass = (uint16_t)*tmp;
 	pos+=2;
-	cout << "Reached 3" << endl;
 	
 
 	cout << "Request Header" << endl;
@@ -202,14 +203,10 @@ int get_query(void* q, char* buf){
 	cout << "QNAME: " << query->qname << endl;
 	cout << "QTYPE: " << ntohs(query->qtype) << endl;
 	cout << "QCLASS: " << ntohs(query->qclass) << endl << endl;
-	cout << "Reached 4" << endl;
-	int tmp = pos + 4;
-	pos = 0;
-	for(int i = 0; i < tmp; i++){
-		printf("%02X ",ntohs(buf[i]));
+	pos += 4;
+	for(int i = 0; i < pos; i++){
+		printf("%02X ",buf[i]);
 	}
-	pos = tmp;
-	cout << "Reached 5" << endl;
 }
 
 // Check if name is in cache
