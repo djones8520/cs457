@@ -182,9 +182,11 @@ int get_query(dnsquery* q, char* buf){
 		pos++;
 	}
 	q->qname = name;
-	buf += pos;
-	memcpy(q, buf, 4);
-	pos += 4;
+	q->qtype = (uint16_t)buf[pos];
+	pos += 2;
+	q->qclass = (uint16_t)buf[pos];
+	//memcpy(q, buf, 4);
+	pos += 2;
 
 	cout << "Request Header" << endl;
 	cout << "------------------------------------" << endl;
