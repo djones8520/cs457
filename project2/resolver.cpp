@@ -144,7 +144,9 @@ int main(int argc, char** argv){
 			cerr << "Unable to get query info" << endl;
 		}
 
-		if (check_cache(q.qname) != 0){
+		if (check_cache(q.qname)){
+			
+			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}
 		else{
@@ -182,6 +184,7 @@ int get_query(void* q, char* buf){
 		pos++;
 	}
 	query->qname = name;
+
 	char *tmp;
 	memcpy(tmp, &buf[pos], 2);
 	query->qtype = (uint16_t)*tmp;
@@ -190,7 +193,6 @@ int get_query(void* q, char* buf){
 	//memcpy(query->qclass, &buf[pos], 2);
 	query->qclass = (uint16_t)*tmp;
 	pos+=2;
-	
 
 	cout << "Request Header" << endl;
 	cout << "------------------------------------" << endl;
