@@ -156,15 +156,28 @@ int main(int argc, char** argv){
 			//return IP
 		}
 		else{
-			unset_recursion_bit(&q);
-			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
-			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
-				perror("Receive error");
-				return 0;
-			}
+			bool found = false;
 			
-			if (get_query(&q, recBuf) < 0){
-				cerr << "Unable to get query info" << endl;
+			while(!found){
+				unset_recursion_bit(&q);
+				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
+				if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+					perror("Receive error");
+					return 0;
+				}
+				
+				if (get_query(&q, recBuf) < 0){
+					cerr << "Unable to get query info" << endl;
+				}
+			
+				// INSERT CHECK IF AN ANSWER WAS FOUND
+				if(q.qname = "check"){
+					// INSERT RESPOND TO CLIENT AND SET TO CACHE
+					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
+					
+					// cache[q.name] = data;
+					found = true;
+				}
 			}
 			//code here to analyze response and determine if we should forward the 
 			//answer to another nameserver or back to the client
