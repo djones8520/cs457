@@ -129,7 +129,7 @@ int main(int argc, char** argv){
 	//later might want to add the rest of the name servers in case we don't receive a response back
 	rootaddr.sin_family = AF_INET;
 	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
-	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
+	rootaddr.sin_addr.s_addr = inet_addr("198.41.0.4"); //A.ROOT-SERVERS.NET.
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
@@ -139,7 +139,8 @@ int main(int argc, char** argv){
 
 	while (1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
-			cerr << "Receive error" << endl;
+			cerr << "Receive error in IF" << endl;
+			return 1;
 		}
 
 		dnsquery q;
@@ -156,7 +157,9 @@ int main(int argc, char** argv){
 		else{
 			unset_recursion_bit(&q);
 			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, (socklen_t*)sizeof(rootaddr)) < 0){
-				cerr << "Receive error" << endl;
+				cerr << "Receive error";
+				cerr << " in ELSE" << endl;
+				return 1;
 			}
 			
 			if (get_query(&q, recBuf) < 0){
