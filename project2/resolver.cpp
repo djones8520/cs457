@@ -158,6 +158,10 @@ int main(int argc, char** argv){
 			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, (socklen_t*)sizeof(rootaddr)) < 0){
 				cerr << "Receive error" << endl;
 			}
+			
+			if (get_query(&q, recBuf) < 0){
+				cerr << "Unable to get query info" << endl;
+			}
 			//code here to analyze response and determine if we should forward the 
 			//answer to another nameserver or back to the client
 		}
