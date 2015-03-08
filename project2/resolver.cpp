@@ -140,7 +140,8 @@ int main(int argc, char** argv){
 
 	while (1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
-			cerr << "Receive error" << endl;
+			cerr << "Receive error in IF" << endl;
+			return 1;
 		}
 
 		dnsquery q;
