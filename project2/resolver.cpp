@@ -171,7 +171,7 @@ int main(int argc, char** argv){
 				}
 			
 				// INSERT CHECK IF AN ANSWER WAS FOUND
-				if(q.qname = "check"){
+				if(q.qname.compare("check")){
 					// INSERT RESPOND TO CLIENT AND SET TO CACHE
 					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 					
