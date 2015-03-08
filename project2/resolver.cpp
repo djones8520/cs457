@@ -129,13 +129,14 @@ int main(int argc, char** argv){
 	//later might want to add the rest of the name servers in case we don't receive a response back
 	rootaddr.sin_family = AF_INET;
 	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
-	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
+	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET. 
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
 	char buf[BUFLEN];
 	char recBuf[BUFLEN];
 	socklen_t socketLength = sizeof(clientaddr);
+	socklen_t rootLength = sizeof(rootaddr);
 
 	while (1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
@@ -149,15 +150,16 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			sendto(sockfd, &cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+			sendto(sockfd, &cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 			// cache[q.qname] is the dnsresponse to send back
 			//return IP
 		}
 		else{
 			unset_recursion_bit(&q);
 			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
-			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, (socklen_t*)sizeof(rootaddr)) < 0){
-				cerr << "Receive error" << endl;
+			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+				perror("Receive error");
+				return 0;
 			}
 			
 			if (get_query(&q, recBuf) < 0){
