@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <iostream>
 #include <sstream>
-#include <string>
+#include <string.h>
 #include <random>
 #include <chrono>
 #include <cstring>
@@ -29,6 +29,7 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
+#include <ctype.h>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -66,6 +67,7 @@ struct dnsresponse{
 int get_query(dnsquery* q, char* buf);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
+int valid_port(string s);
 map<string, dnsresponse> cache;
 
 /*
@@ -89,6 +91,9 @@ map<string, dnsresponse> cache;
  * dig @127.0.0.1 -p 9010 gvsu.edu
  */
 
+
+
+
 int main(int argc, char** argv){
 
 	int port = 9010;
@@ -99,11 +104,9 @@ int main(int argc, char** argv){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
 				i++;
-				port = atoi(argv[i]);
-				if (port < 0 || port > 61000){
-					cerr << "Invalid port\n"; //I'm pretty sure there is more to validating a port number?
+			
+				if(!valid_port(argv[i]))
 					return 1;
-				}
 			}
 			else{
 				cerr << "Invalid option. Only valid option is -p\n";
@@ -227,4 +230,22 @@ void unset_recursion_bit(void* q){
 	dnsquery* query = (dnsquery*)q;
 
 	query->flags &= temp;
+}
+
+int valid_port(string s)
+{
+	int port;
+	for(unsigned int j = 0; j < s.length();j++)
+	{
+		if(!isdigit(s.at(j))){
+			cerr << "Invalid port number: please only enter numeric characters\n";
+			return 0;	
+		}
+		port = atoi(&s[0]);
+		if (port < 0 || port > 61000){
+			cerr << "Invalid port: port number must be between 0 and 61,000\n";
+			return 0;
+		}
+	}
+	return 1;
 }
