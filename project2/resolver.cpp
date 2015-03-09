@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <map>
 #include <ctype.h>
+#include <time.h>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -68,7 +69,7 @@ int get_query(dnsquery* q, char* buf);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
-map<string, dnsresponse> cache;\
+map<string, pair<dnsresponse,time_t>> cache;\
 void CatchAlarm(int);
 
 /*
@@ -153,8 +154,8 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			sendto(sockfd, &cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
-			// cache[q.qname] is the dnsresponse to send back
+			sendto(sockfd, &cache[q.qname].first, sizeof(cache[q.qname].first), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
+			// cache[q.qname].first is the dnsresponse to send back
 			//return IP
 		}
 		else{
@@ -179,7 +180,7 @@ int main(int argc, char** argv){
 					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 					
 					if(cache.size() < cache.max_size()){
-						// cache[q.name] = data;
+						// cache[q.name] = make_pair(data,time(NULL));
 					}
 					else{
 						found = true;
@@ -246,8 +247,9 @@ int get_query(dnsquery* q, char* buf){
 
 // Check if name is in cache
 bool check_cache(string name){
-	if(cache.count(name) != 0)
+	if(cache.count(name) != 0){
 		return true;
+	}
 	else
 		return false;	
 }
