@@ -62,14 +62,17 @@ struct dnsresponse{
 	uint16_t rdlength;
 	uint8_t* rdata;
 };
-
+struct dnspair{
+	struct dnsresponse dr;
+	time_t time_entered;
+};
 int get_header(dnsheader* h, char*buf, int* pos);
 int get_query(dnsquery* q, char* buf, int* pos);
 int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
-map<string, pair<dnsresponse,time_t>> cache;\
+map<string, dnspair> cache;\
 void CatchAlarm(int);
 
 /*
@@ -160,9 +163,9 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			sendto(sockfd, &cache[q.qname].first, sizeof(cache[q.qname].first), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
-			// cache[q.qname].first is the dnsresponse to send back
-			//return IP
+			sendto(sockfd, &cache[q.qname].dr, sizeof(cache[q.qname].dr), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
+			// cache[q.qname].dr is the dnsresponse to send back
+			//return IP<F7>
 		}
 		else{
 			bool found = false;
@@ -204,7 +207,10 @@ int main(int argc, char** argv){
 					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 					
 					if(cache.size() < cache.max_size()){
-						// cache[q.name] = make_pair(data,time(NULL));
+						//struct dnspair tempPair;
+						//temp_pair.dnsresponse = 
+						//temp_pair->time_entered = time(NULL);
+						// cache[q.name] = tempPair;
 					}
 					else{
 						found = true;
@@ -341,7 +347,12 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 
 // Check if name is in cache
 bool check_cache(string name){
+	dnspair myPair = cache[name];
 	if(cache.count(name) != 0){
+		if(time(NULL) > (myPair.dr.rttl + myPair.time_entered)){
+			cache.erase(name);
+			return false;			
+		}
 		return true;
 	}
 	else
