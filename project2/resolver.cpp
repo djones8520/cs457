@@ -163,7 +163,7 @@ int main(int argc, char** argv){
 			bool found = false;
 			
 			while(!found){
-				unset_recursion_bit(&q, &buf);
+				unset_recursion_bit(&q);
 				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
 				alarm(2);
 				if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
@@ -176,12 +176,16 @@ int main(int argc, char** argv){
 				}
 			
 				// INSERT CHECK IF AN ANSWER WAS FOUND
-				if(q.qname == "check"){
+				if(q.qname.compare("check")){
 					// INSERT RESPOND TO CLIENT AND SET TO CACHE
 					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 					
-					// cache[q.name] = data;
-					found = true;
+					if(cache.size() < cache.max_size()){
+						// cache[q.name] = data;
+					}
+					else{
+						found = true;
+					}
 				}
 			}
 			//code here to analyze response and determine if we should forward the 
@@ -250,9 +254,7 @@ bool check_cache(string name){
 		return false;	
 }
 
-void unset_recursion_bit(void* q, char* buf){	
-	buf[2] &= 254; // 11111110
-	
+void unset_recursion_bit(void* q){
 	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
 	dnsquery* query = (dnsquery*)q;
 
