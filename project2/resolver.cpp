@@ -34,37 +34,37 @@
 #define TYPE_A 1
 #define CLASS_IN 1
 #define BUFLEN 512
+#define COMPRESSION 192
 
 using namespace std;
 
-struct dnsquery{
+struct dnsheader{
 	uint16_t id;
 	uint16_t flags;
 	uint16_t qcount;
 	uint16_t ancount;
 	uint16_t nscount;
 	uint16_t arcount;
+};
+
+struct dnsquery{
 	string qname;
 	uint16_t qtype;
 	uint16_t qclass;
 };
 
 struct dnsresponse{
-	uint16_t id;
-	uint16_t flags;
-	uint16_t qcount;
-	uint16_t ancount;
-	uint16_t nscount;
-	uint16_t arcount;
-	uint16_t type;
-	uint16_t dns_class;
-	uint32_t ttl;
+	string rname;
+	uint16_t rtype;
+	uint16_t rclass;
+	uint32_t rttl;
 	uint16_t rdlength;
 	uint8_t* rdata;
-	string name;
 };
 
-int get_query(dnsquery* q, char* buf);
+int get_header(dnsheader* h, char*buf, int* pos);
+int get_query(dnsquery* q, char* buf, int* pos);
+int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
@@ -134,7 +134,7 @@ int main(int argc, char** argv){
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
 	char buf[BUFLEN];
-	char recBuf[BUFLEN];
+	char recbuf[BUFLEN];
 	socklen_t socketLength = sizeof(clientaddr);
 	socklen_t rootLength = sizeof(rootaddr);
 
@@ -144,9 +144,15 @@ int main(int argc, char** argv){
 			return 1;
 		}
 
+		dnsheader h;
 		dnsquery q;
+		int pos = 0;
 
-		if (get_query(&q, buf) < 0){
+		if (get_header(&h, buf, &pos) < 0){
+			cerr << "Unable to get header info" << endl;
+		}
+
+		if (get_query(&q, buf, &pos) < 0){
 			cerr << "Unable to get query info" << endl;
 		}
 
@@ -158,65 +164,157 @@ int main(int argc, char** argv){
 		else{
 			unset_recursion_bit(&q);
 			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
-			if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+			if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
 				perror("Receive error");
 				return 0;
 			}
+
+			dnsheader rh;
+			dnsquery rq;
+			pos = 0;
 			
-			if (get_query(&q, recBuf) < 0){
+			if (get_header(&rh, recbuf, &pos) < 0){
+				cerr << "Unable to get header info" << endl;
+			}
+
+			if (get_query(&rq, recbuf, &pos) < 0){
 				cerr << "Unable to get query info" << endl;
 			}
-			//code here to analyze response and determine if we should forward the 
-			//answer to another nameserver or back to the client
+
+			int response_num = rh.ancount + rh.nscount + rh.arcount;
+			dnsresponse r[response_num];
+
+			for(int i = 0; i < response_num; i++){
+				if (get_response(&(r[i]), recbuf, &pos) < 0){
+					cerr << "Unable to get response info" << endl;
+				}
+			}
 		}
-		
 
 		memset(buf, 0, sizeof(buf));
 	}
 	return 0;
 }
 
-int get_query(dnsquery* q, char* buf){
-	memcpy(q, buf, 12);
-	int pos = 12;
+int get_header(dnsheader* h, char* buf, int* pos){
+	int start = *pos;
+	memcpy(h, buf, 12);
+	*pos = 12;
+	cout << "DNS Header" << endl;
+	cout << "------------------------------------" << endl;
+	cout << "ID: 0x" << hex << ntohs(h->id) << endl;
+	cout << "Flags: 0x" << hex << ntohs(h->flags) << endl;
+	cout << "QCOUNT: " << ntohs(h->qcount) << endl;
+	cout << "ANCOUNT: " << ntohs(h->ancount) << endl;
+	cout << "NSCOUNT: " << ntohs(h->nscount) << endl;
+	cout << "ARCOUNT: " << ntohs(h->arcount) << endl;
+
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+
+ 	cout << endl << endl;
+
+	return 0;
+}
+
+int get_query(dnsquery* q, char* buf, int* pos){
+	int start = *pos;
 	string name;
 	short length;
 	char tempchar;
-	memcpy(&length, &buf[pos], 1);
-	pos++;
+	memcpy(&length, &buf[*pos], 1);
+	(*pos)++;
 	while (length != 0){
 		for (int i = 0; i < length; i++){
-			tempchar = (char)(buf[pos++]);
+			memcpy(&tempchar, &buf[(*pos)++], 1);
 			name += tempchar;
 		}
-
 		name += ".";
-		memcpy(&length, &buf[pos], 1);
-		pos++;
+		memcpy(&length, &buf[(*pos)++], 1);
 	}
 	q->qname = name;
-	memcpy(&(q->qtype),&buf[pos],2);
-	pos += 2;
-	memcpy(&(q->qclass),&buf[pos],2);
+	memcpy(&(q->qtype),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(q->qclass),&buf[*pos],2);
+	*pos += 2;
 
-	cout << "Request Header" << endl;
-	cout << "------------------------------------" << endl;
-	cout << "ID: 0x" << hex << ntohs(q->id) << endl;
-	cout << "Flags: 0x" << hex << ntohs(q->flags) << endl;
-	cout << "QCOUNT: " << ntohs(q->qcount) << endl;
-	cout << "ANCOUNT: " << ntohs(q->ancount) << endl;
-	cout << "NSCOUNT: " << ntohs(q->nscount) << endl;
-	cout << "ARCOUNT: " << ntohs(q->arcount) << endl;
 	cout << "QNAME: " << q->qname << endl;
 	cout << "QTYPE: " << ntohs(q->qtype) << endl;
-	cout << "QCLASS: " << ntohs(q->qclass) << endl << endl;
-	pos += 4;
-	for(int i = 0; i < pos; i++){
-		printf("%02X ",buf[i]);
-	}
-	cout << endl << endl;
-
+	cout << "QCLASS: " << ntohs(q->qclass) << endl;
+	//pos += 4;
+	
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+ 	cout << endl << endl;
+	
 	//just returning 0 to avoid warning
+	return 0;
+}
+
+int get_response(dnsresponse* r, char* buf, int* pos){
+	int start = *pos;
+	string name;
+	short length;
+	char tempchar;
+	memcpy(&length, &buf[(*pos)++], 1);
+	cout << "length=" << length << endl;
+	if(length == COMPRESSION){
+		int ofs = buf[(*pos)++];
+		cout << "ofs=" << ofs << endl;
+		while(ofs != 0){
+			memcpy(&length,&buf[ofs++],1);
+			cout << "length=" << length << endl;
+	      	while(length != 0){
+	        	for(int i = 0; i < length; i++){
+	          		tempchar = buf[ofs++];
+	          		name += tempchar;
+	        	}
+	        	name += ".";
+	        	memcpy(&length,&buf[ofs],1);
+	        	ofs++;
+	      	}
+	      	ofs = (*pos)++;
+		}
+      	r->rname = name;
+	}else{
+		while (length != 0){
+			for (int i = 0; i < length; i++){
+				tempchar = (char)(buf[(*pos)++]);
+				name += tempchar;
+			}
+
+			name += ".";
+			memcpy(&length, &buf[(*pos)++], 1);
+		}
+		r->rname = name;
+	}
+
+	memcpy(&(r->rtype),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(r->rclass),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(r->rttl),&buf[*pos],4);
+	*pos += 4;
+	memcpy(&(r->rdlength),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(r->rdata),&buf[*pos],r->rdlength);
+	*pos += r->rdlength;
+
+	cout << "RNAME: " << r->rname << endl;
+	cout << "RTYPE: " << ntohs(r->rtype) << endl;
+	cout << "RCLASS: " << ntohs(r->rclass) << endl;
+	cout << "RTTL: " << ntohs(r->rttl) << endl;
+	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
+	//cout << "RDATA: " << ntohs(r->rdata) << endl;
+
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+
+ 	cout << endl << endl;
+
 	return 0;
 }
 
@@ -229,10 +327,10 @@ bool check_cache(string name){
 }
 
 void unset_recursion_bit(void* q){
-	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
+	/*uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
 	dnsquery* query = (dnsquery*)q;
 
-	query->flags &= temp;
+	query->flags &= temp;*/
 }
 
 int valid_port(string s)
