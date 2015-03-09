@@ -296,10 +296,11 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	      	while(length != 0){
 	        	for(int i = 0; i < length; i++){
 	          		tempchar = buf[ofs++];
-	          		name += tempchar;
+	          		
+				name += tempchar;
 	        	}
 	        	name += ".";
-	        	memcpy(&length,&buf[ofs],1);
+		     	memcpy(&length,&buf[ofs],1);
 	        	ofs++;
 	      	}
 	      	ofs = (*pos)++;
@@ -317,6 +318,7 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 		}
 		r->rname = name;
 	}
+	cerr << "got response" << endl;
 
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
@@ -352,6 +354,11 @@ bool check_cache(string name){
 		if(time(NULL) > (myPair.dr.rttl + myPair.time_entered)){
 			cache.erase(name);
 			return false;			
+		}
+		
+		cout << "The current cache is:\n";
+		for(map<string,dnspair>::iterator it = cache.begin(); it != cache.end(); it++){
+			cout << it->second.dr.rname << endl;
 		}
 		return true;
 	}
