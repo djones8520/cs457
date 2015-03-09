@@ -68,7 +68,8 @@ int get_query(dnsquery* q, char* buf);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
-map<string, dnsresponse> cache;
+map<string, dnsresponse> cache;\
+void CatchAlarm(int);
 
 /*
  * Link to RFC 1034: https://www.ietf.org/rfc/rfc1034.txt
@@ -98,6 +99,7 @@ int main(int argc, char** argv){
 
 	int port = 9010;
 	string logfile;
+	signal (SIGALRM, CatchAlarm);
 
 	//only need -p, but maybe we could use the others?
 	if (argc > 1){
@@ -139,10 +141,12 @@ int main(int argc, char** argv){
 	socklen_t rootLength = sizeof(rootaddr);
 
 	while (1){
+		alarm(2);
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
 			cerr << "Receive error in IF" << endl;
 			return 1;
 		}
+		alarm(0);
 
 		dnsquery q;
 
@@ -161,11 +165,12 @@ int main(int argc, char** argv){
 			while(!found){
 				unset_recursion_bit(&q);
 				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
+				alarm(2);
 				if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
 					perror("Receive error");
 					return 0;
 				}
-				
+				alarm(0);
 				if (get_query(&q, recBuf) < 0){
 					cerr << "Unable to get query info" << endl;
 				}
@@ -181,9 +186,13 @@ int main(int argc, char** argv){
 			}
 			//code here to analyze response and determine if we should forward the 
 			//answer to another nameserver or back to the client
+			//if(analyze_response(response)){
+			//	
+			//}
+			//else{
+			//	
+			//}
 		}
-		
-
 		memset(buf, 0, sizeof(buf));
 	}
 	return 0;
@@ -264,4 +273,9 @@ int valid_port(string s)
 		}
 	}
 	return 1;
+}
+
+void CatchAlarm(int ignored){
+	cout << "Server took too long to respond\nQuitting...\n";
+	exit(1);
 }
