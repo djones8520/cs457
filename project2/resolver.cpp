@@ -68,7 +68,8 @@ int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
-map<string, dnsresponse> cache;
+map<string, dnsresponse> cache;\
+void CatchAlarm(int);
 
 /*
  * Link to RFC 1034: https://www.ietf.org/rfc/rfc1034.txt
@@ -98,6 +99,7 @@ int main(int argc, char** argv){
 
 	int port = 9010;
 	string logfile;
+	signal (SIGALRM, CatchAlarm);
 
 	//only need -p, but maybe we could use the others?
 	if (argc > 1){
@@ -162,35 +164,53 @@ int main(int argc, char** argv){
 			//return IP
 		}
 		else{
-			unset_recursion_bit(&q);
-			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
-			if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
-				perror("Receive error");
-				return 0;
-			}
-
-			dnsheader rh;
-			dnsquery rq;
-			pos = 0;
+			bool found = false;
 			
-			if (get_header(&rh, recbuf, &pos) < 0){
-				cerr << "Unable to get header info" << endl;
-			}
+			while(!found){
+				unset_recursion_bit(&q);
+				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
+				alarm(2);
+				if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+					perror("Receive error");
+					return 0;
+				}
+				alarm(0);
+				
+				dnsheader rh;
+				dnsquery rq;
+				pos = 0;
+				
+				if (get_header(&rh, recbuf, &pos) < 0){
+					cerr << "Unable to get header info" << endl;
+				}
 
-			if (get_query(&rq, recbuf, &pos) < 0){
-				cerr << "Unable to get query info" << endl;
-			}
+				if (get_query(&rq, recbuf, &pos) < 0){
+					cerr << "Unable to get query info" << endl;
+				}
 
-			int response_num = rh.ancount + rh.nscount + rh.arcount;
-			dnsresponse r[response_num];
+				int response_num = rh.ancount + rh.nscount + rh.arcount;
+				dnsresponse r[response_num];
 
-			for(int i = 0; i < response_num; i++){
-				if (get_response(&(r[i]), recbuf, &pos) < 0){
-					cerr << "Unable to get response info" << endl;
+				for(int i = 0; i < response_num; i++){
+					if (get_response(&(r[i]), recbuf, &pos) < 0){
+						cerr << "Unable to get response info" << endl;
+					}
+				}
+			
+				// INSERT CHECK IF AN ANSWER WAS FOUND
+				if(q.qname.compare("check")){
+					// INSERT RESPOND TO CLIENT AND SET TO CACHE
+					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
+					
+					if(cache.size() < cache.max_size()){
+						// cache[q.name] = data;
+					}
+					else{
+						found = true;
+					}
 				}
 			}
 		}
-
 		memset(buf, 0, sizeof(buf));
 	}
 	return 0;
@@ -349,4 +369,9 @@ int valid_port(string s)
 		}
 	}
 	return 1;
+}
+
+void CatchAlarm(int ignored){
+	cout << "Server took too long to respond\nQuitting...\n";
+	exit(1);
 }
