@@ -171,7 +171,7 @@ int main(int argc, char** argv){
 				unset_recursion_bit(&q);
 				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
 				alarm(2);
-				if (recvfrom(sockfd, recBuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
 					perror("Receive error");
 					return 0;
 				}
