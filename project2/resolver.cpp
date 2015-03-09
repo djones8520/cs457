@@ -141,12 +141,10 @@ int main(int argc, char** argv){
 	socklen_t rootLength = sizeof(rootaddr);
 
 	while (1){
-		alarm(2);
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
 			cerr << "Receive error in IF" << endl;
 			return 1;
 		}
-		alarm(0);
 
 		dnsquery q;
 
