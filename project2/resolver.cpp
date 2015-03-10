@@ -178,7 +178,7 @@ int main(int argc, char** argv){
 			alarm(0);
 
 			bool found = false;
-			stack<dnsresponse> rs;
+			stack<dnsresponse> ns_stack;
 			while(!found){
 				unset_recursion_bit(recbuf);
 				dnsheader rh;
@@ -217,19 +217,40 @@ int main(int argc, char** argv){
 				}			
 
 				if(response_num > 0){
-					for(int i = response_num - 1; i >= 0; i--){//push name servers to stack
-						rs.push(r[i]);
+					for(int i = rh.ancount; i < rh.nscount; i++){//push name servers to stack
+						ns_stack.push(r[i]);
 					}
 				}
-				dnsresponse ns = rs.top();
-				rs.pop();
+				
+				bool match = false;
+				string nextaddr;
+				while(!match){
+					dnsresponse ns = ns_stack.top();
+					ns_stack.pop();
+					for(int i = 0; i < response_num; i++){
+						if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
+							nextaddr = r[i].rdata;
+							match = true;
+						}
+					}
+					if(ns_stack.empty() && !match){
+						cerr << "Ran out of name servers to check" << endl;
+						return -1;
+					}
+				}
+
+				struct sockaddr_in nsaddr;
+				nsaddr.sin_family = AF_INET;
+				nsaddr.sin_port = htons(53);
+				nsaddr.sin_addr.s_addr = inet_addr(nextaddr.c_str());
+				socklen_t nslength = sizeof(nsaddr);
 
 				memset(recbuf, 0, sizeof(buf));
-				/*sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
 					return 0;
-				}*/
+				}
 			}
 		}
 
