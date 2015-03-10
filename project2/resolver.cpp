@@ -217,7 +217,7 @@ int main(int argc, char** argv){
 				}			
 
 				if(response_num > 0){
-					for(int i = rh.ancount; i < rh.nscount; i++){//push name servers to stack
+					for(int i = ntohs(rh.ancount); i < ntohs(rh.nscount); i++){//push name servers to stack
 						ns_stack.push(r[i]);
 					}
 				}
@@ -226,9 +226,11 @@ int main(int argc, char** argv){
 				string nextaddr;
 				while(!match){
 					dnsresponse ns = ns_stack.top();
+					cerr << "Current check: " << ns.rdata << endl;
 					ns_stack.pop();
 					for(int i = 0; i < response_num; i++){
 						if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
+							cerr << "Next Address" << r[i].rdata << endl;
 							nextaddr = r[i].rdata;
 							match = true;
 						}
@@ -238,6 +240,8 @@ int main(int argc, char** argv){
 						return -1;
 					}
 				}
+
+				cerr << "Next Address" << nextaddr << endl;
 
 				struct sockaddr_in nsaddr;
 				nsaddr.sin_family = AF_INET;
@@ -362,7 +366,8 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	        memcpy(&length, &buf[(*pos)++], 1);
 		}
 	}
-	memcpy(&(r->rname),&name,sizeof(name));
+	r->rname += name;
+	//memcpy(&(r->rname),&name,sizeof(name));
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rclass),&buf[*pos],2);
@@ -371,6 +376,7 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	*pos += 2;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
+
 	if(ntohs(r->rtype) == 1){
 		uint8_t tempint;
 		for(int i = 0; i < 4; i++){
@@ -416,7 +422,8 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	        		memcpy(&length, &buf[(*pos)++], 1);
 			}
 		}
-		memcpy(&(r->rdata),&name,sizeof(name));
+		//memcpy(&(r->rdata),&name,sizeof(name));
+		r->rdata += name;
 	}else{
 		cerr << "Incompatible type" << endl;
 		return -1;
