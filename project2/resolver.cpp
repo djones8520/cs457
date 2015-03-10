@@ -198,10 +198,12 @@ int main(int argc, char** argv){
  					printf("%02X ",recbuf[i]);
  				}*/
 
-				int response_num = rh.ancount + rh.nscount + rh.arcount;
+				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
+				cout << "ResponseNum=" << response_num << endl;
 				dnsresponse r[response_num];
 
 				for(int i = 0; i < response_num; i++){
+					cout << "Response " << i << endl;
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl;
 					}
@@ -235,8 +237,8 @@ int get_header(dnsheader* h, char* buf, int* pos){
 	*pos = 12;
 	cout << "DNS Header" << endl;
 	cout << "------------------------------------" << endl;
-	cout << "ID: 0x" << hex << ntohs(h->id) << endl;
-	cout << "Flags: 0x" << hex << ntohs(h->flags) << endl;
+	printf("ID: 0x%02X\n", ntohs(h->id));
+	printf("Flags: 0x%02X\n", ntohs(h->flags));
 	cout << "QCOUNT: " << ntohs(h->qcount) << endl;
 	cout << "ANCOUNT: " << ntohs(h->ancount) << endl;
 	cout << "NSCOUNT: " << ntohs(h->nscount) << endl;
