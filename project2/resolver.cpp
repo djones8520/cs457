@@ -26,13 +26,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
 #include <ctype.h>
 #include <time.h>
-#include <fstream>
 
 #define TYPE_A 1
 #define CLASS_IN 1
