@@ -19,6 +19,7 @@
 #include <random>
 #include <chrono>
 #include <cstring>
+#include <stack>
 #include <fstream>
 #include <signal.h>
 #include <unistd.h>
@@ -70,7 +71,7 @@ int get_header(dnsheader* h, char*buf, int* pos);
 int get_query(dnsquery* q, char* buf, int* pos);
 int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
-void unset_recursion_bit(void* q);
+void unset_recursion_bit(void* buf);
 int valid_port(string s);
 map<string, dnspair> cache;
 void CatchAlarm(int);
@@ -166,20 +167,20 @@ int main(int argc, char** argv){
 			sendto(sockfd, &cache[q.qname].dr, sizeof(cache[q.qname].dr), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 			// cache[q.qname].dr is the dnsresponse to send back
 			//return IP<F7>
-		}
-		else{
+		}else{
+			unset_recursion_bit(&buf);
+			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
+			alarm(2);
+			if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+				perror("Receive error");
+				return 0;
+			}
+			alarm(0);
+
 			bool found = false;
-			
+			stack<dnsresponse> rs;
 			while(!found){
-				unset_recursion_bit(&q);
-				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
-				alarm(2);
-				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
-					perror("Receive error");
-					return 0;
-				}
-				alarm(0);
-				
+				unset_recursion_bit(&recbuf);
 				dnsheader rh;
 				dnsquery rq;
 				pos = 0;
@@ -192,13 +193,21 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
-				for(int i = 0; i < sizeof(recbuf); i++){
+				/*for(int i = 0; i < sizeof(recbuf); i++){
  					printf("%02X ",recbuf[i]);
- 				}
+ 				}*/
 
 				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount);// + ntohs(rh.arcount);
-				//cout << "ResponseNum=" << response_num << endl;
 				dnsresponse r[response_num];
+
+				if(ntohs(rh.ancount) > 0){
+					found = true;
+					for(int i = 0; i < ntohs(rh.qcount); i++){
+						//cache answer here
+						sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));//send answers back to client
+					}
+					//break;
+				}
 
 				for(int i = 0; i < response_num; i++){
 					cout << "Response " << i + 1 << endl;
@@ -206,22 +215,18 @@ int main(int argc, char** argv){
 						cerr << "Unable to get response info" << endl;
 					}
 				}
-			
-				// INSERT CHECK IF AN ANSWER WAS FOUND
-				if(q.qname.compare("check")){
-					// INSERT RESPOND TO CLIENT AND SET TO CACHE
-					// sendto(sockfd, DATA TO SEND, sizeof(DATA TO SEND), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
-					
-					if(cache.size() < cache.max_size()){
-						//struct dnspair tempPair;
-						//temp_pair.dnsresponse = 
-						//temp_pair->time_entered = time(NULL);
-						// cache[q.name] = tempPair;
-					}
-					else{
-						found = true;
+
+				if(response_num > 0){
+					for(int i = response_num - 1; i >= 0; i--){//push name servers to stack
+						rs.push(r[i]);
 					}
 				}
+				dnsresponse ns = (dnsresponse)rs.pop();
+				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
+					perror("Receive error");
+					return 0;
+				}*/
 			}
 		}
 		memset(buf, 0, sizeof(buf));
@@ -373,11 +378,9 @@ bool check_cache(string name){
 		return false;	
 }
 
-void unset_recursion_bit(void* q){
-	/*uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
-	dnsquery* query = (dnsquery*)q;
-
-	query->flags &= temp;*/
+void unset_recursion_bit(void* buf){
+	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
+	buf[2] &= temp;
 }
 
 int valid_port(string s)
