@@ -60,7 +60,7 @@ struct dnsresponse{
 	uint16_t rclass;
 	uint32_t rttl;
 	uint16_t rdlength;
-	uint8_t* rdata;
+	string rdata;
 };
 struct dnspair{
 	struct dnsresponse dr;
@@ -197,11 +197,11 @@ int main(int argc, char** argv){
  				}*/
 
 				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
-				cout << "ResponseNum=" << response_num << endl;
+				//cout << "ResponseNum=" << response_num << endl;
 				dnsresponse r[response_num];
 
 				for(int i = 0; i < response_num; i++){
-					cout << "Response " << i << endl;
+					//cout << "Response " << i << endl;
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl;
 					}
@@ -275,14 +275,12 @@ int get_query(dnsquery* q, char* buf, int* pos){
 	cout << "QNAME: " << q->qname << endl;
 	cout << "QTYPE: " << ntohs(q->qtype) << endl;
 	cout << "QCLASS: " << ntohs(q->qclass) << endl;
-	//pos += 4;
 	
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
  	}
  	cout << endl << endl;
 	
-	//just returning 0 to avoid warning
 	return 0;
 }
 
@@ -334,15 +332,18 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	*pos += 4;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
-	memcpy(&(r->rdata),&buf[*pos],r->rdlength);
-
+	for(int i = 0; i < ntohs(r->rdlength); i++){
+		memcpy(&tempchar, &buf[(*pos)++], 1);
+		r->rdata += tempchar;
+	}
+	//memcpy(&(r->rdata),&buf[*pos],ntohs(r->rdlength));
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
 	cout << "RCLASS: " << ntohs(r->rclass) << endl;
 	cout << "RTTL: " << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
-	//cout << "RDATA: " << ntohs(r->rdata) << endl;
-	*pos += ntohs(r->rdlength);
+	cout << "RDATA: " << r->rdata << endl;
+	//*pos += ntohs(r->rdlength);
 
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
