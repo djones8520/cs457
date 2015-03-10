@@ -192,6 +192,10 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
+				for(int i = 0; i < sizeof(recbuf); i++){
+ 					printf("%02X ",recbuf[i]);
+ 				}
+
 				int response_num = rh.ancount + rh.nscount + rh.arcount;
 				dnsresponse r[response_num];
 
@@ -288,21 +292,19 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	uint16_t ofs = 0; //offset
 	int cmpcnt = 0; //compression count
 	memcpy(&length, &buf[(*pos)++], 1);
-	cerr << "Length=" << length << endl;
 	while(length != 0){
-		cerr << "Length=" << length << endl;
 		if(length >= COMPRESSION){
 			cmpcnt++;
 			if(cmpcnt > 1){
 				memcpy(&ofs, &buf[ofs-1], 2);
-				ofs << 2; //get rid of first two bits
-				ofs >> 2;
+				ofs = ntohs(ofs);
+				ofs &= 16383;
 				memcpy(&length, &buf[ofs++], 1);
 			}else{
 				memcpy(&ofs, &buf[(*pos)-1], 2);
 				(*pos)++;
-				ofs << 2;
-				ofs >> 2;
+				ofs = ntohs(ofs);
+				ofs &= 16383;
 				memcpy(&length, &buf[ofs++], 1);
 			}
 		}else if(ofs != 0){
@@ -321,17 +323,23 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	        memcpy(&length, &buf[(*pos)++], 1);
 		}
 	}
-
+	cerr << name << endl;
 	r->rname = name;
+	cerr << "Resolved name" << endl;
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
+	cerr << "Resolved type" << endl;
 	memcpy(&(r->rclass),&buf[*pos],2);
 	*pos += 2;
+	cerr << "Resolved class" << endl;
 	memcpy(&(r->rttl),&buf[*pos],4);
 	*pos += 4;
+	cerr << "Resolved ttl" << endl;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
+	cerr << "Resolved rdlength" << endl;
 	memcpy(&(r->rdata),&buf[*pos],r->rdlength);
+	cerr << "Resolved data" << endl;
 
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
