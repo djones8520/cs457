@@ -27,7 +27,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
@@ -224,15 +223,27 @@ int main(int argc, char** argv){
 				}
 				dnsresponse ns = rs.top();
 				rs.pop();
-				/*sendto(sockfd, rec, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+
+				memset(recbuf, 0, sizeof(buf));
+				/*sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
 					return 0;
 				}*/
 			}
 		}
+
 		memset(buf, 0, sizeof(buf));
+		
+		ofstream cacheOut;
+		cacheOut.open ("cache.txt");
+		
+		for(const auto& item : cache)
+			cacheOut << item.first << "\n";
+
+		cacheOut.close();
 	}
+
 	return 0;
 }
 
