@@ -71,7 +71,7 @@ int get_header(dnsheader* h, char*buf, int* pos);
 int get_query(dnsquery* q, char* buf, int* pos);
 int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
-void unset_recursion_bit(void* buf);
+void unset_recursion_bit(char* buf);
 int valid_port(string s);
 map<string, dnspair> cache;
 void CatchAlarm(int);
@@ -111,7 +111,7 @@ int main(int argc, char** argv){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
 				i++;
-			
+
 				if(!valid_port(argv[i]))
 					return 1;
 			}
@@ -136,7 +136,7 @@ int main(int argc, char** argv){
 	//later might want to add the rest of the name servers in case we don't receive a response back
 	rootaddr.sin_family = AF_INET;
 	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
-	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET. 
+	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
@@ -168,7 +168,7 @@ int main(int argc, char** argv){
 			// cache[q.qname].dr is the dnsresponse to send back
 			//return IP<F7>
 		}else{
-			unset_recursion_bit(&buf);
+			unset_recursion_bit(buf);
 			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
 			alarm(2);
 			if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
@@ -180,11 +180,11 @@ int main(int argc, char** argv){
 			bool found = false;
 			stack<dnsresponse> rs;
 			while(!found){
-				unset_recursion_bit(&recbuf);
+				unset_recursion_bit(recbuf);
 				dnsheader rh;
 				dnsquery rq;
 				pos = 0;
-				
+
 				if (get_header(&rh, recbuf, &pos) < 0){
 					cerr << "Unable to get header info" << endl;
 				}
@@ -280,12 +280,12 @@ int get_query(dnsquery* q, char* buf, int* pos){
 	cout << "QNAME: " << q->qname << endl;
 	cout << "QTYPE: " << ntohs(q->qtype) << endl;
 	cout << "QCLASS: " << ntohs(q->qclass) << endl;
-	
+
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
  	}
  	cout << endl << endl;
-	
+
 	return 0;
 }
 
@@ -365,9 +365,9 @@ bool check_cache(string name){
 	if(cache.count(name) != 0){
 		if(time(NULL) > (myPair.dr.rttl + myPair.time_entered)){
 			cache.erase(name);
-			return false;			
+			return false;
 		}
-		
+
 		cout << "The current cache is:\n";
 		for(map<string,dnspair>::iterator it = cache.begin(); it != cache.end(); it++){
 			cout << it->second.dr.rname << endl;
@@ -375,10 +375,10 @@ bool check_cache(string name){
 		return true;
 	}
 	else
-		return false;	
+		return false;
 }
 
-void unset_recursion_bit(void* buf){
+void unset_recursion_bit(char* buf){
 	uint16_t temp = 254; //1111111011111111 the 0 is the RD bit
 	buf[2] &= temp;
 }
@@ -390,7 +390,7 @@ int valid_port(string s)
 	{
 		if(!isdigit(s.at(j))){
 			cerr << "Invalid port number: please only enter numeric characters\n";
-			return 0;	
+			return 0;
 		}
 		port = atoi(&s[0]);
 		if (port < 0 || port > 61000){
