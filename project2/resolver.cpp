@@ -106,13 +106,15 @@ int main(int argc, char** argv){
 	signal (SIGALRM, CatchAlarm);
 
 	//only need -p, but maybe we could use the others?
-	if (argc > 1){
+	if (argc > 2){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
 				i++;
 			
-				if(!valid_port(argv[i]))
+				if(!valid_port(argv[i])){
 					return 1;
+				}
+				port = atoi(argv[i]);
 			}
 			else{
 				cerr << "Invalid option. Only valid option is -p\n";
