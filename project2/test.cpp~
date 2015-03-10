@@ -1,0 +1,21 @@
+#include <iostream>
+#include <fstream>
+#include <map>
+using namespace std;
+
+int main () {
+map<string, string> cache;
+cache["test1"] = "one";
+cache["test2"] = "two";
+cache["test3"] = "three";
+
+
+  ofstream cacheOut;
+		cacheOut.open ("cache.txt");
+		
+		for(const auto& item : cache)
+			cacheOut << item.first;
+
+		cacheOut.close();
+  return 0;
+}

@@ -32,6 +32,7 @@
 #include <map>
 #include <ctype.h>
 #include <time.h>
+#include <fstream>
 
 #define TYPE_A 1
 #define CLASS_IN 1
@@ -223,6 +224,7 @@ int main(int argc, char** argv){
 				}
 				dnsresponse ns = rs.top();
 				rs.pop();
+				memset(recbuf, 0, sizeof(buf));
 				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
@@ -230,8 +232,18 @@ int main(int argc, char** argv){
 				}*/
 			}
 		}
+
 		memset(buf, 0, sizeof(buf));
+		
+		ofstream cacheOut;
+		cacheOut.open ("cache.txt");
+		
+		for(const auto& item : cache)
+			cacheOut << item.first << "\n";
+
+		cacheOut.close();
 	}
+
 	return 0;
 }
 
