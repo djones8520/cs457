@@ -327,9 +327,9 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rclass),&buf[*pos],2);
-	*pos += 2;
-	memcpy(&(r->rttl),&buf[*pos],4);
 	*pos += 4;
+	memcpy(&(r->rttl),&buf[*pos],4);
+	*pos += 2;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
 	for(int i = 0; i < ntohs(r->rdlength); i++){
