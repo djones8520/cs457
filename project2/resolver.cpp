@@ -287,12 +287,9 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	uint16_t length;
 	uint16_t ofs = 0; //offset
 	int cmpcnt = 0; //compression count
-	cerr << "1" << endl;
 	memcpy(&length, &buf[(*pos)++], 1);
-	cerr << "2" << endl;
 	while(length != 0){
 		if(length >= COMPRESSION){
-			cerr << "3" << endl;
 			cmpcnt++;
 			if(cmpcnt > 1){
 				memcpy(&ofs, &buf[ofs-1], 2);
@@ -307,7 +304,6 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 				memcpy(&length, &buf[ofs++], 1);
 			}
 		}else if(ofs != 0){
-			cerr << "4" << endl;
 			for(int i = 0; i < length; i++){
 				memcpy(&tempchar, &buf[ofs++], 1);
 	          	name += tempchar;
@@ -315,7 +311,6 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 			name += ".";
 	        memcpy(&length, &buf[ofs++], 1);
 		}else{
-			cerr << "5" << endl;
 			for(int i = 0; i < length; i++){
 				memcpy(&tempchar, &buf[(*pos)++], 1);
 	          	name += tempchar;
@@ -324,7 +319,6 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	        memcpy(&length, &buf[(*pos)++], 1);
 		}
 	}
-	cerr << "Resolved name" << endl;
 	r->rname = name;
 
 	memcpy(&(r->rtype),&buf[*pos],2);
