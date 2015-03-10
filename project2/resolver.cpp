@@ -222,6 +222,7 @@ int main(int argc, char** argv){
 					}
 				}
 				dnsresponse ns = rs.top();
+				rs.pop();
 				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
