@@ -72,7 +72,7 @@ int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
 void unset_recursion_bit(void* q);
 int valid_port(string s);
-map<string, dnspair> cache;\
+map<string, dnspair> cache;
 void CatchAlarm(int);
 
 /*
@@ -106,15 +106,13 @@ int main(int argc, char** argv){
 	signal (SIGALRM, CatchAlarm);
 
 	//only need -p, but maybe we could use the others?
-	if (argc > 2){
+	if (argc > 1){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
 				i++;
 			
-				if(!valid_port(argv[i])){
+				if(!valid_port(argv[i]))
 					return 1;
-				}
-				port = atoi(argv[i]);
 			}
 			else{
 				cerr << "Invalid option. Only valid option is -p\n";
@@ -194,16 +192,16 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
-				/*for(int i = 0; i < sizeof(recbuf); i++){
+				for(int i = 0; i < sizeof(recbuf); i++){
  					printf("%02X ",recbuf[i]);
- 				}*/
+ 				}
 
-				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
+				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount);// + ntohs(rh.arcount);
 				//cout << "ResponseNum=" << response_num << endl;
 				dnsresponse r[response_num];
 
 				for(int i = 0; i < response_num; i++){
-					//cout << "Response " << i << endl;
+					cout << "Response " << i + 1 << endl;
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl;
 					}
