@@ -288,7 +288,9 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	uint16_t ofs = 0; //offset
 	int cmpcnt = 0; //compression count
 	memcpy(&length, &buf[(*pos)++], 1);
+	cerr << "Length=" << length << endl;
 	while(length != 0){
+		cerr << "Length=" << length << endl;
 		if(length >= COMPRESSION){
 			cmpcnt++;
 			if(cmpcnt > 1){
@@ -330,7 +332,6 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rdata),&buf[*pos],r->rdlength);
-	*pos += r->rdlength;
 
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
@@ -338,7 +339,11 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	cout << "RTTL: " << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	//cout << "RDATA: " << ntohs(r->rdata) << endl;
+	cerr << "pos=" << *pos << endl;
+	cerr << "rdlength=" << ntohs(r->rdlength) << endl;
+	*pos += ntohs(r->rdlength);
 
+	cerr << "start=" << start << "   pos=" << *pos << endl;
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
  	}
