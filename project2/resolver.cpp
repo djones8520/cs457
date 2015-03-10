@@ -282,41 +282,50 @@ int get_query(dnsquery* q, char* buf, int* pos){
 
 int get_response(dnsresponse* r, char* buf, int* pos){
 	int start = *pos;
-	string name;
-	short length;
 	char tempchar;
+	string name;
+	uint16_t length;
+	uint16_t ofs = 0; //offset
+	int cmpcnt = 0; //compression count
+	cerr << "1" << endl;
 	memcpy(&length, &buf[(*pos)++], 1);
-	cout << "length=" << length << endl;
-	if(length == COMPRESSION){
-		int ofs = buf[(*pos)++];
-		cout << "ofs=" << ofs << endl;
-		while(ofs != 0){
-			memcpy(&length,&buf[ofs++],1);
-			cout << "length=" << length << endl;
-	      	while(length != 0){
-	        	for(int i = 0; i < length; i++){
-	          		tempchar = buf[ofs++];
-	          		name += tempchar;
-	        	}
-	        	name += ".";
-	        	memcpy(&length,&buf[ofs],1);
-	        	ofs++;
-	      	}
-	      	ofs = (*pos)++;
-		}
-      	r->rname = name;
-	}else{
-		while (length != 0){
-			for (int i = 0; i < length; i++){
-				tempchar = (char)(buf[(*pos)++]);
-				name += tempchar;
+	cerr << "2" << endl;
+	while(length != 0){
+		if(length >= COMPRESSION){
+			cerr << "3" << endl;
+			cmpcnt++;
+			if(cmpcnt > 1){
+				memcpy(&ofs, &buf[ofs-1], 2);
+				ofs << 2; //get rid of first two bits
+				ofs >> 2;
+				memcpy(&length, &buf[ofs++], 1);
+			}else{
+				memcpy(&ofs, &buf[(*pos)-1], 2);
+				(*pos)++;
+				ofs << 2;
+				ofs >> 2;
+				memcpy(&length, &buf[ofs++], 1);
 			}
-
+		}else if(ofs != 0){
+			cerr << "4" << endl;
+			for(int i = 0; i < length; i++){
+				memcpy(&tempchar, &buf[ofs++], 1);
+	          	name += tempchar;
+			}
 			name += ".";
-			memcpy(&length, &buf[(*pos)++], 1);
+	        memcpy(&length, &buf[ofs++], 1);
+		}else{
+			cerr << "5" << endl;
+			for(int i = 0; i < length; i++){
+				memcpy(&tempchar, &buf[(*pos)++], 1);
+	          	name += tempchar;
+			}
+			name += ".";
+	        memcpy(&length, &buf[(*pos)++], 1);
 		}
-		r->rname = name;
 	}
+	cerr << "Resolved name" << endl;
+	r->rname = name;
 
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
