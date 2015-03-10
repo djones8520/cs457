@@ -192,9 +192,9 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
-				for(int i = 0; i < sizeof(recbuf); i++){
+				/*for(int i = 0; i < sizeof(recbuf); i++){
  					printf("%02X ",recbuf[i]);
- 				}
+ 				}*/
 
 				int response_num = rh.ancount + rh.nscount + rh.arcount;
 				dnsresponse r[response_num];
@@ -323,23 +323,16 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	        memcpy(&length, &buf[(*pos)++], 1);
 		}
 	}
-	cerr << name << endl;
-	r->rname = name;
-	cerr << "Resolved name" << endl;
+	memcpy(&(r->rname),&name,sizeof(name));
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
-	cerr << "Resolved type" << endl;
 	memcpy(&(r->rclass),&buf[*pos],2);
 	*pos += 2;
-	cerr << "Resolved class" << endl;
 	memcpy(&(r->rttl),&buf[*pos],4);
 	*pos += 4;
-	cerr << "Resolved ttl" << endl;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
-	cerr << "Resolved rdlength" << endl;
 	memcpy(&(r->rdata),&buf[*pos],r->rdlength);
-	cerr << "Resolved data" << endl;
 
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
@@ -347,11 +340,8 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	cout << "RTTL: " << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	//cout << "RDATA: " << ntohs(r->rdata) << endl;
-	cerr << "pos=" << *pos << endl;
-	cerr << "rdlength=" << ntohs(r->rdlength) << endl;
 	*pos += ntohs(r->rdlength);
 
-	cerr << "start=" << start << "   pos=" << *pos << endl;
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
  	}
