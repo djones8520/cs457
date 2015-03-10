@@ -221,7 +221,7 @@ int main(int argc, char** argv){
 						rs.push(r[i]);
 					}
 				}
-				dnsresponse ns = (dnsresponse)rs.pop();
+				dnsresponse ns = rs.top();
 				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
@@ -379,7 +379,7 @@ bool check_cache(string name){
 }
 
 void unset_recursion_bit(void* buf){
-	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
+	uint16_t temp = 254; //1111111011111111 the 0 is the RD bit
 	buf[2] &= temp;
 }
 

@@ -15,10 +15,11 @@
 #include <cstdio>
 #include <iostream>
 #include <sstream>
-#include <string>
+#include <string.h>
 #include <random>
 #include <chrono>
 #include <cstring>
+#include <stack>
 #include <fstream>
 #include <signal.h>
 #include <unistd.h>
@@ -29,44 +30,51 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
+#include <ctype.h>
+#include <time.h>
 
 #define TYPE_A 1
 #define CLASS_IN 1
 #define BUFLEN 512
+#define COMPRESSION 192
 
 using namespace std;
 
-struct dnsquery{
+struct dnsheader{
 	uint16_t id;
 	uint16_t flags;
 	uint16_t qcount;
 	uint16_t ancount;
 	uint16_t nscount;
 	uint16_t arcount;
+};
+
+struct dnsquery{
 	string qname;
 	uint16_t qtype;
 	uint16_t qclass;
 };
 
 struct dnsresponse{
-	uint16_t id;
-	uint16_t flags;
-	uint16_t qcount;
-	uint16_t ancount;
-	uint16_t nscount;
-	uint16_t arcount;
-	uint16_t type;
-	uint16_t dns_class;
-	uint32_t ttl;
+	string rname;
+	uint16_t rtype;
+	uint16_t rclass;
+	uint32_t rttl;
 	uint16_t rdlength;
-	uint8_t* rdata;
-	string name;
+	string rdata;
 };
-
-int get_query(dnsquery* q, char* buf);
+struct dnspair{
+	struct dnsresponse dr;
+	time_t time_entered;
+};
+int get_header(dnsheader* h, char*buf, int* pos);
+int get_query(dnsquery* q, char* buf, int* pos);
+int get_response(dnsresponse *r, char* buf, int* pos);
 bool check_cache(string name);
-void unset_recursion_bit(void* q);
-map<string, dnsresponse> cache;
+void unset_recursion_bit(void* buf);
+int valid_port(string s);
+map<string, dnspair> cache;
+void CatchAlarm(int);
 
 /*
  * Link to RFC 1034: https://www.ietf.org/rfc/rfc1034.txt
@@ -89,21 +97,23 @@ map<string, dnsresponse> cache;
  * dig @127.0.0.1 -p 9010 gvsu.edu
  */
 
+
+
+
 int main(int argc, char** argv){
 
 	int port = 9010;
 	string logfile;
+	signal (SIGALRM, CatchAlarm);
 
 	//only need -p, but maybe we could use the others?
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
 				i++;
-				port = atoi(argv[i]);
-				if (port < 0 || port > 61000){
-					cerr << "Invalid port\n"; //I'm pretty sure there is more to validating a port number?
+			
+				if(!valid_port(argv[i]))
 					return 1;
-				}
 			}
 			else{
 				cerr << "Invalid option. Only valid option is -p\n";
@@ -126,95 +136,272 @@ int main(int argc, char** argv){
 	//later might want to add the rest of the name servers in case we don't receive a response back
 	rootaddr.sin_family = AF_INET;
 	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
-	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
+	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET. 
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
 	char buf[BUFLEN];
-	socklen_t socketLength = sizeof(clientaddr);;
+	char recbuf[BUFLEN];
+	socklen_t socketLength = sizeof(clientaddr);
+	socklen_t rootLength = sizeof(rootaddr);
 
 	while (1){
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &socketLength) < 0){
-			cerr << "Receive error" << endl;
+			cerr << "Receive error in IF" << endl;
+			return 1;
 		}
 
+		dnsheader h;
 		dnsquery q;
+		int pos = 0;
 
-		if (get_query(&q, buf) < 0){
+		if (get_header(&h, buf, &pos) < 0){
+			cerr << "Unable to get header info" << endl;
+		}
+
+		if (get_query(&q, buf, &pos) < 0){
 			cerr << "Unable to get query info" << endl;
 		}
 
 		if (check_cache(q.qname)){
-			sendto(sockfd, (void *)cache[q.qname], sizeof(cache[q.qname]), 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
-			// cache[q.qname] is the dnsresponse to send back
-			//return IP
+			sendto(sockfd, &cache[q.qname].dr, sizeof(cache[q.qname].dr), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
+			// cache[q.qname].dr is the dnsresponse to send back
+			//return IP<F7>
+		}else{
+			unset_recursion_bit(&buf);
+			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
+			alarm(2);
+			if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&rootaddr, &rootLength) < 0){
+				perror("Receive error");
+				return 0;
+			}
+			alarm(0);
+
+			bool found = false;
+			stack<dnsresponse> rs;
+			while(!found){
+				unset_recursion_bit(&recbuf);
+				dnsheader rh;
+				dnsquery rq;
+				pos = 0;
+				
+				if (get_header(&rh, recbuf, &pos) < 0){
+					cerr << "Unable to get header info" << endl;
+				}
+
+				if (get_query(&rq, recbuf, &pos) < 0){
+					cerr << "Unable to get query info" << endl;
+				}
+
+				/*for(int i = 0; i < sizeof(recbuf); i++){
+ 					printf("%02X ",recbuf[i]);
+ 				}*/
+
+				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount);// + ntohs(rh.arcount);
+				dnsresponse r[response_num];
+
+				if(ntohs(rh.ancount) > 0){
+					found = true;
+					for(int i = 0; i < ntohs(rh.qcount); i++){
+						//cache answer here
+						sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));//send answers back to client
+					}
+					//break;
+				}
+
+				for(int i = 0; i < response_num; i++){
+					cout << "Response " << i + 1 << endl;
+					if (get_response(&(r[i]), recbuf, &pos) < 0){
+						cerr << "Unable to get response info" << endl;
+					}
+				}
+
+				if(response_num > 0){
+					for(int i = response_num - 1; i >= 0; i--){//push name servers to stack
+						rs.push(r[i]);
+					}
+				}
+				dnsresponse ns = rs.top();
+				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
+					perror("Receive error");
+					return 0;
+				}*/
+			}
 		}
-		else{
-			unset_recursion_bit(&q);
-		}
-
-		//insert code to send query to name server, receive response, parse it, and
-		//either forward to client or additional name server
-
-		
-
 		memset(buf, 0, sizeof(buf));
 	}
 	return 0;
 }
 
-int get_query(dnsquery* q, char* buf){
-	memcpy(q, &buf, 12);
-	int pos = 12;
+int get_header(dnsheader* h, char* buf, int* pos){
+	int start = *pos;
+	memcpy(h, buf, 12);
+	*pos = 12;
+	cout << "DNS Header" << endl;
+	cout << "------------------------------------" << endl;
+	printf("ID: 0x%02X\n", ntohs(h->id));
+	printf("Flags: 0x%02X\n", ntohs(h->flags));
+	cout << "QCOUNT: " << ntohs(h->qcount) << endl;
+	cout << "ANCOUNT: " << ntohs(h->ancount) << endl;
+	cout << "NSCOUNT: " << ntohs(h->nscount) << endl;
+	cout << "ARCOUNT: " << ntohs(h->arcount) << endl;
+
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+
+ 	cout << endl << endl;
+
+	return 0;
+}
+
+int get_query(dnsquery* q, char* buf, int* pos){
+	int start = *pos;
 	string name;
 	short length;
 	char tempchar;
-	memcpy(&length, &buf[pos], 1);
-	pos++;
+	memcpy(&length, &buf[*pos], 1);
+	(*pos)++;
 	while (length != 0){
 		for (int i = 0; i < length; i++){
-			tempchar = (char)(buf[pos++]);
+			memcpy(&tempchar, &buf[(*pos)++], 1);
 			name += tempchar;
 		}
-
 		name += ".";
-		memcpy(&length, &buf[pos], 1);
-		pos++;
+		memcpy(&length, &buf[(*pos)++], 1);
 	}
 	q->qname = name;
-	
-	memcpy(q, &buf[pos], 4);
-	pos += 4;
+	memcpy(&(q->qtype),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(q->qclass),&buf[*pos],2);
+	*pos += 2;
 
-	cout << "Request Header" << endl;
-	cout << "------------------------------------" << endl;
-	cout << "ID: 0x" << hex << ntohs(q->id) << endl;
-	cout << "Flags: 0x" << hex << ntohs(q->flags) << endl;
-	cout << "QCOUNT: " << ntohs(q->qcount) << endl;
-	cout << "ANCOUNT: " << ntohs(q->ancount) << endl;
-	cout << "NSCOUNT: " << ntohs(q->nscount) << endl;
-	cout << "ARCOUNT: " << ntohs(q->arcount) << endl;
 	cout << "QNAME: " << q->qname << endl;
 	cout << "QTYPE: " << ntohs(q->qtype) << endl;
-	cout << "QCLASS: " << ntohs(q->qclass) << endl << endl;
-	pos += 4;
-	for(int i = 0; i < pos; i++){
-		printf("%02X ",buf[i]);
+	cout << "QCLASS: " << ntohs(q->qclass) << endl;
+	
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+ 	cout << endl << endl;
+	
+	return 0;
+}
+
+int get_response(dnsresponse* r, char* buf, int* pos){
+	int start = *pos;
+	char tempchar;
+	string name;
+	uint16_t length;
+	uint16_t ofs = 0; //offset
+	int cmpcnt = 0; //compression count
+	memcpy(&length, &buf[(*pos)++], 1);
+	while(length != 0){
+		if(length >= COMPRESSION){
+			cmpcnt++;
+			if(cmpcnt > 1){
+				memcpy(&ofs, &buf[ofs-1], 2);
+				ofs = ntohs(ofs);
+				ofs &= 16383;
+				memcpy(&length, &buf[ofs++], 1);
+			}else{
+				memcpy(&ofs, &buf[(*pos)-1], 2);
+				(*pos)++;
+				ofs = ntohs(ofs);
+				ofs &= 16383;
+				memcpy(&length, &buf[ofs++], 1);
+			}
+		}else if(ofs != 0){
+			for(int i = 0; i < length; i++){
+				memcpy(&tempchar, &buf[ofs++], 1);
+	          	name += tempchar;
+			}
+			name += ".";
+	        memcpy(&length, &buf[ofs++], 1);
+		}else{
+			for(int i = 0; i < length; i++){
+				memcpy(&tempchar, &buf[(*pos)++], 1);
+	          	name += tempchar;
+			}
+			name += ".";
+	        memcpy(&length, &buf[(*pos)++], 1);
+		}
 	}
-	cout << endl << endl;
+	memcpy(&(r->rname),&name,sizeof(name));
+	memcpy(&(r->rtype),&buf[*pos],2);
+	*pos += 2;
+	memcpy(&(r->rclass),&buf[*pos],2);
+	*pos += 4;
+	memcpy(&(r->rttl),&buf[*pos],4);
+	*pos += 2;
+	memcpy(&(r->rdlength),&buf[*pos],2);
+	*pos += 2;
+	for(int i = 0; i < ntohs(r->rdlength); i++){
+		memcpy(&tempchar, &buf[(*pos)++], 1);
+		r->rdata += tempchar;
+	}
+	//memcpy(&(r->rdata),&buf[*pos],ntohs(r->rdlength));
+	cout << "RNAME: " << r->rname << endl;
+	cout << "RTYPE: " << ntohs(r->rtype) << endl;
+	cout << "RCLASS: " << ntohs(r->rclass) << endl;
+	cout << "RTTL: " << ntohs(r->rttl) << endl;
+	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
+	cout << "RDATA: " << r->rdata << endl;
+	//*pos += ntohs(r->rdlength);
+
+	for(int i = start; i < *pos; i++){
+ 		printf("%02X ",buf[i]);
+ 	}
+
+ 	cout << endl << endl;
+
+	return 0;
 }
 
 // Check if name is in cache
 bool check_cache(string name){
-	if(cache.count(name) != 0)
+	dnspair myPair = cache[name];
+	if(cache.count(name) != 0){
+		if(time(NULL) > (myPair.dr.rttl + myPair.time_entered)){
+			cache.erase(name);
+			return false;			
+		}
+		
+		cout << "The current cache is:\n";
+		for(map<string,dnspair>::iterator it = cache.begin(); it != cache.end(); it++){
+			cout << it->second.dr.rname << endl;
+		}
 		return true;
+	}
 	else
 		return false;	
 }
 
-void unset_recursion_bit(void* q){
+void unset_recursion_bit(void* buf){
 	uint16_t temp = 65279; //1111111011111111 the 0 is the RD bit
-	dnsquery* query = (dnsquery*)q;
+	buf[2] &= temp;
+}
 
-	query->flags &= temp;
+int valid_port(string s)
+{
+	int port;
+	for(unsigned int j = 0; j < s.length();j++)
+	{
+		if(!isdigit(s.at(j))){
+			cerr << "Invalid port number: please only enter numeric characters\n";
+			return 0;	
+		}
+		port = atoi(&s[0]);
+		if (port < 0 || port > 61000){
+			cerr << "Invalid port: port number must be between 0 and 61,000\n";
+			return 0;
+		}
+	}
+	return 1;
+}
+
+void CatchAlarm(int ignored){
+	cout << "Server took too long to respond\nQuitting...\n";
+	exit(1);
 }
