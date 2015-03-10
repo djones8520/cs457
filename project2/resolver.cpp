@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <stdlib.h>
 #include <random>
 #include <chrono>
 #include <cstring>
@@ -197,7 +198,7 @@ int main(int argc, char** argv){
  					printf("%02X ",recbuf[i]);
  				}*/
 
-				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount);// + ntohs(rh.arcount);
+				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
 				dnsresponse r[response_num];
 
 				if(ntohs(rh.ancount) > 0){
@@ -214,7 +215,7 @@ int main(int argc, char** argv){
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl;
 					}
-				}
+				}			
 
 				if(response_num > 0){
 					for(int i = response_num - 1; i >= 0; i--){//push name servers to stack
@@ -223,7 +224,7 @@ int main(int argc, char** argv){
 				}
 				dnsresponse ns = rs.top();
 				rs.pop();
-				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+				/*sendto(sockfd, rec, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
 					return 0;
@@ -323,7 +324,7 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 		}else{
 			for(int i = 0; i < length; i++){
 				memcpy(&tempchar, &buf[(*pos)++], 1);
-	          	name += tempchar;
+	          		name += tempchar;
 			}
 			name += ".";
 	        memcpy(&length, &buf[(*pos)++], 1);
@@ -338,18 +339,63 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	*pos += 2;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
-	for(int i = 0; i < ntohs(r->rdlength); i++){
-		memcpy(&tempchar, &buf[(*pos)++], 1);
-		r->rdata += tempchar;
+	if(ntohs(r->rtype) == 1){
+		uint8_t tempint;
+		for(int i = 0; i < 4; i++){
+			memcpy(&tempint, &buf[(*pos)++], 1);
+	          	r->rdata += to_string(tempint);
+			if(i < 3){
+				r->rdata += ".";
+			}
+		}
+	}else if(ntohs(r->rtype) == 2){
+		name = "";
+		ofs = 0; //offset
+		cmpcnt = 0; //compression count
+		memcpy(&length, &buf[(*pos)++], 1);
+		while(length != 0){
+			if(length >= COMPRESSION){
+				cmpcnt++;
+				if(cmpcnt > 1){
+					memcpy(&ofs, &buf[ofs-1], 2);
+					ofs = ntohs(ofs);
+					ofs &= 16383;
+					memcpy(&length, &buf[ofs++], 1);
+				}else{
+					memcpy(&ofs, &buf[(*pos)-1], 2);
+					(*pos)++;
+					ofs = ntohs(ofs);
+					ofs &= 16383;
+					memcpy(&length, &buf[ofs++], 1);
+				}
+			}else if(ofs != 0){
+				for(int i = 0; i < length; i++){
+					memcpy(&tempchar, &buf[ofs++], 1);
+	          			name += tempchar;
+				}
+				name += ".";
+	        	memcpy(&length, &buf[ofs++], 1);
+			}else{
+				for(int i = 0; i < length; i++){
+					memcpy(&tempchar, &buf[(*pos)++], 1);
+	          			name += tempchar;
+				}
+				name += ".";
+	        		memcpy(&length, &buf[(*pos)++], 1);
+			}
+		}
+		memcpy(&(r->rdata),&name,sizeof(name));
+	}else{
+		cerr << "Incompatible type" << endl;
+		return -1;
 	}
-	//memcpy(&(r->rdata),&buf[*pos],ntohs(r->rdlength));
+
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
 	cout << "RCLASS: " << ntohs(r->rclass) << endl;
 	cout << "RTTL: " << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	cout << "RDATA: " << r->rdata << endl;
-	//*pos += ntohs(r->rdlength);
 
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
