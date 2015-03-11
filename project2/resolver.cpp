@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <stdlib.h>
 #include <random>
 #include <chrono>
 #include <cstring>
@@ -26,7 +27,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
@@ -178,7 +178,7 @@ int main(int argc, char** argv){
 			alarm(0);
 
 			bool found = false;
-			stack<dnsresponse> rs;
+			stack<dnsresponse> ns_stack;
 			while(!found){
 				unset_recursion_bit(recbuf);
 				dnsheader rh;
@@ -197,7 +197,7 @@ int main(int argc, char** argv){
  					printf("%02X ",recbuf[i]);
  				}*/
 
-				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount);// + ntohs(rh.arcount);
+				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
 				dnsresponse r[response_num];
 
 				if(ntohs(rh.ancount) > 0){
@@ -214,24 +214,61 @@ int main(int argc, char** argv){
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl;
 					}
-				}
+				}			
 
 				if(response_num > 0){
-					for(int i = response_num - 1; i >= 0; i--){//push name servers to stack
-						rs.push(r[i]);
+					for(int i = ntohs(rh.ancount); i < ntohs(rh.nscount); i++){//push name servers to stack
+						ns_stack.push(r[i]);
 					}
 				}
-				dnsresponse ns = rs.top();
-				rs.pop();
-				/*sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+				
+				bool match = false;
+				string nextaddr;
+				while(!match){
+					dnsresponse ns = ns_stack.top();
+					cerr << "Current check: " << ns.rdata << endl;
+					ns_stack.pop();
+					for(int i = 0; i < response_num; i++){
+						if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
+							cerr << "Next Address" << r[i].rdata << endl;
+							nextaddr = r[i].rdata;
+							match = true;
+						}
+					}
+					if(ns_stack.empty() && !match){
+						cerr << "Ran out of name servers to check" << endl;
+						return -1;
+					}
+				}
+
+				cerr << "Next Address" << nextaddr << endl;
+
+				struct sockaddr_in nsaddr;
+				nsaddr.sin_family = AF_INET;
+				nsaddr.sin_port = htons(53);
+				nsaddr.sin_addr.s_addr = inet_addr(nextaddr.c_str());
+				socklen_t nslength = sizeof(nsaddr);
+
+				memset(recbuf, 0, sizeof(buf));
+				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
 				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 					perror("Receive error");
 					return 0;
-				}*/
+				}
 			}
 		}
+
 		memset(buf, 0, sizeof(buf));
+		
+		ofstream cacheOut;
+		cacheOut.open ("cache.txt");
+		
+		for(const auto& item : cache)
+			cacheOut << item.first << "\n";
+
+		cacheOut.close();
 	}
+
 	return 0;
 }
 
@@ -323,13 +360,14 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 		}else{
 			for(int i = 0; i < length; i++){
 				memcpy(&tempchar, &buf[(*pos)++], 1);
-	          	name += tempchar;
+	          		name += tempchar;
 			}
 			name += ".";
 	        memcpy(&length, &buf[(*pos)++], 1);
 		}
 	}
-	memcpy(&(r->rname),&name,sizeof(name));
+	r->rname += name;
+	//memcpy(&(r->rname),&name,sizeof(name));
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rclass),&buf[*pos],2);
@@ -344,18 +382,65 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	*pos += 4;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
-	for(int i = 0; i < ntohs(r->rdlength); i++){
-		memcpy(&tempchar, &buf[(*pos)++], 1);
-		r->rdata += tempchar;
+
+	if(ntohs(r->rtype) == 1){
+		uint8_t tempint;
+		for(int i = 0; i < 4; i++){
+			memcpy(&tempint, &buf[(*pos)++], 1);
+	          	r->rdata += to_string(tempint);
+			if(i < 3){
+				r->rdata += ".";
+			}
+		}
+	}else if(ntohs(r->rtype) == 2){
+		name = "";
+		ofs = 0; //offset
+		cmpcnt = 0; //compression count
+		memcpy(&length, &buf[(*pos)++], 1);
+		while(length != 0){
+			if(length >= COMPRESSION){
+				cmpcnt++;
+				if(cmpcnt > 1){
+					memcpy(&ofs, &buf[ofs-1], 2);
+					ofs = ntohs(ofs);
+					ofs &= 16383;
+					memcpy(&length, &buf[ofs++], 1);
+				}else{
+					memcpy(&ofs, &buf[(*pos)-1], 2);
+					(*pos)++;
+					ofs = ntohs(ofs);
+					ofs &= 16383;
+					memcpy(&length, &buf[ofs++], 1);
+				}
+			}else if(ofs != 0){
+				for(int i = 0; i < length; i++){
+					memcpy(&tempchar, &buf[ofs++], 1);
+	          			name += tempchar;
+				}
+				name += ".";
+	        	memcpy(&length, &buf[ofs++], 1);
+			}else{
+				for(int i = 0; i < length; i++){
+					memcpy(&tempchar, &buf[(*pos)++], 1);
+	          			name += tempchar;
+				}
+				name += ".";
+	        		memcpy(&length, &buf[(*pos)++], 1);
+			}
+		}
+		//memcpy(&(r->rdata),&name,sizeof(name));
+		r->rdata += name;
+	}else{
+		cerr << "Incompatible type" << endl;
+		return -1;
 	}
-	//memcpy(&(r->rdata),&buf[*pos],ntohs(r->rdlength));
+
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
 	cout << "RCLASS: " << ntohs(r->rclass) << endl;
 	cout << "RTTL: " << dec << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	cout << "RDATA: " << r->rdata << endl;
-	//*pos += ntohs(r->rdlength);
 
 	for(int i = start; i < *pos; i++){
  		printf("%02X ",buf[i]);
