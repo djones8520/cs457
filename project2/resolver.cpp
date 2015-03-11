@@ -386,7 +386,7 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 				r->rdata += ".";
 			}
 		}
-	}else if(ntohs(r->rtype) == 2){
+	}else if(ntohs(r->rtype) == 2 || ntohs(r->rtype) == 5){
 		name = "";
 		ofs = 0; //offset
 		cmpcnt = 0; //compression count
