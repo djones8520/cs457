@@ -168,6 +168,9 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
+			//uint8_t bit1 = h.id;
+			//uint8_t bit2 = h.id << 8;
+			memcpy(&cache[q.qname].buf, &h.id, 2);
 			sendto(sockfd, &cache[q.qname].buf, sizeof(cache[q.qname].buf), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 		}else{
 			unset_recursion_bit(buf);
