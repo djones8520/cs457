@@ -67,11 +67,11 @@ struct dnspair{
 	struct dnsresponse dr;
 	time_t time_entered;
 };
-int get_header(dnsheader* h, char*buf, int* pos);
-int get_query(dnsquery* q, char* buf, int* pos);
-int get_response(dnsresponse *r, char* buf, int* pos);
+int get_header(dnsheader* h, unsigned char*buf, int* pos);
+int get_query(dnsquery* q, unsigned char* buf, int* pos);
+int get_response(dnsresponse *r, unsigned char* buf, int* pos);
 bool check_cache(string name);
-void unset_recursion_bit(char* buf);
+void unset_recursion_bit(unsigned char* buf);
 int valid_port(string s);
 map<string, dnspair> cache;
 void CatchAlarm(int);
@@ -140,8 +140,8 @@ int main(int argc, char** argv){
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
 
-	char buf[BUFLEN];
-	char recbuf[BUFLEN];
+	unsigned char buf[BUFLEN];
+	unsigned char recbuf[BUFLEN];
 	socklen_t socketLength = sizeof(clientaddr);
 	socklen_t rootLength = sizeof(rootaddr);
 
@@ -235,7 +235,7 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-int get_header(dnsheader* h, char* buf, int* pos){
+int get_header(dnsheader* h, unsigned char* buf, int* pos){
 	int start = *pos;
 	memcpy(h, buf, 12);
 	*pos = 12;
@@ -257,7 +257,7 @@ int get_header(dnsheader* h, char* buf, int* pos){
 	return 0;
 }
 
-int get_query(dnsquery* q, char* buf, int* pos){
+int get_query(dnsquery* q, unsigned char* buf, int* pos){
 	int start = *pos;
 	string name;
 	short length;
@@ -290,7 +290,7 @@ int get_query(dnsquery* q, char* buf, int* pos){
 	return 0;
 }
 
-int get_response(dnsresponse* r, char* buf, int* pos){
+int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	int start = *pos;
 	char tempchar;
 	string name;
@@ -333,9 +333,15 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rclass),&buf[*pos],2);
-	*pos += 4;
-	memcpy(&(r->rttl),&buf[*pos],4);
 	*pos += 2;
+
+	// char tempbuf[4];
+	// memcpy(&tempbuf[0],&buf[*pos],2); //memcpy(&(r->rttl),&buf[*pos],2);
+	// memcpy(&tempbuf[2],&buf[*pos+2],2);
+	// memcpy(&(r->rttl),&tempbuf[0],4);
+	memcpy(&(r->rttl),&buf[*pos],2);
+
+	*pos += 4;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
 	for(int i = 0; i < ntohs(r->rdlength); i++){
@@ -346,7 +352,7 @@ int get_response(dnsresponse* r, char* buf, int* pos){
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
 	cout << "RCLASS: " << ntohs(r->rclass) << endl;
-	cout << "RTTL: " << ntohs(r->rttl) << endl;
+	cout << "RTTL: " << dec << ntohs(r->rttl) << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	cout << "RDATA: " << r->rdata << endl;
 	//*pos += ntohs(r->rdlength);
@@ -379,7 +385,7 @@ bool check_cache(string name){
 		return false;
 }
 
-void unset_recursion_bit(char* buf){
+void unset_recursion_bit(unsigned char* buf){
 	uint16_t temp = 254; //1111111011111111 the 0 is the RD bit
 	buf[2] &= temp;
 }
