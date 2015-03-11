@@ -196,7 +196,7 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
-				for(int i = 0; i < sizeof(recbuf); i++){
+				for(unsigned int i = 0; i < sizeof(recbuf); i++){
  					printf("%02X ",recbuf[i]);
  				}
 
