@@ -215,8 +215,8 @@ int main(int argc, char** argv){
 						ns_stack.push(r[i]);
 					}
 					for(int i = ntohs(rh.ancount) + ntohs(rh.nscount); i < response_num; i++){//push additional records to stack
-						ar_vector.push_back(r[i]);					
-					}				
+						ar_vector.push_back(r[i]);
+					}
 				}
 
 				if(ntohs(rh.ancount) > 0){
@@ -236,7 +236,7 @@ int main(int argc, char** argv){
 					while(!match && !found){
 						dnsresponse ns = ns_stack.top();
 						ns_stack.pop();
-						for(int i = 0; i < ar_vector.size(); i++){
+						for(unsigned int i = 0; i < ar_vector.size(); i++){
 							if(strcmp(ns.rdata.c_str(),ar_vector[i].rname.c_str()) == 0){
 								nextaddr = ar_vector[i].rdata;
 								match = true;
