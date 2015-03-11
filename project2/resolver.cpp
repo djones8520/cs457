@@ -196,9 +196,9 @@ int main(int argc, char** argv){
 					cerr << "Unable to get query info" << endl;
 				}
 
-				/*for(int i = 0; i < sizeof(recbuf); i++){
+				for(int i = 0; i < sizeof(recbuf); i++){
  					printf("%02X ",recbuf[i]);
- 				}*/
+ 				}
 
 				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
 				dnsresponse r[response_num];
@@ -442,6 +442,7 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 		//memcpy(&(r->rdata),&name,sizeof(name));
 		r->rdata += name;
 	}else{
+		*pos += ntohs(r->rdlength);
 		cerr << "Incompatible type" << endl;
 		return -1;
 	}
