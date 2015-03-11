@@ -225,36 +225,36 @@ int main(int argc, char** argv){
 						cache[rq.qname] = di;
 					}
 					sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));//send answers back to client
-				}
-				
-				bool match = false;
-				string nextaddr;
-				while(!match && !found){
-					dnsresponse ns = ns_stack.top();
-					ns_stack.pop();
-					for(int i = 0; i < response_num; i++){
-						if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
-							nextaddr = r[i].rdata;
-							match = true;
+				}else{
+					bool match = false;
+					string nextaddr;
+					while(!match && !found){
+						dnsresponse ns = ns_stack.top();
+						ns_stack.pop();
+						for(int i = 0; i < response_num; i++){
+							if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
+								nextaddr = r[i].rdata;
+								match = true;
+							}
+						}
+						if(ns_stack.empty() && !match){
+							cerr << "Ran out of name servers to check" << endl;
+							return -1;
 						}
 					}
-					if(ns_stack.empty() && !match){
-						cerr << "Ran out of name servers to check" << endl;
-						return -1;
+
+					struct sockaddr_in nsaddr;
+					nsaddr.sin_family = AF_INET;
+					nsaddr.sin_port = htons(53);
+					nsaddr.sin_addr.s_addr = inet_addr(nextaddr.c_str());
+					socklen_t nslength = sizeof(nsaddr);
+
+					memset(recbuf, 0, sizeof(buf));
+					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
+					if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
+						perror("Receive error");
+						return 0;
 					}
-				}
-
-				struct sockaddr_in nsaddr;
-				nsaddr.sin_family = AF_INET;
-				nsaddr.sin_port = htons(53);
-				nsaddr.sin_addr.s_addr = inet_addr(nextaddr.c_str());
-				socklen_t nslength = sizeof(nsaddr);
-
-				memset(recbuf, 0, sizeof(buf));
-				sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
-				if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
-					perror("Receive error");
-					return 0;
 				}
 			}
 		}
