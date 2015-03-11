@@ -17,8 +17,7 @@
 #include <sstream>
 #include <string.h>
 #include <stdlib.h>
-#include <random>
-#include <chrono>
+#include <vector>
 #include <cstring>
 #include <stack>
 #include <fstream>
@@ -26,7 +25,6 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <stdio.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <map>
@@ -84,25 +82,8 @@ void CatchAlarm(int);
  * Link to RFC 1034: https://www.ietf.org/rfc/rfc1034.txt
  * Link to RFC 1035: https://www.ietf.org/rfc/rfc1035.txt section 7 is extremely relevant
  *
- * Steps to take:
- * 1. Open UDP socket with client and accept DNS query
- *    -Possibly create seperate threads to handle queries to leave socket open for more connections
- *    -Figure out how to "maintain connection" (didn't do in Lab4 and I don't understand how)
- * 2. Parse query and put into a dnsquery struct
- * 3. Check if name is cached
- *    -If so, send dnsresponse to client
- * 4. Unset the RecursionDesired (RD) bit in the query flags
- *    -This will prevent other name servers from forwarding the query further
- * 5. Open UDP socket to a name server from: http://www.internic.net/domain/named.root
- * 6. Send query to name server
- * 7. When we receive a successful response back, cache the response and forward response packet to client
- * 8. Keep track of TTL in cache
- *
  * dig @127.0.0.1 -p 9010 gvsu.edu
  */
-
-
-
 
 int main(int argc, char** argv){
 
@@ -110,7 +91,6 @@ int main(int argc, char** argv){
 	string logfile;
 	signal (SIGALRM, CatchAlarm);
 
-	//only need -p, but maybe we could use the others?
 	if (argc > 1){
 		for (int i = 1; i < argc; i++){
 			if (strcmp(argv[i], "-p") == 0){
@@ -137,9 +117,8 @@ int main(int argc, char** argv){
 	serveraddr.sin_port = htons(port);
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
-	//later might want to add the rest of the name servers in case we don't receive a response back
 	rootaddr.sin_family = AF_INET;
-	rootaddr.sin_port = htons(53); //apparently this is the port DNS servers use?
+	rootaddr.sin_port = htons(53);//port that DNS servers use
 	rootaddr.sin_addr.s_addr = inet_addr("192.203.230.10"); //A.ROOT-SERVERS.NET.
 
 	bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
@@ -168,8 +147,7 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			//uint8_t bit1 = h.id;
-			//uint8_t bit2 = h.id << 8;
+			cout << "FOUND ANSWER IN CACHE" << endl;
 			memcpy(&cache[q.qname].buf, &h.id, 2);
 			sendto(sockfd, &cache[q.qname].buf, sizeof(cache[q.qname].buf), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 		}else{
@@ -191,11 +169,11 @@ int main(int argc, char** argv){
 				dnsquery rq;
 				pos = 0;
 
-				if (get_header(&rh, recbuf, &pos) < 0){
+				if(get_header(&rh, recbuf, &pos) < 0){
 					cerr << "Unable to get header info" << endl;
 				}
 
-				if (get_query(&rq, recbuf, &pos) < 0){
+				if(get_query(&rq, recbuf, &pos) < 0){
 					cerr << "Unable to get query info" << endl;
 				}
 
@@ -218,13 +196,13 @@ int main(int argc, char** argv){
 					for(int i = ntohs(rh.ancount); i < ntohs(rh.nscount); i++){//push name servers to stack
 						ns_stack.push(r[i]);
 					}
-					for(int i = ntohs(rh.ancount) + ntohs(rh.nscount); i < response_num; i++){//push additional records to stack
+					for(int i = ntohs(rh.ancount) + ntohs(rh.nscount); i < response_num; i++){//push additional records to vector
 						ar_vector.push_back(r[i]);
 					}
 				}
 
 				if(ntohs(rh.ancount) > 0){
-					cerr << "FOUND ANSWER!" << endl;
+					cerr << "FOUND ANSWER" << endl;
 					found = true;
 					for(int i = 0; i < ntohs(rh.ancount); i++){
 						dnsinfo di;
@@ -260,7 +238,7 @@ int main(int argc, char** argv){
 
 					memset(recbuf, 0, sizeof(buf));
 					sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&nsaddr,sizeof(struct sockaddr_in));//send answers back to client
-					if (recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
+					if(recvfrom(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&nsaddr, &nslength) < 0){
 						perror("Receive error");
 						return 0;
 					}
@@ -274,7 +252,7 @@ int main(int argc, char** argv){
 		cacheOut.open ("cache.txt");
 
 		for(const auto& item : cache){
-			cacheOut << item.first << "\n";
+			cacheOut << "Name: " << item.first << "    TTL: " << item.second.ttl << "\n";
 		}
 		cacheOut.close();
 	}
@@ -311,7 +289,7 @@ int get_query(dnsquery* q, unsigned char* buf, int* pos){
 	char tempchar;
 	memcpy(&length, &buf[*pos], 1);
 	(*pos)++;
-	while (length != 0){
+	while(length != 0){
 		for (int i = 0; i < length; i++){
 			memcpy(&tempchar, &buf[(*pos)++], 1);
 			name += tempchar;
@@ -377,19 +355,11 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 		}
 	}
 	r->rname += name;
-	//memcpy(&(r->rname),&name,sizeof(name));
 	memcpy(&(r->rtype),&buf[*pos],2);
 	*pos += 2;
 	memcpy(&(r->rclass),&buf[*pos],2);
 	*pos += 2;
 
-	// char tempbuf[4];
-	// memcpy(&tempbuf[0],&buf[*pos],2); //memcpy(&(r->rttl),&buf[*pos],2);
-	// memcpy(&tempbuf[2],&buf[*pos+2],2);
-	// memcpy(&(r->rttl),&tempbuf[0],4);
-	// memcpy(&(r->rttl),&buf[*pos],2);
-	//
-	// *pos += 4;
 	r->rttl =((buf[*pos+0] << 24)
 				+ (buf[*pos+1] << 16)
 				+ (buf[*pos+2] << 8)
@@ -443,7 +413,6 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	        		memcpy(&length, &buf[(*pos)++], 1);
 			}
 		}
-		//memcpy(&(r->rdata),&name,sizeof(name));
 		r->rdata += name;
 	}else{
 		*pos += ntohs(r->rdlength);
@@ -467,7 +436,6 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	return 0;
 }
 
-// Check if name is in cache
 bool check_cache(string name){
 	dnsinfo info = cache[name];
 	if(cache.count(name) != 0){
@@ -475,15 +443,10 @@ bool check_cache(string name){
 			cache.erase(name);
 			return false;
 		}
-
-		/*cout << "The current cache is:\n";
-		for(map<string,dnsinfo>::iterator it = cache.begin(); it != cache.end(); it++){
-			cout << it->second.dr.rname << endl;
-		}*/
 		return true;
-	}
-	else
+	}else{
 		return false;
+	}
 }
 
 void unset_recursion_bit(unsigned char* buf){
@@ -494,14 +457,13 @@ void unset_recursion_bit(unsigned char* buf){
 int valid_port(string s)
 {
 	int port;
-	for(unsigned int j = 0; j < s.length();j++)
-	{
+	for(unsigned int j = 0; j < s.length();j++){
 		if(!isdigit(s.at(j))){
 			cerr << "Invalid port number: please only enter numeric characters\n";
 			return 0;
 		}
 		port = atoi(&s[0]);
-		if (port < 0 || port > 61000){
+		if(port < 0 || port > 61000){
 			cerr << "Invalid port: port number must be between 0 and 61,000\n";
 			return 0;
 		}
