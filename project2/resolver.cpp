@@ -59,7 +59,7 @@ struct dnsresponse{
 	string rname;
 	uint16_t rtype;
 	uint16_t rclass;
-	uint32_t rttl;
+	int32_t rttl;
 	uint16_t rdlength;
 	string rdata;
 };
@@ -207,7 +207,7 @@ int main(int argc, char** argv){
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
 						cerr << "Unable to get response info" << endl << endl;
 					}
-				}			
+				}
 
 				if(response_num > 0){
 					for(int i = ntohs(rh.ancount); i < ntohs(rh.nscount); i++){//push name servers to stack
@@ -260,10 +260,10 @@ int main(int argc, char** argv){
 		}
 
 		memset(buf, 0, sizeof(buf));
-		
+
 		ofstream cacheOut;
 		cacheOut.open ("cache.txt");
-		
+
 		for(const auto& item : cache){
 			cacheOut << item.first << "\n";
 		}
@@ -378,9 +378,14 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	// memcpy(&tempbuf[0],&buf[*pos],2); //memcpy(&(r->rttl),&buf[*pos],2);
 	// memcpy(&tempbuf[2],&buf[*pos+2],2);
 	// memcpy(&(r->rttl),&tempbuf[0],4);
-	memcpy(&(r->rttl),&buf[*pos],2);
-
-	*pos += 4;
+	// memcpy(&(r->rttl),&buf[*pos],2);
+	//
+	// *pos += 4;
+	r->rttl =((buf[*pos+0] << 24)
+				+ (buf[*pos+1] << 16)
+				+ (buf[*pos+2] << 8)
+				+ (buf[*pos+3]));
+	*pos+=4;
 	memcpy(&(r->rdlength),&buf[*pos],2);
 	*pos += 2;
 
@@ -439,7 +444,7 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 	cout << "RNAME: " << r->rname << endl;
 	cout << "RTYPE: " << ntohs(r->rtype) << endl;
 	cout << "RCLASS: " << ntohs(r->rclass) << endl;
-	cout << "RTTL: " << dec << ntohs(r->rttl) << endl;
+	cout << "RTTL: " << r->rttl << endl;
 	cout << "RDLENGTH: " << ntohs(r->rdlength) << endl;
 	cout << "RDATA: " << r->rdata << endl;
 
