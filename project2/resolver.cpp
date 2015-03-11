@@ -205,7 +205,7 @@ int main(int argc, char** argv){
 				for(int i = 0; i < response_num; i++){
 					cout << "Response " << i + 1 << endl;
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
-						cerr << "Unable to get response info" << endl;
+						cerr << "Unable to get response info" << endl << endl;
 					}
 				}			
 
