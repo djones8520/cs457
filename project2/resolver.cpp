@@ -181,6 +181,7 @@ int main(int argc, char** argv){
 
 			bool found = false;
 			stack<dnsresponse> ns_stack;
+			vector<dnsresponse> ar_vector;
 			while(!found){
 				unset_recursion_bit(recbuf);
 				dnsheader rh;
@@ -213,9 +214,13 @@ int main(int argc, char** argv){
 					for(int i = ntohs(rh.ancount); i < ntohs(rh.nscount); i++){//push name servers to stack
 						ns_stack.push(r[i]);
 					}
+					for(int i = ntohs(rh.ancount) + ntohs(rh.nscount); i < response_num; i++){//push additional records to stack
+						ar_vector.push_back(r[i]);					
+					}				
 				}
 
 				if(ntohs(rh.ancount) > 0){
+					cerr << "FOUND ANSWER!" << endl;
 					found = true;
 					for(int i = 0; i < ntohs(rh.ancount); i++){
 						dnsinfo di;
@@ -231,9 +236,9 @@ int main(int argc, char** argv){
 					while(!match && !found){
 						dnsresponse ns = ns_stack.top();
 						ns_stack.pop();
-						for(int i = 0; i < response_num; i++){
-							if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
-								nextaddr = r[i].rdata;
+						for(int i = 0; i < ar_vector.size(); i++){
+							if(strcmp(ns.rdata.c_str(),ar_vector[i].rname.c_str()) == 0){
+								nextaddr = ar_vector[i].rdata;
 								match = true;
 							}
 						}
