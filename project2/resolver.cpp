@@ -63,17 +63,21 @@ struct dnsresponse{
 	uint16_t rdlength;
 	string rdata;
 };
-struct dnspair{
-	struct dnsresponse dr;
+
+struct dnsinfo{
+	unsigned char buf[BUFLEN];
+	time_t ttl;
 	time_t time_entered;
 };
+
+map<string, dnsinfo> cache;
+
 int get_header(dnsheader* h, unsigned char*buf, int* pos);
 int get_query(dnsquery* q, unsigned char* buf, int* pos);
 int get_response(dnsresponse *r, unsigned char* buf, int* pos);
 bool check_cache(string name);
 void unset_recursion_bit(unsigned char* buf);
 int valid_port(string s);
-map<string, dnspair> cache;
 void CatchAlarm(int);
 
 /*
@@ -164,9 +168,7 @@ int main(int argc, char** argv){
 		}
 
 		if (check_cache(q.qname)){
-			sendto(sockfd, &cache[q.qname].dr, sizeof(cache[q.qname].dr), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
-			// cache[q.qname].dr is the dnsresponse to send back
-			//return IP<F7>
+			sendto(sockfd, &cache[q.qname].buf, sizeof(cache[q.qname].buf), 0, (struct sockaddr*)&clientaddr, sizeof(struct sockaddr_in));
 		}else{
 			unset_recursion_bit(buf);
 			sendto(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&rootaddr,sizeof(struct sockaddr_in));
@@ -200,15 +202,6 @@ int main(int argc, char** argv){
 				int response_num = ntohs(rh.ancount) + ntohs(rh.nscount) + ntohs(rh.arcount);
 				dnsresponse r[response_num];
 
-				if(ntohs(rh.ancount) > 0){
-					found = true;
-					for(int i = 0; i < ntohs(rh.qcount); i++){
-						//cache answer here
-						sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));//send answers back to client
-					}
-					//break;
-				}
-
 				for(int i = 0; i < response_num; i++){
 					cout << "Response " << i + 1 << endl;
 					if (get_response(&(r[i]), recbuf, &pos) < 0){
@@ -221,16 +214,26 @@ int main(int argc, char** argv){
 						ns_stack.push(r[i]);
 					}
 				}
+
+				if(ntohs(rh.ancount) > 0){
+					found = true;
+					for(int i = 0; i < ntohs(rh.ancount); i++){
+						dnsinfo di;
+						memcpy(&di.buf,&recbuf,BUFLEN);
+						di.ttl = r[i].rttl;
+						di.time_entered = time(NULL);
+						cache[rq.qname] = di;
+					}
+					sendto(sockfd, recbuf, BUFLEN, 0, (struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));//send answers back to client
+				}
 				
 				bool match = false;
 				string nextaddr;
-				while(!match){
+				while(!match && !found){
 					dnsresponse ns = ns_stack.top();
-					cerr << "Current check: " << ns.rdata << endl;
 					ns_stack.pop();
 					for(int i = 0; i < response_num; i++){
 						if(strcmp(ns.rdata.c_str(),r[i].rname.c_str()) == 0){
-							cerr << "Next Address" << r[i].rdata << endl;
 							nextaddr = r[i].rdata;
 							match = true;
 						}
@@ -240,8 +243,6 @@ int main(int argc, char** argv){
 						return -1;
 					}
 				}
-
-				cerr << "Next Address" << nextaddr << endl;
 
 				struct sockaddr_in nsaddr;
 				nsaddr.sin_family = AF_INET;
@@ -263,9 +264,9 @@ int main(int argc, char** argv){
 		ofstream cacheOut;
 		cacheOut.open ("cache.txt");
 		
-		for(const auto& item : cache)
+		for(const auto& item : cache){
 			cacheOut << item.first << "\n";
-
+		}
 		cacheOut.close();
 	}
 
@@ -453,17 +454,17 @@ int get_response(dnsresponse* r, unsigned char* buf, int* pos){
 
 // Check if name is in cache
 bool check_cache(string name){
-	dnspair myPair = cache[name];
+	dnsinfo info = cache[name];
 	if(cache.count(name) != 0){
-		if(time(NULL) > (myPair.dr.rttl + myPair.time_entered)){
+		if(time(NULL) > (info.ttl + info.time_entered)){
 			cache.erase(name);
 			return false;
 		}
 
-		cout << "The current cache is:\n";
-		for(map<string,dnspair>::iterator it = cache.begin(); it != cache.end(); it++){
+		/*cout << "The current cache is:\n";
+		for(map<string,dnsinfo>::iterator it = cache.begin(); it != cache.end(); it++){
 			cout << it->second.dr.rname << endl;
-		}
+		}*/
 		return true;
 	}
 	else
