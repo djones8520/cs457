@@ -1,2 +1,2 @@
-cmu.edu.
-montcalm.edu.
+Name: drive.google.com.    TTL: 300
+Name: usa.gov.    TTL: 3600
