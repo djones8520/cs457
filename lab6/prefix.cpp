@@ -38,6 +38,7 @@ bool setupTrie(){
 void addNode(string path, string address){
 	int pos = 0;
 	Node *nodePos = root;
+	Node *test = root;
 
 	int check = 0;
 	while((check = path.length() - pos) > 0){
@@ -61,21 +62,21 @@ void addNode(string path, string address){
 
 				break;
 			case 1:
-				if(nodePos->zero0 == NULL)
+				if(nodePos->zero1 == NULL)
 					nodePos->zero1 = new Node;
 
 				nodePos = nodePos->zero1;
 
 				break;
 			case 10:
-				if(nodePos->zero0 == NULL)
+				if(nodePos->one0 == NULL)
 					nodePos->one0 = new Node;
 
 				nodePos = nodePos->one0;
 
 				break;
 			case 11:
-				if(nodePos->zero0 == NULL)
+				if(nodePos->one1 == NULL)
 					nodePos->one1 = new Node;
 
 				nodePos = nodePos->one1;
@@ -87,11 +88,17 @@ void addNode(string path, string address){
 	}
 
 	nodePos->data = address;
+	int hi =0;
 }
 
 int main(){	
 	root->data = "test";
 	cout << root->data << endl;
+
+	string address = "1.1.1.1";
+	string path = "00000000111";
+
+	addNode(path, address);
 
 	return 0;
 }
