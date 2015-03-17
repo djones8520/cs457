@@ -82,7 +82,7 @@ void setupTrie(string fileName){
 			addNode(FINALPREFIX, FINALHOP);
 			
 			nodeCount++;
-			cout << "Node added: " << nodeCount << endl;
+			cout << "Node added: " << nodeCount << " Hop: " << FINALHOP << endl;
 			std::this_thread::sleep_for (std::chrono::seconds(5));
 
 			FINALPREFIX = prefix;
