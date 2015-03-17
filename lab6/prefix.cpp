@@ -89,11 +89,19 @@ void setupTrie(string fileName){
 }
 
 void addNode(string path, string address){
+	cout << "PATH: " << path << endl;
+	cout << "DATA: " << address << endl;
+
+	cout << "HERE 1" << endl;
+	
 	int pos = 0;
 	Node *nodePos = root;
 
+	cout << "HERE 2" << endl;
+
 	int check = 0;
 	while((check = path.length() - pos) > 0){
+		cout << "HERE 3" << endl;
 		string nextNode;
 
 		if(check == 1){
@@ -102,18 +110,29 @@ void addNode(string path, string address){
 		}
 		else{
 			nextNode = path.substr(pos, 2);
+			cout << "NEXTNODE: " << nextNode << endl;
 		}
 
+		cout << "HERE A" << endl;
+
 		int caseCompare = stoi(nextNode);
+
+		cout << "HERE B" << endl;
+
 		switch(caseCompare){
 			case 0:
-				if(nodePos->zero0 == NULL)
+				cout << "HERE 4.1" << endl;				
+				if(nodePos->zero0 == NULL) {
+					cout << "HERE 4.1A" << endl;					
 					nodePos->zero0 = new Node;
-
+					cout << "HERE 4.1B" << endl;
+				}
+				cout << "HERE 4.2" << endl;
 				nodePos = nodePos->zero0;
-
+				cout << "HERE 4.3" << endl;
 				break;
 			case 1:
+				cout << "HERE 5" << endl;
 				if(nodePos->zero1 == NULL)
 					nodePos->zero1 = new Node;
 
@@ -121,6 +140,7 @@ void addNode(string path, string address){
 
 				break;
 			case 10:
+				cout << "HERE 6" << endl;
 				if(nodePos->one0 == NULL)
 					nodePos->one0 = new Node;
 
@@ -128,6 +148,7 @@ void addNode(string path, string address){
 
 				break;
 			case 11:
+				cout << "HERE 7" << endl;
 				if(nodePos->one1 == NULL)
 					nodePos->one1 = new Node;
 
@@ -135,9 +156,11 @@ void addNode(string path, string address){
 
 				break;
 		}
-
+		cout << "BEFORE POS INC: " << pos << endl;
 		pos += 2;
+		cout << "AFTER POS INC: " << pos << endl;
 	}
+	cout << "HERE FINAL" << endl;
 
 	nodePos->data = address;
 	int hi =0;
