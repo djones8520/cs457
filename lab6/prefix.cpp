@@ -13,6 +13,7 @@
 using namespace std;
 
 string getPrefix(string input);
+void addNode(string path, string address);
 
 #include <string>
 #include <stdlib.h>
@@ -85,8 +86,6 @@ void setupTrie(string fileName){
 			FINALHOP = next_hop;
 		}
 	}
-
-	return true;
 }
 
 void addNode(string path, string address){
@@ -149,19 +148,19 @@ string findMatch(string address){
 	Node *nodePos = root;
 	string match = "No match";
 
-	if(root->data != null)
+	if(!root->data.empty())
 		match = root->data;
 
 	int check = 0;
-	while((check = path.length() - pos) > 0){
+	while((check = address.length() - pos) > 0){
 		string nextNode;
 
 		if(check == 1){
-			nextNode = path.substr(pos);
+			nextNode = address.substr(pos);
 			nextNode += "0";
 		}
 		else{
-			nextNode = path.substr(pos, 2);
+			nextNode = address.substr(pos, 2);
 		}
 
 		int caseCompare = stoi(nextNode);
@@ -187,12 +186,13 @@ string findMatch(string address){
 
 				break;
 			default:
-				if(nodePos->data != NULL)
+				if(!nodePos->data.empty())
 					match = nodePos->data;
 		}		
 	}
 
 	return match;
+}
 
 void readFile(string fileName) {
 	ifstream file("sampleips.txt");
@@ -206,15 +206,16 @@ void readFile(string fileName) {
 		int ipInt[4];
 		int count = 0;
 		string delimiter = ".";
+		string token;
 		size_t pos = 0;
-		while ((pos = ipaddress.find(delimiter)) != std::string::npos) {
-			token = ipaddress.substr(0, pos);
+		while ((pos = line.find(delimiter)) != std::string::npos) {
+			token = line.substr(0, pos);
 			ipInt[count] = atoi(token.c_str());
 			count++;
-			ipaddress.erase(0, pos + delimiter.length());
+			line.erase(0, pos + delimiter.length());
 		}
 
-		ipInt[3] = atoi(ipaddress.c_str());
+		ipInt[3] = atoi(line.c_str());
 		string binaryIP;
 
 		for (int i = 0; i < 4; i++) {
