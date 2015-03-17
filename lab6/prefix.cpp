@@ -76,7 +76,7 @@ bool setupTrie(){
 			cout << "LENGTH: " << MINLENGTH << endl;
 			cout << "NXTHOP: " << FINALHOP << endl;
 
-			/* CALL METHOD TO INPUT DATA INTO NODE */
+			addNode(FINALPREFIX, FINALHOP);
 
 			std::this_thread::sleep_for (std::chrono::seconds(5));
 
@@ -145,13 +145,17 @@ void addNode(string path, string address){
 	int hi =0;
 }
 
+void findMatch(string address){
+	
+}
+
 int main(int argc, char** argv){
 	if (argc != 3) {
 		printf("Please run program using 2 arguments");
 		return 0;
 	}
 	
-	if(setupTrie())
+	if(!setupTrie())
 		return 0;	
 
 	root->data = "test";

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-<<<<<<< HEAD
 #include <array>
 #include <thread>
 #include <chrono>
@@ -14,7 +13,7 @@
 using namespace std;
 
 string getPrefix(string input);
-=======
+
 #include <string>
 #include <stdlib.h>
 
@@ -30,7 +29,6 @@ class Node{
 };
 
 Node *root = new Node;
->>>>>>> cc0ab9749897110e4d211cfa82339b0859facb4b
 
 bool setupTrie(){
 	ifstream file("bgprib20131101.txt");
@@ -47,7 +45,7 @@ bool setupTrie(){
 		size_t pos = 0;
 		string token;
 		int count = 0;
-<<<<<<< HEAD
+
 		string info[3];
 		while ((pos = line.find(delimiter)) != std::string::npos) {
 		    token = line.substr(0, pos);
@@ -78,7 +76,7 @@ bool setupTrie(){
 			cout << "LENGTH: " << MINLENGTH << endl;
 			cout << "NXTHOP: " << FINALHOP << endl;
 
-			/* CALL METHOD TO INPUT DATA INTO NODE */
+			addNode(FINALPREFIX, FINALHOP);
 
 			std::this_thread::sleep_for (std::chrono::seconds(5));
 
@@ -86,25 +84,11 @@ bool setupTrie(){
 			MINLENGTH = length;
 			FINALHOP = next_hop;
 		}
-=======
-		string ipaddress;
-		string path;
->>>>>>> cc0ab9749897110e4d211cfa82339b0859facb4b
 	}
 
 	return true;
 }
 
-<<<<<<< HEAD
-int main(int argc, char** argv){
-	if (argc != 3) {
-		printf("Please run program using 2 arguments");
-		return 0;
-	}
-	
-	if(setupTrie())
-		return 0;	
-=======
 void addNode(string path, string address){
 	int pos = 0;
 	Node *nodePos = root;
@@ -161,7 +145,19 @@ void addNode(string path, string address){
 	int hi =0;
 }
 
-int main(){	
+void findMatch(string address){
+
+}
+
+int main(int argc, char** argv){
+	if (argc != 3) {
+		printf("Please run program using 2 arguments");
+		return 0;
+	}
+	
+	if(!setupTrie())
+		return 0;	
+
 	root->data = "test";
 	cout << root->data << endl;
 
@@ -169,12 +165,9 @@ int main(){
 	string path = "00000000111";
 
 	addNode(path, address);
->>>>>>> cc0ab9749897110e4d211cfa82339b0859facb4b
 
 	return 0;
 }
-
-
 
 string getPrefix(string input) {
 	string line = input;	
@@ -211,6 +204,4 @@ string getPrefix(string input) {
 	binaryIP = binaryIP.substr(0, limit);
 
 	return binaryIP;
-	
-
 }
