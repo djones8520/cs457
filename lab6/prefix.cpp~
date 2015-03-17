@@ -92,7 +92,6 @@ bool setupTrie(){
 void addNode(string path, string address){
 	int pos = 0;
 	Node *nodePos = root;
-	Node *test = root;
 
 	int check = 0;
 	while((check = path.length() - pos) > 0){
@@ -145,8 +144,52 @@ void addNode(string path, string address){
 	int hi =0;
 }
 
-void findMatch(string address){
+string findMatch(string address){	
+	int pos = 0;
+	Node *nodePos = root;
+	string match = "No match";
 
+	int check = 0;
+	while((check = path.length() - pos) > 0){
+		string nextNode;
+
+		if(check == 1){
+			nextNode = path.substr(pos);
+			nextNode += "0";
+		}
+		else{
+			nextNode = path.substr(pos, 2);
+		}
+
+		int caseCompare = stoi(nextNode);
+		switch(caseCompare){
+			case 0:
+				if(nodePos->zero0 != NULL)
+					nodePos = nodePos->zero0;
+
+				break;
+			case 1:
+				if(nodePos->zero1 != NULL)
+					nodePos = nodePos->zero1;
+
+				break;
+			case 10:
+				if(nodePos->one0 == NULL)
+					nodePos = nodePos->one0;
+
+				break;
+			case 11:
+				if(nodePos->one1 == NULL)
+					nodePos = nodePos->one1;
+
+				break;
+			default:
+				if(nodePos->data != NULL)
+					match = nodePos->data;
+		}		
+	}
+
+	return match;
 }
 
 int main(int argc, char** argv){
