@@ -29,7 +29,7 @@ class Node{
 		Node* one1;	
 };
 
-Node *root = new Node;
+Node *root = new Node();
 
 void setupTrie(string fileName){
 	ifstream file("bgprib20131101.txt");
@@ -40,7 +40,7 @@ void setupTrie(string fileName){
 	string FINALHOP = "";
 
 	while(getline(file, line)){
-		cout << line << endl;
+		//cout << line << endl;
 		string delimiter = "|";
 
 		size_t pos = 0;
@@ -73,12 +73,13 @@ void setupTrie(string fileName){
 				FINALHOP = next_hop;
 			}
 		} else { // Entered new block of prefixes
-			cout << "PREFIX: " << FINALPREFIX << endl;
-			cout << "LENGTH: " << MINLENGTH << endl;
-			cout << "NXTHOP: " << FINALHOP << endl;
+			//cout << "PREFIX: " << FINALPREFIX << endl;
+			//cout << "LENGTH: " << MINLENGTH << endl;
+			//cout << "NXTHOP: " << FINALHOP << endl;
 
 			addNode(FINALPREFIX, FINALHOP);
-
+				
+			cout << "Node added" << endl;
 			std::this_thread::sleep_for (std::chrono::seconds(5));
 
 			FINALPREFIX = prefix;
@@ -86,22 +87,24 @@ void setupTrie(string fileName){
 			FINALHOP = next_hop;
 		}
 	}
+	
+	cout << "End Node Setup" << endl;
 }
 
 void addNode(string path, string address){
-	cout << "PATH: " << path << endl;
-	cout << "DATA: " << address << endl;
+	//cout << "PATH: " << path << endl;
+	//cout << "DATA: " << address << endl;
 
-	cout << "HERE 1" << endl;
+	//cout << "HERE 1" << endl;
 	
 	int pos = 0;
 	Node *nodePos = root;
 
-	cout << "HERE 2" << endl;
+	//cout << "HERE 2" << endl;
 
 	int check = 0;
 	while((check = path.length() - pos) > 0){
-		cout << "HERE 3" << endl;
+		//cout << "HERE 3" << endl;
 		string nextNode;
 
 		if(check == 1){
@@ -110,57 +113,57 @@ void addNode(string path, string address){
 		}
 		else{
 			nextNode = path.substr(pos, 2);
-			cout << "NEXTNODE: " << nextNode << endl;
+			//cout << "NEXTNODE: " << nextNode << endl;
 		}
 
-		cout << "HERE A" << endl;
+		//cout << "HERE A" << endl;
 
 		int caseCompare = stoi(nextNode);
 
-		cout << "HERE B" << endl;
+		//cout << "HERE B" << endl;
 
 		switch(caseCompare){
 			case 0:
-				cout << "HERE 4.1" << endl;				
+				//cout << "HERE 4.1" << endl;				
 				if(nodePos->zero0 == NULL) {
-					cout << "HERE 4.1A" << endl;					
-					nodePos->zero0 = new Node;
-					cout << "HERE 4.1B" << endl;
+					//cout << "HERE 4.1A" << endl;					
+					nodePos->zero0 = new Node();
+					//cout << "HERE 4.1B" << endl;
 				}
-				cout << "HERE 4.2" << endl;
+				//cout << "HERE 4.2" << endl;
 				nodePos = nodePos->zero0;
-				cout << "HERE 4.3" << endl;
+				//cout << "HERE 4.3" << endl;
 				break;
 			case 1:
-				cout << "HERE 5" << endl;
+				//cout << "HERE 5" << endl;
 				if(nodePos->zero1 == NULL)
-					nodePos->zero1 = new Node;
+					nodePos->zero1 = new Node();
 
 				nodePos = nodePos->zero1;
 
 				break;
 			case 10:
-				cout << "HERE 6" << endl;
+				//cout << "HERE 6" << endl;
 				if(nodePos->one0 == NULL)
-					nodePos->one0 = new Node;
+					nodePos->one0 = new Node();
 
 				nodePos = nodePos->one0;
 
 				break;
 			case 11:
-				cout << "HERE 7" << endl;
+				//cout << "HERE 7" << endl;
 				if(nodePos->one1 == NULL)
-					nodePos->one1 = new Node;
+					nodePos->one1 = new Node();
 
 				nodePos = nodePos->one1;
 
 				break;
 		}
-		cout << "BEFORE POS INC: " << pos << endl;
+		//cout << "BEFORE POS INC: " << pos << endl;
 		pos += 2;
-		cout << "AFTER POS INC: " << pos << endl;
+		//cout << "AFTER POS INC: " << pos << endl;
 	}
-	cout << "HERE FINAL" << endl;
+	//cout << "HERE FINAL" << endl;
 
 	nodePos->data = address;
 	int hi =0;
@@ -245,6 +248,7 @@ void readFile(string fileName) {
 			binaryIP += bitset<8>(ipInt[i]).to_string();
 		}
 
+		cout << "Wrote to file" << endl;
 		outputFile << line << "\t" << findMatch(binaryIP) << endl;
 	}
 	
