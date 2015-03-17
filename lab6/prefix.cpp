@@ -30,7 +30,7 @@ class Node{
 
 Node *root = new Node;
 
-bool setupTrie(){
+void setupTrie(string fileName){
 	ifstream file("bgprib20131101.txt");
 
 	string line;
@@ -145,8 +145,41 @@ void addNode(string path, string address){
 	int hi =0;
 }
 
-void findMatch(string address){
+string findMatch(string address){
+
+}
+
+void readFile(string fileName) {
+	ifstream file("sampleips.txt");
+	string line;
+
+	ofstream outputFile;
+	outputFile.open("output.txt");
+
+	while(getline(file, line)){
+		// Convert address to binary
+		int ipInt[4];
+		int count = 0;
+		string delimiter = ".";
+		size_t pos = 0;
+		while ((pos = ipaddress.find(delimiter)) != std::string::npos) {
+			token = ipaddress.substr(0, pos);
+			ipInt[count] = atoi(token.c_str());
+			count++;
+			ipaddress.erase(0, pos + delimiter.length());
+		}
+
+		ipInt[3] = atoi(ipaddress.c_str());
+		string binaryIP;
+
+		for (int i = 0; i < 4; i++) {
+			binaryIP += bitset<8>(ipInt[i]).to_string();
+		}
+
+		outputFile << line << "\t" << findMatch(binaryIP) << endl;
+	}
 	
+	outputFile.close();
 }
 
 int main(int argc, char** argv){
@@ -154,17 +187,12 @@ int main(int argc, char** argv){
 		printf("Please run program using 2 arguments");
 		return 0;
 	}
+
+	string pathsFile = argv[1];
+	string ipsFile = argv[2];
 	
-	if(!setupTrie())
-		return 0;	
-
-	root->data = "test";
-	cout << root->data << endl;
-
-	string address = "1.1.1.1";
-	string path = "00000000111";
-
-	addNode(path, address);
+	setupTrie(pathsFile);
+	readFile(ipsFile);
 
 	return 0;
 }
