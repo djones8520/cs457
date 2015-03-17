@@ -33,6 +33,8 @@ Node *root = new Node();
 
 void setupTrie(string fileName){
 	ifstream file("bgprib20131101.txt");
+	
+	int nodeCount = 0;
 
 	string line;
 	string FINALPREFIX = "";
@@ -78,8 +80,9 @@ void setupTrie(string fileName){
 			//cout << "NXTHOP: " << FINALHOP << endl;
 
 			addNode(FINALPREFIX, FINALHOP);
-				
-			cout << "Node added" << endl;
+			
+			nodeCount++;
+			cout << "Node added: " << nodeCount << endl;
 			std::this_thread::sleep_for (std::chrono::seconds(5));
 
 			FINALPREFIX = prefix;
