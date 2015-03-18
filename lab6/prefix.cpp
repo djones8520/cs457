@@ -155,7 +155,7 @@ void addNode(string path, string address){
 string findMatch(string address){
 	int pos = 0;
 	Node *nodePos = root;
-	string match = "No match";
+	string match = "NoMatch";
 
 	if(!root->data.empty())
 		match = root->data;
@@ -207,7 +207,10 @@ string findMatch(string address){
 				cout << "default" << endl;
 				if(!nodePos->data.empty())
 					match = nodePos->data;
-		}	
+		}
+
+		if(!nodePos->data.empty())
+			match = nodePos->data;
 
 		pos += 2;		
 	}

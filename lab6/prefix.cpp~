@@ -207,7 +207,10 @@ string findMatch(string address){
 				cout << "default" << endl;
 				if(!nodePos->data.empty())
 					match = nodePos->data;
-		}	
+		}
+
+		if(!nodePos->data.empty())
+			match = nodePos->data;
 
 		pos += 2;		
 	}
