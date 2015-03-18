@@ -32,8 +32,9 @@ class Node{
 Node *root = new Node();
 
 void setupTrie(string fileName){
-	ifstream file("bgprib20131101.txt");
-	
+	//ifstream file("bgprib20131101.txt");
+	ifstream file(fileName);	
+
 	int nodeCount = 0;
 
 	string line;
@@ -155,7 +156,7 @@ void addNode(string path, string address){
 string findMatch(string address){
 	int pos = 0;
 	Node *nodePos = root;
-	string match = "No match";
+	string match = "NoMatch";
 
 	if(!root->data.empty())
 		match = root->data;
@@ -219,7 +220,8 @@ string findMatch(string address){
 }
 
 void readFile(string fileName) {
-	ifstream file("sampleips.txt");
+	//ifstream file("sampleips.txt");
+	ifstream file(fileName);	
 	string line, fulladdress;
 
 	ofstream outputFile;
