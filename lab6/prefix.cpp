@@ -146,12 +146,12 @@ void addNode(string path, string address){
 		pos += 2;
 	}
 
-	if(check == 1){
+	if((check + 2) == 1){
 		pos -= 2;
 
 		string nextNode = path.substr(pos);
 
-		if(nextNode == "0"){
+		if(nextNode.compare("0") == 0){
 			if(nodePos->zero0 == NULL)
 				nodePos->zero0 = new Node();
 
@@ -178,8 +178,9 @@ void addNode(string path, string address){
 				nodePos->one1->data = address;
 		}
 	}
-	else
+	else{
 		nodePos->data = address;
+	}
 }
 
 string findMatch(string address){
