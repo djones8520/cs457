@@ -15,9 +15,6 @@ using namespace std;
 string getPrefix(string input);
 void addNode(string path, string address);
 
-#include <string>
-#include <stdlib.h>
-
 using namespace std;
 
 class Node{
@@ -105,8 +102,7 @@ void addNode(string path, string address){
 		string nextNode;
 
 		if(check == 1){
-			nextNode = path.substr(pos);
-			nextNode += "0";
+			nextNode = "20";			
 		}
 		else{
 			nextNode = path.substr(pos, 2);
@@ -149,13 +145,46 @@ void addNode(string path, string address){
 		pos += 2;
 	}
 
-	nodePos->data = address;
+	if(check == 1){
+		pos -= 2;
+
+		string nextNode = path.substr(pos);
+
+		if(nextNode == "0"){
+			if(nodePos->zero0 == NULL)
+				nodePos->zero0 = new Node();
+
+			if(nodePos->zero1 == NULL)
+				nodePos->zero1 = new Node();
+
+			if(nodePos->zero0->data.empty())
+				nodePos->zero0->data = address;
+
+			if(nodePos->zero1->data.empty())
+				nodePos->zero1->data = address;
+		}
+		else{
+			if(nodePos->one0 == NULL)
+				nodePos->one0 = new Node();
+
+			if(nodePos->one1 == NULL)
+				nodePos->one1 = new Node();
+
+			if(nodePos->one0->data.empty())
+				nodePos->one0->data = address;
+
+			if(nodePos->one1->data.empty())
+				nodePos->one1->data = address;
+		}
+	}
+	else
+		nodePos->data = address;
 }
 
 string findMatch(string address){
 	int pos = 0;
 	Node *nodePos = root;
-	string match = "No match";
+	string match = "NoMatch";
 
 	if(!root->data.empty())
 		match = root->data;
@@ -167,7 +196,7 @@ string findMatch(string address){
 
 		if(check == 1){
 			nextNode = address.substr(pos);
-			nextNode += "0";
+			nextNode = "0" + nextNode;
 		}
 		else{
 			nextNode = address.substr(pos, 2);
@@ -176,37 +205,29 @@ string findMatch(string address){
 		int caseCompare = stoi(nextNode);
 		switch(caseCompare){
 			case 0:
-				cout << "case 00" << endl;
 				if(nodePos->zero0 != NULL)
 					nodePos = nodePos->zero0;
 				else
 					endRoute = true;
 				break;
 			case 1:
-				cout << "case 01" << endl;
 				if(nodePos->zero1 != NULL)
 					nodePos = nodePos->zero1;
 				else
 					endRoute = true;
 				break;
 			case 10:
-				cout << "case 10" << endl;
 				if(nodePos->one0 != NULL)
 					nodePos = nodePos->one0;
 				else
 					endRoute = true;
 				break;
 			case 11:
-				cout << "case 11" << endl;
 				if(nodePos->one1 != NULL)
 					nodePos = nodePos->one1;
 				else
 					endRoute = true;
 				break;
-			default:
-				cout << "default" << endl;
-				if(!nodePos->data.empty())
-					match = nodePos->data;
 		}
 
 		if(!nodePos->data.empty())
@@ -249,7 +270,6 @@ void readFile(string fileName) {
 		}
 		
 		outputFile << fulladdress << "\t" << findMatch(binaryIP) << endl;
-		cout << "Out file write" << endl;
 	}
 	
 	outputFile.close();
