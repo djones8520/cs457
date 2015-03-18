@@ -217,13 +217,15 @@ string findMatch(string address){
 
 void readFile(string fileName) {
 	ifstream file("sampleips.txt");
-	string line;
+	string line, fulladdress;
 
 	ofstream outputFile;
 	outputFile.open("output.txt");
 
 	while(getline(file, line)){
 		// Convert address to binary
+		fulladdress = line;
+
 		int ipInt[4];
 		int count = 0;
 		string delimiter = ".";
@@ -243,7 +245,7 @@ void readFile(string fileName) {
 			binaryIP += bitset<8>(ipInt[i]).to_string();
 		}
 		
-		outputFile << line << "\t" << findMatch(binaryIP) << endl;
+		outputFile << fulladdress << "\t" << findMatch(binaryIP) << endl;
 		cout << "Out file write" << endl;
 	}
 	
