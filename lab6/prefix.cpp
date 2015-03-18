@@ -82,7 +82,7 @@ void setupTrie(string fileName){
 			addNode(FINALPREFIX, FINALHOP);
 			
 			nodeCount++;
-			cout << "Node added: " << nodeCount << " Hop: " << FINALHOP << endl;
+			//cout << "Node added: " << nodeCount << " Hop: " << FINALHOP << endl;
 
 			FINALPREFIX = prefix;
 			MINLENGTH = length;
@@ -90,23 +90,18 @@ void setupTrie(string fileName){
 		}
 	}
 	
+	// Add final node
+	addNode(FINALPREFIX, FINALHOP);
+	
 	cout << "End Node Setup" << endl;
 }
 
 void addNode(string path, string address){
-	//cout << "PATH: " << path << endl;
-	//cout << "DATA: " << address << endl;
-
-	//cout << "HERE 1" << endl;
-	
 	int pos = 0;
 	Node *nodePos = root;
 
-	//cout << "HERE 2" << endl;
-
 	int check = 0;
 	while((check = path.length() - pos) > 0){
-		//cout << "HERE 3" << endl;
 		string nextNode;
 
 		if(check == 1){
@@ -115,29 +110,20 @@ void addNode(string path, string address){
 		}
 		else{
 			nextNode = path.substr(pos, 2);
-			//cout << "NEXTNODE: " << nextNode << endl;
 		}
-
-		//cout << "HERE A" << endl;
 
 		int caseCompare = stoi(nextNode);
 
-		//cout << "HERE B" << endl;
-
 		switch(caseCompare){
-			case 0:
-				//cout << "HERE 4.1" << endl;				
-				if(nodePos->zero0 == NULL) {
-					//cout << "HERE 4.1A" << endl;					
+			case 0:			
+				if(nodePos->zero0 == NULL) {				
 					nodePos->zero0 = new Node();
-					//cout << "HERE 4.1B" << endl;
 				}
-				//cout << "HERE 4.2" << endl;
+				
 				nodePos = nodePos->zero0;
-				//cout << "HERE 4.3" << endl;
+				
 				break;
 			case 1:
-				//cout << "HERE 5" << endl;
 				if(nodePos->zero1 == NULL)
 					nodePos->zero1 = new Node();
 
@@ -145,7 +131,6 @@ void addNode(string path, string address){
 
 				break;
 			case 10:
-				//cout << "HERE 6" << endl;
 				if(nodePos->one0 == NULL)
 					nodePos->one0 = new Node();
 
@@ -153,7 +138,6 @@ void addNode(string path, string address){
 
 				break;
 			case 11:
-				//cout << "HERE 7" << endl;
 				if(nodePos->one1 == NULL)
 					nodePos->one1 = new Node();
 
@@ -161,17 +145,14 @@ void addNode(string path, string address){
 
 				break;
 		}
-		//cout << "BEFORE POS INC: " << pos << endl;
+		
 		pos += 2;
-		//cout << "AFTER POS INC: " << pos << endl;
 	}
-	//cout << "HERE FINAL" << endl;
 
 	nodePos->data = address;
-	int hi =0;
 }
 
-string findMatch(string address){	
+string findMatch(string address){
 	int pos = 0;
 	Node *nodePos = root;
 	string match = "No match";
@@ -180,7 +161,8 @@ string findMatch(string address){
 		match = root->data;
 
 	int check = 0;
-	while((check = address.length() - pos) > 0){
+	bool endRoute = false;
+	while((check = address.length() - pos) > 0 && !endRoute){
 		string nextNode;
 
 		if(check == 1){
@@ -194,29 +176,40 @@ string findMatch(string address){
 		int caseCompare = stoi(nextNode);
 		switch(caseCompare){
 			case 0:
+				cout << "case 00" << endl;
 				if(nodePos->zero0 != NULL)
 					nodePos = nodePos->zero0;
-
+				else
+					endRoute = true;
 				break;
 			case 1:
+				cout << "case 01" << endl;
 				if(nodePos->zero1 != NULL)
 					nodePos = nodePos->zero1;
-
+				else
+					endRoute = true;
 				break;
 			case 10:
-				if(nodePos->one0 == NULL)
+				cout << "case 10" << endl;
+				if(nodePos->one0 != NULL)
 					nodePos = nodePos->one0;
-
+				else
+					endRoute = true;
 				break;
 			case 11:
-				if(nodePos->one1 == NULL)
+				cout << "case 11" << endl;
+				if(nodePos->one1 != NULL)
 					nodePos = nodePos->one1;
-
+				else
+					endRoute = true;
 				break;
 			default:
+				cout << "default" << endl;
 				if(!nodePos->data.empty())
 					match = nodePos->data;
-		}		
+		}	
+
+		pos += 2;		
 	}
 
 	return match;
@@ -249,12 +242,13 @@ void readFile(string fileName) {
 		for (int i = 0; i < 4; i++) {
 			binaryIP += bitset<8>(ipInt[i]).to_string();
 		}
-
-		cout << "End Write to file" << endl;
+		
 		outputFile << line << "\t" << findMatch(binaryIP) << endl;
+		cout << "Out file write" << endl;
 	}
 	
 	outputFile.close();
+	cout << "End Write to file" << endl;
 }
 
 int main(int argc, char** argv){
