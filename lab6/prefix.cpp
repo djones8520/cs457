@@ -83,7 +83,6 @@ void setupTrie(string fileName){
 			
 			nodeCount++;
 			cout << "Node added: " << nodeCount << " Hop: " << FINALHOP << endl;
-			std::this_thread::sleep_for (std::chrono::seconds(5));
 
 			FINALPREFIX = prefix;
 			MINLENGTH = length;
@@ -251,7 +250,7 @@ void readFile(string fileName) {
 			binaryIP += bitset<8>(ipInt[i]).to_string();
 		}
 
-		cout << "Wrote to file" << endl;
+		cout << "End Write to file" << endl;
 		outputFile << line << "\t" << findMatch(binaryIP) << endl;
 	}
 	
