@@ -176,37 +176,29 @@ string findMatch(string address){
 		int caseCompare = stoi(nextNode);
 		switch(caseCompare){
 			case 0:
-				cout << "case 00" << endl;
 				if(nodePos->zero0 != NULL)
 					nodePos = nodePos->zero0;
 				else
 					endRoute = true;
 				break;
 			case 1:
-				cout << "case 01" << endl;
 				if(nodePos->zero1 != NULL)
 					nodePos = nodePos->zero1;
 				else
 					endRoute = true;
 				break;
 			case 10:
-				cout << "case 10" << endl;
 				if(nodePos->one0 != NULL)
 					nodePos = nodePos->one0;
 				else
 					endRoute = true;
 				break;
 			case 11:
-				cout << "case 11" << endl;
 				if(nodePos->one1 != NULL)
 					nodePos = nodePos->one1;
 				else
 					endRoute = true;
 				break;
-			default:
-				cout << "default" << endl;
-				if(!nodePos->data.empty())
-					match = nodePos->data;
 		}
 
 		if(!nodePos->data.empty())
