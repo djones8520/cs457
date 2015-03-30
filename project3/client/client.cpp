@@ -1,6 +1,6 @@
 /**********************************************************************************
-* Lab 2
-* Due 1/21/2015
+* Project 3
+* Due 4/1/2015
 *
 * Michael Kinkema
 * Danny Selgo
@@ -9,17 +9,20 @@
 *
 **********************************************************************************/
 
-#define BYTES_TO_REC 256
-
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 
+#define BYTES_TO_REC 256
+
+using namespace std;
+
 int main(int argc, char **argv) {
-	int sockfd = socket(AF_INET,SOCK_STREAM,0);
+	int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 	if (sockfd < 0) {
 		printf("There was a problem creating the socket\n");
 		return 1;
@@ -35,32 +38,21 @@ int main(int argc, char **argv) {
 	fgets(serverIP,5000,stdin);
 	  
 	struct sockaddr_in serveraddr;
-	serveraddr.sin_family = AF_INET;
-	// 9876
+	serveraddr.sin_family = AF_INET; //9010
 	serveraddr.sin_port = htons(atoi(serverPort));
-	// 148.61.162.118 (Changes depending on the machine where the server is running)
 	serveraddr.sin_addr.s_addr = inet_addr(serverIP);
-	  
-	int e = connect(sockfd,(struct sockaddr*)&serveraddr,
-	sizeof(struct sockaddr_in));
-	  
-	if (e < 0) {
-		printf("There were some problems with connecting\n");
-		return 1;
-	}
 	  
 	printf("Enter a file name: ");
 	char line[5000];
-	//char line2[5000];
 	fgets(line,5000,stdin);
 	char *pos;
 	if ((pos=strchr(line, '\n')) != NULL)
     	*pos = '\0';
 
-	send(sockfd,line,strlen(line),0);
+	sendto(sockfd,line,strlen(line),0,(struct sockaddr*)&serveraddr,sizeof(struct sockaddr_in));
 
 	char * path;
-	path = malloc(strlen(line)+strlen("client/")+1);
+	path = (char *)malloc(strlen(line)+strlen("client/")+1);
     	path[0] = '\0';   // ensures the memory is an empty string
     	strcat(path,"client/");
     	strcat(path,line);
@@ -68,7 +60,9 @@ int main(int argc, char **argv) {
 	int bytesReceived = 0;
         char recvBuff[BYTES_TO_REC];
 
-	if((bytesReceived = read(sockfd, recvBuff, BYTES_TO_REC)) > 0){  
+	socklen_t slen_server = sizeof(serveraddr);
+
+	if (bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server) > 0){  
 		FILE * recFile;
 		recFile = fopen(path, "w");
 		
@@ -76,7 +70,7 @@ int main(int argc, char **argv) {
                 fwrite(recvBuff, 1, bytesReceived, recFile);
 		
 		if(recFile != NULL){
-			while((bytesReceived = read(sockfd, recvBuff, BYTES_TO_REC)) > 0){
+			while(bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, 					(struct sockaddr*)&serveraddr, &slen_server) > 0){
         			printf("Bytes received %d\n", bytesReceived);
         			fwrite(recvBuff, 1, bytesReceived, recFile);
     			}
