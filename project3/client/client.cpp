@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -62,15 +63,17 @@ int main(int argc, char **argv) {
 
 	socklen_t slen_server = sizeof(serveraddr);
 
-	if (bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server) > 0){  
+	if ((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server)) > 0){  
 		FILE * recFile;
 		recFile = fopen(path, "w");
 		
 		printf("Bytes received %d\n", bytesReceived);
                 fwrite(recvBuff, 1, bytesReceived, recFile);
-		
+		cerr << "Reached 1" << endl;
 		if(recFile != NULL){
-			while(bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, 					(struct sockaddr*)&serveraddr, &slen_server) > 0){
+		cerr << "Reached 2" << endl;
+			while((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0,(struct sockaddr*)&serveraddr, &slen_server)) > 0){
+				cerr << "Reached 3" << endl;
         			printf("Bytes received %d\n", bytesReceived);
         			fwrite(recvBuff, 1, bytesReceived, recFile);
     			}
