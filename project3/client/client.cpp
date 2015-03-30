@@ -14,6 +14,7 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -66,20 +67,25 @@ int main(int argc, char **argv) {
 	socklen_t slen_server = sizeof(serveraddr);
 
 	if ((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server)) > 0){  
-		FILE * recFile;
-		recFile = fopen(path, "w");
+		//FILE * recFile;
+		//recFile = fopen(path, "w");
+		ofstream recFile;
+		recFile.open(path);
 		
 		printf("Bytes received %d\n", bytesReceived);
-                fwrite(recvBuff, 1, bytesReceived, recFile);
+		recFile << recvBuff;		
+		//fprintf(recFile, "%s", recvBuff);
+                //fwrite(recvBuff, 1, bytesReceived, recFile);
 		cerr << "Reached 1" << endl;
 		if(recFile != NULL){
 		cerr << "Reached 2" << endl;
 			while((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0,(struct sockaddr*)&serveraddr, &slen_server)) > 0){
 				cerr << "Reached 3" << endl;
         			printf("Bytes received %d\n", bytesReceived);
-        			fwrite(recvBuff, 1, bytesReceived, recFile);
+				recFile << recvBuff;
+        			//fwrite(recvBuff, 1, bytesReceived, recFile);
     			}
-			fclose(recFile);
+			recFile.close();
 			printf("Got from the server %s\n", line);
 		}
 	}	
