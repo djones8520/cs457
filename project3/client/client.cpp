@@ -30,17 +30,19 @@ int main(int argc, char **argv) {
 	  
 	char serverPort[5000];
 	char serverIP[5000];
-	  
+	/*  
 	printf("Enter server port number\n");
 	fgets(serverPort,5000,stdin);
 	  
 	printf("Enter server IP address\n");
 	fgets(serverIP,5000,stdin);
-	  
+	*/  
 	struct sockaddr_in serveraddr;
 	serveraddr.sin_family = AF_INET; //9010
-	serveraddr.sin_port = htons(atoi(serverPort));
-	serveraddr.sin_addr.s_addr = inet_addr(serverIP);
+	// atoi(serverPort)
+	serveraddr.sin_port = htons(9010);
+	// serverIP
+	serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	  
 	printf("Enter a file name: ");
 	char line[5000];
