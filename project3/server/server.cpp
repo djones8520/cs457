@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
 		while(1){
 			char readbuff[BYTES_TO_SEND - 3];
-			char header[4]={'0','0','0','\0'};
+			char header[3]={'0','0','0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
 			total+= bytesRead;
 			
@@ -73,14 +73,13 @@ int main(int argc, char **argv)
 				header[2] = '1';
 			}
 
-			string tmp = "";
-			tmp += header;
-			tmp += readbuff;
-			const char * sendbuff = &tmp[0];//.c_str();
-			//strcat(sendbuff,"\0");
-			printf("Server: BytesRead %d\n",bytesRead);
+			char sendbuff[BYTES_TO_SEND];
+			memcpy(sendbuff,header,3);
+			memcpy(&sendbuff[3],readbuff,bytesRead);
+
+			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
-			//printf("Server: Sending... %s\n",sendbuff);
+			//printf("Server: sent %s\n",&sendbuff[3]);
 			sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			
@@ -89,10 +88,6 @@ int main(int argc, char **argv)
 				break;			
 			}
 
-			/*if(bytesRead < BYTES_TO_SEND - 3){
-				puts("Server: Reached end of file");
-				break;
-			}*/
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
 		fclose(fp);
