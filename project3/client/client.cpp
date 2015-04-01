@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     	//strcat(path,"client/");
     	strcat(path,line);
 	
-        char * recvBuff;
+        char recvBuff[BYTES_TO_REC];
 
 	socklen_t slen_server = sizeof(serveraddr);
 
@@ -69,13 +69,25 @@ int main(int argc, char **argv) {
 	recFile.open(path);
 
 	recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+	strcat(recvBuff,"\0");
+	char subbuff2[251];
+		memcpy( subbuff2, &recvBuff[0], 250 );
+		subbuff2[250] = '\0';
+		printf("Got from the server \n%s\n", &subbuff2[3]);
+		strcpy(recvBuff,subbuff2);
 	
 	//printf("rec buff: %c\n",recvBuff[2]);
 	//cerr << "rec buff: " << recvBuff[2] << endl;
 	while(recvBuff[2] != '1'){
 		recFile << &recvBuff[3];
-		//printf("Got from the server \n%s\n", recvBuff);
+		//printf("Got from the server \n%s\n", &recvBuff[3]);
+		memset(recvBuff, 0, sizeof(recvBuff));
 		recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+		char subbuff[251];
+		memcpy( subbuff, &recvBuff[0], 250 );
+		subbuff[250] = '\0';
+		printf("Got from the server \n%s\n", &subbuff[3]);
+		strcpy(recvBuff,subbuff);
 	}
 	recFile << &recvBuff[3];
 	//printf("Got from the server %s\n", recvBuff);

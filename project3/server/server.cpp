@@ -44,6 +44,7 @@ int main(int argc, char **argv)
 
 	socklen_t slen_client = sizeof(clientaddr);
 	while(1){
+		int total = 0;
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){  
 			printf("Receive error. \n");
 		}
@@ -59,32 +60,41 @@ int main(int argc, char **argv)
 			char readbuff[BYTES_TO_SEND - 3];
 			char header[4]={'0','0','0','\0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
+			total+= bytesRead;
 			
-			if(bytesRead < BYTES_TO_SEND - 3){
+			//if(bytesRead < BYTES_TO_SEND - 3){
+			if(bytesRead > 0){
 				if(feof(fp)){
 					header[2] = '1';
 				}else if(ferror(fp)){
 					puts("Server: Error while reading file");
 				}
+			}else if(bytesRead == 0){
+				header[2] = '1';
 			}
 
 			string tmp = "";
 			tmp += header;
 			tmp += readbuff;
-			const char * sendbuff = tmp.c_str();
+			const char * sendbuff = &tmp[0];//.c_str();
+			//strcat(sendbuff,"\0");
 			printf("Server: BytesRead %d\n",bytesRead);
-
+			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: Sending... %s\n",sendbuff);
 			sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			
+			if(bytesRead <= 0){
+				puts("Server: Reached end of file");
+				break;			
+			}
 
-			if(bytesRead < BYTES_TO_SEND - 3){
+			/*if(bytesRead < BYTES_TO_SEND - 3){
 				puts("Server: Reached end of file");
 				break;
-			}
+			}*/
 		}
-		puts("File sent");
+		printf("File sent.  Total Bytes... %d\n",total);
 		fclose(fp);
 	}
 	close(sockfd);
