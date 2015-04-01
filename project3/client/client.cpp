@@ -58,32 +58,31 @@ int main(int argc, char **argv) {
 	char * path;
 	path = (char *)malloc(strlen(line)+strlen("client/")+1);
     	path[0] = '\0';   // ensures the memory is an empty string
-    	strcat(path,"client/");
+    	//strcat(path,"client/");
     	strcat(path,line);
 	
-	int bytesReceived = 0;
-        char recvBuff[BYTES_TO_REC];
+        char * recvBuff;
 
 	socklen_t slen_server = sizeof(serveraddr);
 
 	ofstream recFile;
 	recFile.open(path);
-	if ((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server)) > 0){  
-		printf("Bytes received %d\n", bytesReceived);
-		recFile << recvBuff;
-		if(recFile != NULL){
-			while((bytesReceived = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0,(struct sockaddr*)&serveraddr, &slen_server)) > 0){
-        			printf("Bytes received %d\n", bytesReceived);
-				recFile << recvBuff;
-    			}
-			printf("Got from the server %s\n", line);
-		}
-	}	
-    	else{
-        	printf("Something went wrong reading the file from the server or the file does not exist\n");
-  	}  
+
+	recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+	
+	//printf("rec buff: %c\n",recvBuff[2]);
+	//cerr << "rec buff: " << recvBuff[2] << endl;
+	while(recvBuff[2] != '1'){
+		recFile << &recvBuff[3];
+		//printf("Got from the server \n%s\n", recvBuff);
+		recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+	}
+	recFile << &recvBuff[3];
+	//printf("Got from the server %s\n", recvBuff);
+	printf("\nFile transferred\n");
+
 	recFile.close();
 	close(sockfd);
   
-  return 0;
+  	return 0;
 }

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -55,24 +56,35 @@ int main(int argc, char **argv)
 		}
 
 		while(1){
-			char buff[BYTES_TO_SEND]={0};
-			int bytesRead = fread(buff,1,BYTES_TO_SEND,fp);
-			printf("Server: Bytes read %d\n",bytesRead);
-
-			if(bytesRead > 0){
-				puts("Server: Sending... \n");
-				sendto(sockfd,buff,bytesRead,0,
-					(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+			char readbuff[BYTES_TO_SEND - 3];
+			char header[4]={'0','0','0','\0'};
+			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
+			
+			if(bytesRead < BYTES_TO_SEND - 3){
+				if(feof(fp)){
+					header[2] = '1';
+				}else if(ferror(fp)){
+					puts("Server: Error while reading file");
+				}
 			}
 
-			if(bytesRead < BYTES_TO_SEND){
-				if(feof(fp))
-					puts("Server: Reached end of file");
-				else if(ferror(fp))
-					puts("Server: Error while reading file");
+			string tmp = "";
+			tmp += header;
+			tmp += readbuff;
+			const char * sendbuff = tmp.c_str();
+			printf("Server: BytesRead %d\n",bytesRead);
+
+			//printf("Server: Sending... %s\n",sendbuff);
+			sendto(sockfd,sendbuff,bytesRead + 3,0,
+				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+			
+
+			if(bytesRead < BYTES_TO_SEND - 3){
+				puts("Server: Reached end of file");
 				break;
 			}
 		}
+		puts("File sent");
 		fclose(fp);
 	}
 	close(sockfd);
