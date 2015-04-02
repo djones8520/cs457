@@ -20,10 +20,19 @@
 #include <stdlib.h>
 
 #define BYTES_TO_REC 256
+#define WINDOW_SIZE 5
+
+uint16_t window[WINDOW_SIZE];
+// Free window slot
+uint16_t ALL_ONES = 65535;
 
 using namespace std;
 
 int main(int argc, char **argv) {
+	for(int i = 0; i < WINDOW_SIZE; i++){
+		window[i] = i;
+	}
+	
 	int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 	if (sockfd < 0) {
 		printf("There was a problem creating the socket\n");
@@ -73,13 +82,40 @@ int main(int argc, char **argv) {
 	//printf("rec buff: %c\n",recvBuff[2]);
 	//cerr << "rec buff: " << recvBuff[2] << endl;
 	while(recvBuff[2] != '1'){
-		recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+		// PUT IN AREA WHERE PACKET IS RECEIVED
+		uint16_t sequenceNumber;
+		memcpy(&sequenceNumber, &recvBuff[0], 2);
+
+		int i = 0;
+		if(window[i] == sequenceNumber){
+			window[i] = ALL_ONES;
+
+			for(i; i < WINDOW_SIZE; i++){
+				for(int j = 0; j < WINDOW_SIZE; j++){
+					if(window[j] != ALL_ONES){
+						window[i] = window[j];
+						window[j] = ALL_ONES;
+					}
+					else
+						window[j] = ALL_ONES;
+				}
+			}
+		}
+		else{
+			for(int k = 1; k < WINDOW_SIZE; k++){
+				if(window[k] == sequenceNumber){
+					// PACKET IS IN WINDOW, DO STUFF HERE
+					recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+				}
+			}
+		}
+		
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 	}
-	recFile.write( &recvBuff[3],bytes_received - 3);
+	recFile.write(&recvBuff[3],bytes_received - 3);
 	//printf("Got from the server %s\n", recvBuff);
 	printf("\nFile transferred\n");
 
