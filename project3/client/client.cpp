@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	recFile.open(path);
 
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
-	
+	cout << "client dataCheck: " << recvBuff[2] << endl;
 	//printf("rec buff: %c\n",recvBuff[2]);
 	//cerr << "rec buff: " << recvBuff[2] << endl;
 	while(recvBuff[2] != '1'){
@@ -97,8 +97,10 @@ int main(int argc, char **argv) {
 			// PACKET IN WINDOW (window moves)
 			
 			recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+
 			// Send acknowledgement
-			sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+			int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+			cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
 
 			window[i] = ALL_ONES;
 			
@@ -139,7 +141,7 @@ int main(int argc, char **argv) {
 					// Write to file
 					recFile.write(&recvBuff[3],BYTES_TO_REC-3);
 					// Send acknowledgement
-					sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+					sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 				}
 			}
 		}
@@ -150,7 +152,7 @@ int main(int argc, char **argv) {
 	}
 	
 	// Send final ACK
-	sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+	sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 	
 	recFile.write(&recvBuff[3],bytes_received - 3);
 	//printf("Got from the server %s\n", recvBuff);

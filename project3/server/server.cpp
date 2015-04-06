@@ -128,9 +128,9 @@ int main(int argc, char **argv)
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[3]);
 			
-			sendto(sockfd,sendbuff,bytesRead + 3,0,
+			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
-			
+			cout << "sendSize: " << sendSize << endl;
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
 				break;			
@@ -160,13 +160,14 @@ void* receiveThread(void* arg){
 		
 		uint16_t sequenceNumber;
 		memcpy(&sequenceNumber, &buf[0], 2);
-		uint8_t dataCheck;
+		char dataCheck;
 		memcpy(&dataCheck, &buf[2], 1);
 
 		cout << "dataCheck: " << dataCheck << endl;
+		cout << "sequenceNumber: " << sequenceNumber << endl;
 		
 		// If there is no more data, end the thread
-		if(dataCheck != 0){
+		if(dataCheck != '0'){
 			cout << "Receive thread exit" << endl;
 			
 			break;
