@@ -29,8 +29,14 @@ uint16_t ALL_ONES = 65535;
 using namespace std;
 
 int main(int argc, char **argv) {
+	// Next sequence number to be put into window when it moves
+	int windowCounter = 0;
+	
+	// Intialize window
 	for(int i = 0; i < WINDOW_SIZE; i++){
 		window[i] = i;
+		
+		windowCounter++;
 	}
 	
 	int sockfd = socket(AF_INET,SOCK_DGRAM,0);
@@ -85,27 +91,51 @@ int main(int argc, char **argv) {
 		// PUT IN AREA WHERE PACKET IS RECEIVED
 		uint16_t sequenceNumber;
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-
+cout << sequenceNumber << endl;
 		int i = 0;
 		if(window[i] == sequenceNumber){
-			window[i] = ALL_ONES;
+			// PACKET IN WINDOW (window moves)
+			
+			recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+			// Send acknowledgement
+			sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+			cout << "if ACK" << endl;
 
+			window[i] = ALL_ONES;
+			
 			for(i; i < WINDOW_SIZE; i++){
-				for(int j = 0; j < WINDOW_SIZE; j++){
-					if(window[j] != ALL_ONES){
+				bool found = false;
+				for(int j = i+1; j < WINDOW_SIZE; j++){
+					if(window[j] != ALL_ONES && !found){
 						window[i] = window[j];
 						window[j] = ALL_ONES;
+						
+						found = true;
 					}
-					else
-						window[j] = ALL_ONES;
+				}
+			}
+			
+			// items in the window have moved to the front, now add to free spot(s)
+			for(int i = 0; i < WINDOW_SIZE; i++){
+				if(window[i] == ALL_ONES){
+					window[i] = windowCounter;
+					windowCounter++;
+					
+					cout << "client window updated" << endl;
 				}
 			}
 		}
 		else{
-			for(int k = 1; k < WINDOW_SIZE; k++){
+			// IN PART ONE, IT SHOULD NEVER GET HERE
+			cout << "PACKET IS OUT OF ORDER" << endl;
+			
+			for(int k = 1; k < WINDOW_SIZE; k++){	
 				if(window[k] == sequenceNumber){
-					// PACKET IS IN WINDOW, DO STUFF HERE
+					// PACKET IS IN WINDOW					
+					// Write to file
 					recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+					// Send acknowledgement
+					sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 				}
 			}
 		}
@@ -113,8 +143,11 @@ int main(int argc, char **argv) {
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
-
 	}
+	
+	// Send final ACK
+	sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+	
 	recFile.write(&recvBuff[3],bytes_received - 3);
 	//printf("Got from the server %s\n", recvBuff);
 	printf("\nFile transferred\n");

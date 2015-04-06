@@ -35,18 +35,21 @@ uint16_t ALL_ONES = 65535;
 // Acknowledged packet
 uint16_t ONES_WITH_ONE_ZERO = 65534;
 
+int sockfd = socket(AF_INET,SOCK_DGRAM,0);
+struct sockaddr_in clientaddr;
+socklen_t slen_client = sizeof(clientaddr);
+
 using namespace std;
 
 std::mutex windowLock;
 
 int main(int argc, char **argv)
 {	
-	int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 	if(sockfd<0){
 		printf("There was an error creating the socket\n");
 		return 1;
 	}
-	struct sockaddr_in serveraddr, clientaddr;
+	struct sockaddr_in serveraddr;
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(9010);
 	serveraddr.sin_addr.s_addr=INADDR_ANY;
@@ -54,7 +57,6 @@ int main(int argc, char **argv)
 	bind(sockfd,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
 	char buf[BUFLEN]; 
 
-	socklen_t slen_client = sizeof(clientaddr);
 	while(1){
 		int total = 0;
 		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){  
@@ -85,20 +87,27 @@ int main(int argc, char **argv)
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
 			total+= bytesRead;
 			
+			memcpy(&header, &currentSequence, 2);
+			cout << "Sequence #: " <<  currentSequence << endl;
+			
 			// Stay in this loop until there is a free spot in the window
 			bool found = false;
 			while(!found){
 				windowLock.lock();
 				for(int i = 0; i < WINDOW_SIZE; i++){
+					//cout << "window " << i << " " << window[i] << endl;
 					if(window[i] == ALL_ONES && !found){
 						window[i] = currentSequence;
-						currentSequence++;
 						found = true;
 					}
 				}
 
 				windowLock.unlock();
 			}
+			
+			// Increment sequence
+			currentSequence++;
+			
 			
 			//if(bytesRead < BYTES_TO_SEND - 3){
 			if(bytesRead > 0){
@@ -118,6 +127,7 @@ int main(int argc, char **argv)
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[3]);
+			
 			sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			
@@ -136,41 +146,54 @@ int main(int argc, char **argv)
 }
 
 void* receiveThread(void* arg){
-	int sockfd = *(int*) arg;
-	struct sockaddr_in clientaddr;
-	socklen_t slen_client = sizeof(clientaddr);
 	char buf[BYTES_TO_SEND];
 
+	cout << "Receive thread created" << endl;
+	
 	while(1){
 		if (recvfrom(sockfd, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){  
 				printf("Receive error. \n");
 		}
 
+		cout << "ACK" << endl;
+		
 		uint16_t sequenceNumber;
 		memcpy(&sequenceNumber, &buf[0], 2);
 		uint8_t dataCheck;
 		memcpy(&dataCheck, &buf[2], 1);
 
+		cout << "here" << endl;
+		
 		// If there is no more data, end the thread
 		if(dataCheck != 0)
 			break;
 
 		int i = 0;
-		int j = 1;
 
 		windowLock.lock();
+		cout << "Thread sequence #: " << sequenceNumber << endl;
 		if(window[i] == sequenceNumber){
+			// window moves
 			window[i] = ALL_ONES;
 
 			for(i; i < WINDOW_SIZE; i++){
-				for(j; j < WINDOW_SIZE; j++){
-					if(window[j] != ALL_ONES && window[j] != ONES_WITH_ONE_ZERO){
+				bool found = false;
+				
+				for(int j = i+1; j < WINDOW_SIZE; j++){
+					if(window[j] != ALL_ONES && window[j] != ONES_WITH_ONE_ZERO && !found){
 						window[i] = window[j];
 						window[j] = ALL_ONES;
+						
+						found = true;
 					}
-					else
-						window[j] = ALL_ONES;
+			
+					if(j == (WINDOW_SIZE-1) && !found)
+						window[i] = ALL_ONES;
 				}
+				
+				// The last window slot won't be compared and must be set to ALL_ONES
+				if(i == (WINDOW_SIZE - 1))
+					window[i] = ALL_ONES;
 			}
 		}
 		else{
