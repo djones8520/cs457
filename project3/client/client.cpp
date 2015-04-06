@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 		// PUT IN AREA WHERE PACKET IS RECEIVED
 		uint16_t sequenceNumber;
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-cout << sequenceNumber << endl;
+
 		int i = 0;
 		if(window[i] == sequenceNumber){
 			// PACKET IN WINDOW (window moves)
@@ -99,7 +99,6 @@ cout << sequenceNumber << endl;
 			recFile.write(&recvBuff[3],BYTES_TO_REC-3);
 			// Send acknowledgement
 			sendto(sockfd, recvBuff, strlen(recvBuff), 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-			cout << "if ACK" << endl;
 
 			window[i] = ALL_ONES;
 			
@@ -115,15 +114,20 @@ cout << sequenceNumber << endl;
 				}
 			}
 			
+			cout << "window counter: " << windowCounter << endl;
 			// items in the window have moved to the front, now add to free spot(s)
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] == ALL_ONES){
 					window[i] = windowCounter;
 					windowCounter++;
 					
-					cout << "client window updated" << endl;
+					//cout << "client window updated" << endl;
 				}
+				
+				cout << window[i];
 			}
+			
+			cout << endl << "end window move" << endl;
 		}
 		else{
 			// IN PART ONE, IT SHOULD NEVER GET HERE

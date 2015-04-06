@@ -156,17 +156,21 @@ void* receiveThread(void* arg){
 		}
 
 		cout << "ACK" << endl;
+		cout << "buf: " << buf << endl;
 		
 		uint16_t sequenceNumber;
 		memcpy(&sequenceNumber, &buf[0], 2);
 		uint8_t dataCheck;
 		memcpy(&dataCheck, &buf[2], 1);
 
-		cout << "here" << endl;
+		cout << "dataCheck: " << dataCheck << endl;
 		
 		// If there is no more data, end the thread
-		if(dataCheck != 0)
+		if(dataCheck != 0){
+			cout << "Receive thread exit" << endl;
+			
 			break;
+		}
 
 		int i = 0;
 
