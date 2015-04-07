@@ -31,9 +31,9 @@ void* receiveThread(void* arg);
 uint16_t window[WINDOW_SIZE];
 
 // Free window slot
-uint16_t ALL_ONES = 65535;
+uint16_t OPEN_SLOT = 65535;
 // Acknowledged packet
-uint16_t ONES_WITH_ONE_ZERO = 65534;
+uint16_t ACKNOWLEDGED = 65534;
 
 int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 struct sockaddr_in clientaddr;
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 				windowLock.lock();
 				for(int i = 0; i < WINDOW_SIZE; i++){
 					//cout << "window " << i << " " << window[i] << endl;
-					if(window[i] == ALL_ONES && !found){
+					if(window[i] == OPEN_SLOT && !found){
 						window[i] = currentSequence;
 						found = true;
 					}
@@ -135,6 +135,8 @@ int main(int argc, char **argv)
 				puts("Server: Reached end of file");
 				break;			
 			}
+
+			
 
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
@@ -179,32 +181,32 @@ void* receiveThread(void* arg){
 		//cout << "Thread sequence #: " << sequenceNumber << endl;
 		if(window[i] == sequenceNumber){
 			// window moves
-			window[i] = ALL_ONES;
+			window[i] = OPEN_SLOT;
 
 			for(i; i < WINDOW_SIZE; i++){
 				bool found = false;
 				
 				for(int j = i+1; j < WINDOW_SIZE; j++){
-					if(window[j] != ALL_ONES && window[j] != ONES_WITH_ONE_ZERO && !found){
+					if(window[j] != OPEN_SLOT && window[j] != ACKNOWLEDGED && !found){
 						window[i] = window[j];
-						window[j] = ALL_ONES;
+						window[j] = OPEN_SLOT;
 						
 						found = true;
 					}
 			
 					if(j == (WINDOW_SIZE-1) && !found)
-						window[i] = ALL_ONES;
+						window[i] = OPEN_SLOT;
 				}
 				
-				// The last window slot won't be compared and must be set to ALL_ONES
+				// The last window slot won't be compared and must be set to OPEN_SLOT
 				if(i == (WINDOW_SIZE - 1))
-					window[i] = ALL_ONES;
+					window[i] = OPEN_SLOT;
 			}
 		}
 		else{
 			for(int k = 1; k < WINDOW_SIZE; k++){
 				if(window[k] == sequenceNumber){
-					window[k] = ONES_WITH_ONE_ZERO;
+					window[k] = ACKNOWLEDGED;
 				}
 			}
 		}
