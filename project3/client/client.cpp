@@ -18,6 +18,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <map>
+
+using namespace std;
 
 #define BYTES_TO_REC 256
 #define WINDOW_SIZE 5
@@ -25,8 +28,9 @@
 uint16_t window[WINDOW_SIZE];
 // Free window slot
 uint16_t ALL_ONES = 65535;
+uint16_t maxSequence = 65533;
+map<uint16_t, char[BYTES_TO_REC-3]> dataToWrite;
 
-using namespace std;
 
 int main(int argc, char **argv) {
 	// Next sequence number to be put into window when it moves
@@ -84,78 +88,91 @@ int main(int argc, char **argv) {
 	recFile.open(path);
 
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
-	cout << "client dataCheck: " << recvBuff[2] << endl;
-	//printf("rec buff: %c\n",recvBuff[2]);
-	//cerr << "rec buff: " << recvBuff[2] << endl;
-	while(recvBuff[2] != '1'){
-		// PUT IN AREA WHERE PACKET IS RECEIVED
-		uint16_t sequenceNumber;
-		memcpy(&sequenceNumber, &recvBuff[0], 2);
 
-		int i = 0;
-		if(window[i] == sequenceNumber){
-			// PACKET IN WINDOW (window moves)
+	uint16_t sequenceNumber;
+	memcpy(&sequenceNumber, &recvBuff[0], 2);
+	
+	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+	while(window[0] <= maxSequence){
+			cout << "client dataCheck: " << recvBuff[2] << endl;
+
+			int i = 0;
+			if(window[i] == sequenceNumber){
+				if(recvBuff[2] == '1'){
+					maxSequence = sequenceNumber;
+				}
+
+				// PACKET IN WINDOW (window moves)			
+				recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+
+				// Write items in out of order packets in dataToWrite
+				uint16_t sequenceNumberAfter = sequenceNumber++;
+				while(dataToWrite.count(sequenceNumberAfter) > 0){
+					recFile.write(dataToWrite[sequenceNumberAfter],BYTES_TO_REC-3);
+					sequenceNumberAfter++;
+				}
+
+				// Send acknowledgement
+				int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+				cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
+
+				window[i] = ALL_ONES;
 			
-			recFile.write(&recvBuff[3],BYTES_TO_REC-3);
-
-			// Send acknowledgement
-			int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-			cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
-
-			window[i] = ALL_ONES;
-			
-			for(i; i < WINDOW_SIZE; i++){
-				bool found = false;
-				for(int j = i+1; j < WINDOW_SIZE; j++){
-					if(window[j] != ALL_ONES && !found){
-						window[i] = window[j];
-						window[j] = ALL_ONES;
+				for(i; i < WINDOW_SIZE; i++){
+					bool found = false;
+					for(int j = i+1; j < WINDOW_SIZE; j++){
+						if(window[j] != ALL_ONES && !found){
+							window[i] = window[j];
+							window[j] = ALL_ONES;
 						
-						found = true;
+							found = true;
+						}
+					}
+				}
+			
+				cout << "window counter: " << windowCounter << endl;
+				// items in the window have moved to the front, now add to free spot(s)
+				for(int i = 0; i < WINDOW_SIZE; i++){
+					if(window[i] == ALL_ONES){
+						window[i] = windowCounter;
+						windowCounter++;
+					
+						//cout << "client window updated" << endl;
+					}
+				
+					cout << window[i];
+				}
+			
+				cout << endl << "end window move" << endl;
+			}
+			else{
+				// IN PART ONE, IT SHOULD NEVER GET HERE
+				cout << "PACKET IS OUT OF ORDER" << endl;
+			
+				for(int k = 1; k < WINDOW_SIZE; k++){	
+					if(window[k] == sequenceNumber){
+						if(recvBuff[2] == '1')
+							maxSequence = sequenceNumber;	
+
+						// PACKET IS IN WINDOW					
+						window[k] = ALL_ONES;
+						memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+
+						// Send acknowledgement
+						sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 					}
 				}
 			}
-			
-			cout << "window counter: " << windowCounter << endl;
-			// items in the window have moved to the front, now add to free spot(s)
-			for(int i = 0; i < WINDOW_SIZE; i++){
-				if(window[i] == ALL_ONES){
-					window[i] = windowCounter;
-					windowCounter++;
-					
-					//cout << "client window updated" << endl;
-				}
-				
-				cout << window[i];
-			}
-			
-			cout << endl << "end window move" << endl;
-		}
-		else{
-			// IN PART ONE, IT SHOULD NEVER GET HERE
-			cout << "PACKET IS OUT OF ORDER" << endl;
-			
-			for(int k = 1; k < WINDOW_SIZE; k++){	
-				if(window[k] == sequenceNumber){
-					// PACKET IS IN WINDOW					
-					// Write to file
-					recFile.write(&recvBuff[3],BYTES_TO_REC-3);
-					// Send acknowledgement
-					sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-				}
-			}
-		}
+		
 		
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+
+		memcpy(&sequenceNumber, &recvBuff[0], 2);
+		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 	}
-	
-	// Send final ACK
-	sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-	
-	recFile.write(&recvBuff[3],bytes_received - 3);
-	//printf("Got from the server %s\n", recvBuff);
+
 	printf("\nFile transferred\n");
 
 	recFile.close();
