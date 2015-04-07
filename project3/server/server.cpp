@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 			
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
-			cout << "sendSize: " << sendSize << endl;
+			//cout << "sendSize: " << sendSize << endl;
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
 				break;			
@@ -163,8 +163,8 @@ void* receiveThread(void* arg){
 		char dataCheck;
 		memcpy(&dataCheck, &buf[2], 1);
 
-		cout << "dataCheck: " << dataCheck << endl;
-		cout << "sequenceNumber: " << sequenceNumber << endl;
+		//cout << "dataCheck: " << dataCheck << endl;
+		//cout << "sequenceNumber: " << sequenceNumber << endl;
 		
 		// If there is no more data, end the thread
 		if(dataCheck != '0'){
@@ -176,7 +176,7 @@ void* receiveThread(void* arg){
 		int i = 0;
 
 		windowLock.lock();
-		cout << "Thread sequence #: " << sequenceNumber << endl;
+		//cout << "Thread sequence #: " << sequenceNumber << endl;
 		if(window[i] == sequenceNumber){
 			// window moves
 			window[i] = ALL_ONES;
