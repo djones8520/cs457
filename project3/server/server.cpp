@@ -264,7 +264,8 @@ void* receiveThread(void* arg){
 			else{
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
-						window[k] = ACKNOWLEDGED;
+						//window[k] = ACKNOWLEDGED;
+						window[k] = OPEN_SLOT;
 					}
 					cerr << "Window K " << window[k];
 				}
