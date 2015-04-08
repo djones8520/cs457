@@ -164,9 +164,9 @@ void* receiveThread(void* arg){
 
 	fd_set select_fds;
 	struct timeval timeout;
-
+	int fd2 = *(int *)arg;
 	FD_ZERO(&select_fds);
-	FD_SET(sockfd, &select_fds);
+	FD_SET(fd2, &select_fds);
 
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
@@ -174,11 +174,11 @@ void* receiveThread(void* arg){
 	while(1){
 
 		timeout.tv_sec = 1;
-		if(select(sockfd+1, &select_fds, NULL, NULL, &timeout) == 0){
+		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
-					if(sendto(sockfd,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
+					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
 				cerr << "Resending" << endl;
@@ -188,7 +188,8 @@ void* receiveThread(void* arg){
 			windowLock.unlock();
 		}
 		else{
-			if (recvfrom(sockfd, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
+			cerr << "ELSE" << endl;
+			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
 
