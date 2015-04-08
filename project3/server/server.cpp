@@ -193,6 +193,8 @@ void* receiveThread(void* arg){
 
 			}
 			windowLock.unlock();
+			FD_ZERO(&select_fds);
+			FD_SET(fd2, &select_fds);
 		}
 		else{
 			cerr << "ELSE" << endl;
