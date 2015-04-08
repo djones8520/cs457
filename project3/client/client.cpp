@@ -23,6 +23,7 @@
 using namespace std;
 
 #define BYTES_TO_REC 256
+#define OVERHEAD 5
 #define WINDOW_SIZE 5
 
 uint16_t window[WINDOW_SIZE];
@@ -31,6 +32,8 @@ uint16_t ALL_ONES = 65535;
 uint16_t maxSequence = 65533;
 map<uint16_t, char[BYTES_TO_REC-3]> dataToWrite;
 
+uint16_t genChkSum(char * data);
+bool valChkSum(char * data);
 
 int main(int argc, char **argv) {
 	// Next sequence number to be put into window when it moves
@@ -194,7 +197,9 @@ int main(int argc, char **argv) {
 		if (dataToWrite.count(sequenceNumber) > 0) {
 			// SENDS BACK ACK
 			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
-			sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
+				cerr << "SEND ERROR" << endl;
+			}
 		} else {
 			// ADD PACKET TO MAP ONCE RECEIVED
 			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
@@ -211,4 +216,38 @@ int main(int argc, char **argv) {
 	close(sockfd);
   
   	return 0;
+}
+
+uint16_t genChkSum(char * data){
+	uint16_t chkSum = 0;
+	
+	data += OVERHEAD;
+	int len = strlen(data);
+	for(int i = 0; i < len; i++){
+		cerr << *data;
+		chkSum += *data;
+		data++;
+	}
+
+	chkSum = ~chkSum;
+
+	return chkSum;
+}
+
+bool valChkSum(char * data){
+	uint16_t oldChkSum;
+	memcpy(&oldChkSum,data,2);
+	uint16_t newChkSum = 0;
+	
+	data += OVERHEAD;
+	int len = strlen(data);
+	for(int i = 0; i < len; i++){
+		cerr << *data;
+		newChkSum += *data;
+		data++;
+	}
+
+	newChkSum |= oldChkSum;
+
+	return newChkSum == VALID_CHECKSUM;
 }
