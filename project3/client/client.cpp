@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 				// Write items in out of order packets in dataToWrite
 				uint16_t sequenceNumberAfter = sequenceNumber++;
 				while(dataToWrite.count(sequenceNumberAfter) > 0){
-					recFile.write(dataToWrite[sequenceNumberAfter],BYTES_TO_REC-3);
+					recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
 					sequenceNumberAfter++;
 				}
 
