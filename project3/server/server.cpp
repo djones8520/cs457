@@ -181,7 +181,9 @@ void* receiveThread(void* arg){
 					if(sendto(sockfd,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
+				cerr << "Resending" << endl;
 				}
+
 			}
 			windowLock.unlock();
 		}
