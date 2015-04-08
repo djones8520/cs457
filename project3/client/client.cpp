@@ -194,7 +194,9 @@ int main(int argc, char **argv) {
 		if (dataToWrite.count(sequenceNumber) > 0) {
 			// SENDS BACK ACK
 			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
-			sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
+				cerr << "SEND ERROR" << endl;
+			}
 		} else {
 			// ADD PACKET TO MAP ONCE RECEIVED
 			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
