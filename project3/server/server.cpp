@@ -266,6 +266,7 @@ void* receiveThread(void* arg){
 					if(window[k] == sequenceNumber){
 						window[k] = ACKNOWLEDGED;
 					}
+					cerr << "Window K " << window[k];
 				}
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
