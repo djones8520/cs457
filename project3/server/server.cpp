@@ -180,8 +180,12 @@ void* receiveThread(void* arg){
 
 	while(1){
 
+		//FD_ZERO(&select_fds);
+		//FD_SET(fd2,&select_fds);
 		timeout.tv_sec = 1;
 		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
+			FD_ZERO(&select_fds);
+			FD_SET(fd2,&select_fds);
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
@@ -193,11 +197,12 @@ void* receiveThread(void* arg){
 
 			}
 			windowLock.unlock();
-			FD_ZERO(&select_fds);
-			FD_SET(fd2, &select_fds);
+			//cerr << "The socket # is " << fd2 << endl;
+			//timeout.tv_sec = 1;
+			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			cerr << "ELSE" << endl;
+			cerr << "Got to ELSE" << endl;
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
@@ -269,6 +274,8 @@ void* receiveThread(void* arg){
 			windowLock.unlock();
 
 			memset(buf, 0, sizeof(buf));
+			FD_ZERO(&select_fds);
+			FD_SET(fd2,&select_fds);
 		}
 	}
 }

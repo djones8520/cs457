@@ -25,7 +25,7 @@ using namespace std;
 #define BYTES_TO_REC 256
 #define OVERHEAD 5
 #define WINDOW_SIZE 5
-
+#define VALID_CHECKSUM 65535
 uint16_t window[WINDOW_SIZE];
 // Free window slot
 uint16_t ALL_ONES = 65535;
