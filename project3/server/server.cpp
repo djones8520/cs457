@@ -50,7 +50,7 @@ std::mutex windowLock;
 std::mutex dataMapLock;
 
 int main(int argc, char **argv)
-{	
+{
 	if(sockfd<0){
 		printf("There was an error creating the socket\n");
 		return 1;
@@ -61,11 +61,11 @@ int main(int argc, char **argv)
 	serveraddr.sin_addr.s_addr=INADDR_ANY;
 
 	bind(sockfd,(struct sockaddr*)&serveraddr,sizeof(serveraddr));
-	char buf[BUFLEN]; 
+	char buf[BUFLEN];
 
 	while(1){
 		int total = 0;
-		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){  
+		if (recvfrom(sockfd, buf, BUFLEN, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 			printf("Receive error. \n");
 		}
 		puts("Client connected");
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 			printf("Server: File read error\n");
 			return 1;
 		}
-		
+
 		// Set each item in window to all ones (ie free slot)
 		for(int i = 0; i < WINDOW_SIZE; i++)
 			window[i] = 65535;
@@ -92,10 +92,10 @@ int main(int argc, char **argv)
 			char header[3]={'0','0','0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
 			total+= bytesRead;
-			
+
 			memcpy(&header, &currentSequence, 2);
 			cout << "Sequence #: " <<  currentSequence << endl;
-			
+
 			// Stay in this loop until there is a free spot in the window
 			bool found = false;
 			while(!found){
@@ -110,11 +110,11 @@ int main(int argc, char **argv)
 
 				windowLock.unlock();
 			}
-			
+
 			// Increment sequence
 			currentSequence++;
-			
-			
+
+
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
 				if(feof(fp)){
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 			char sendbuff[BYTES_TO_SEND];
 			memcpy(sendbuff,header,3);
 			memcpy(&sendbuff[3],readbuff,bytesRead);
-			
+
 			dataMapLock.lock();
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
 			dataMapLock.unlock();
@@ -137,16 +137,16 @@ int main(int argc, char **argv)
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[3]);
-			
+
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			//cout << "sendSize: " << sendSize << endl;
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
-				break;			
+				break;
 			}
 
-			
+
 
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
@@ -170,9 +170,10 @@ void* receiveThread(void* arg){
 
 	timeout.tv_sec = 1;
 	timeout.tv_usec = 0;
-	
+
 	while(1){
 
+		timeout.tv_sec = 1;
 		if(select(sockfd, &select_fds, NULL, NULL, &timeout) == 0){
 			cerr << "RESENDING PACKET!" << endl;
 			windowLock.lock();
@@ -180,18 +181,20 @@ void* receiveThread(void* arg){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
 					if(sendto(sockfd,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
+						timeout.tv_sec = 1;
 					}
-					timeout.tv_sec = 1;
 				}
 			}
-		}else{
-			if (recvfrom(sockfd, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){  
+			windowLock.unlock();
+		}
+		else{
+			if (recvfrom(sockfd, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
 
 			cout << "ACK" << endl;
 			cout << "buf: " << buf << endl;
-		
+
 			uint16_t sequenceNumber;
 			memcpy(&sequenceNumber, &buf[0], 2);
 			char dataCheck;
@@ -200,11 +203,11 @@ void* receiveThread(void* arg){
 
 			//cout << "dataCheck: " << dataCheck << endl;
 			//cout << "sequenceNumber: " << sequenceNumber << endl;
-		
+
 			// If there is no more data, end the thread
 			if(dataCheck != '0'){
 				cout << "Receive thread exit" << endl;
-			
+
 				break;
 			}
 
@@ -223,26 +226,26 @@ void* receiveThread(void* arg){
 
 				for(i; i < WINDOW_SIZE; i++){
 					bool found = false;
-				
+
 					for(int j = i+1; j < WINDOW_SIZE; j++){
 						if(window[j] != OPEN_SLOT && window[j] != ACKNOWLEDGED && !found){
 							window[i] = window[j];
 							window[j] = OPEN_SLOT;
-							
+
 							found = true;
 						}
-			
+
 						if(j == (WINDOW_SIZE-1) && !found)
 							window[i] = OPEN_SLOT;
 					}
-				
+
 					// The last window slot won't be compared and must be set to OPEN_SLOT
 					if(i == (WINDOW_SIZE - 1)){
 						window[i] = OPEN_SLOT;
 					}
 				}
 			}
-			else if(0){
+			else{
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
 						window[k] = ACKNOWLEDGED;
