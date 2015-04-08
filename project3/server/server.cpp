@@ -174,14 +174,12 @@ void* receiveThread(void* arg){
 	while(1){
 
 		timeout.tv_sec = 1;
-		if(select(sockfd, &select_fds, NULL, NULL, &timeout) == 0){
-			cerr << "RESENDING PACKET!" << endl;
+		if(select(sockfd+1, &select_fds, NULL, NULL, &timeout) == 0){
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
 					if(sendto(sockfd,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
-						timeout.tv_sec = 1;
 					}
 				}
 			}
@@ -215,7 +213,7 @@ void* receiveThread(void* arg){
 
 			windowLock.lock();
 			cout << "Thread sequence #: " << sequenceNumber << endl;
-			if( 0 && window[i] == sequenceNumber){
+			if(window[i] == sequenceNumber){
 
 				dataMapLock.lock();
 				dataMap.erase(sequenceNumber);
