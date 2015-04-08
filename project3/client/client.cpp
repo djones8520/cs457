@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 				}
 
 				// PACKET IN WINDOW (window moves)			
-				recFile.write(&recvBuff[3],BYTES_TO_REC-3);
+				recFile.write(&recvBuff[3],bytes_received-3);
 
 				// Write items in out of order packets in dataToWrite
 				uint16_t sequenceNumberAfter = sequenceNumber++;
