@@ -24,8 +24,6 @@
 #include <utility>
 
 #define BYTES_TO_SEND 256
-#define OVERHEAD 3
-#define VALID_CHECKSUM 65535
 #define WINDOW_SIZE 5
 #define BUFLEN 5000
 
@@ -33,8 +31,6 @@ using namespace std;
 
 void strip_newline(char* s);
 void* receiveThread(void* arg);
-uint16_t genChkSum(char * data);
-bool valChkSum(char * data);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
@@ -137,9 +133,6 @@ int main(int argc, char **argv)
 			dataMapLock.lock();
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
 			dataMapLock.unlock();
-
-			bool chkSum = valChkSum(sendbuff);
-			cerr << "Checksum: " << chkSum << endl;
 
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
@@ -277,38 +270,4 @@ void strip_newline(char *s){
 		}
 		s++;
 	}
-}
-
-uint16_t genChkSum(char * data){
-	uint16_t chkSum = 0;
-	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
-		cerr << *data;
-		chkSum += *data;
-		data++;
-	}
-
-	chkSum = ~chkSum;
-
-	return chkSum;
-}
-
-bool valChkSum(char * data){
-	uint16_t oldChkSum;
-	memcpy(&oldChkSum,data,2);
-	uint16_t newChkSum = 0;
-	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
-		cerr << *data;
-		newChkSum += *data;
-		data++;
-	}
-
-	newChkSum |= oldChkSum;
-
-	return newChkSum == VALID_CHECKSUM;
 }
