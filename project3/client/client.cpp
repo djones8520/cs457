@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
 	serveraddr.sin_port = htons(9010);
 	// serverIP
 	string ipAddress = argv[2];
+
 	serveraddr.sin_addr.s_addr = inet_addr(ipAddress.c_str());
 	//serveraddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	  
