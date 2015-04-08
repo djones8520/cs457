@@ -229,11 +229,12 @@ void* receiveThread(void* arg){
 			int i = 0;
 
 			windowLock.lock();
-			cout << "Thread sequence #: " << sequenceNumber << endl;
+			cout << "Thread sequence #: " << sequenceNumber;
+			cerr << " window: " << window[i] << endl;
 			if(window[i] == sequenceNumber){
-
+				
 				dataMapLock.lock();
-				dataMap.erase(sequenceNumber);
+					dataMap.erase(sequenceNumber);
 				dataMapLock.unlock();
 
 				// window moves
@@ -264,11 +265,11 @@ void* receiveThread(void* arg){
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
 						window[k] = ACKNOWLEDGED;
-						dataMapLock.lock();
-						dataMap.erase(sequenceNumber);
-						dataMapLock.unlock();
 					}
 				}
+				dataMapLock.lock();
+					dataMap.erase(sequenceNumber);
+				dataMapLock.unlock();
 			}
 
 			windowLock.unlock();
