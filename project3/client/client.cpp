@@ -94,6 +94,22 @@ int main(int argc, char **argv) {
 
 	uint16_t sequenceNumber;
 	memcpy(&sequenceNumber, &recvBuff[0], 2);
+
+
+
+	// CHECKS TO MAKE SURE PACKET IS NOT ALREADY IN THE MAP
+	if (dataToWrite.count(sequenceNumber) > 0) {
+		// SENDS BACK ACK
+		cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
+		sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+	} else {
+		// ADD PACKET TO MAP ONCE RECEIVED
+		cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
+		memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+	}
+
+
+	
 	
 	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 	while(window[0] <= maxSequence){
@@ -152,6 +168,7 @@ int main(int argc, char **argv) {
 				// IN PART ONE, IT SHOULD NEVER GET HERE
 				cout << "PACKET IS OUT OF ORDER" << endl;
 			
+				// IF WITHIN WINDOW
 				for(int k = 1; k < WINDOW_SIZE; k++){	
 					if(window[k] == sequenceNumber){
 						if(recvBuff[2] == '1')
@@ -159,7 +176,9 @@ int main(int argc, char **argv) {
 
 						// PACKET IS IN WINDOW					
 						window[k] = ALL_ONES;
-						memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+
+						// COMMENTED OUT BECUASE IT SHOULD BE ALREADY IN THE MAP
+						//memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 
 						// Send acknowledgement
 						sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
@@ -171,6 +190,16 @@ int main(int argc, char **argv) {
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
+
+		if (dataToWrite.count(sequenceNumber) > 0) {
+			// SENDS BACK ACK
+			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
+			sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+		} else {
+			// ADD PACKET TO MAP ONCE RECEIVED
+			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
+			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+		}
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
