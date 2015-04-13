@@ -245,6 +245,7 @@ void* receiveThread(void* arg){
 				cout << "ACK in order" << endl;
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
+					cout << "Map remove: " << sequenceNumber << endl;
 				dataMapLock.unlock();
 
 				// window moves
