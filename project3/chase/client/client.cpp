@@ -210,7 +210,12 @@ int main(int argc, char **argv) {
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 
 		cout << "-----------------" << endl;
-		cout << "WINDOW[0]:    " << window[0] << endl;
+		//cout << "WINDOW[0]:    " << window[0] << endl;
+
+		for(int j = 0; j < window.size(); j++) {
+			cout << "WINDOW[" << j << "]: " << window[j] << endl;
+		}
+
 		cout << "MAX SEQUENCE: " << maxSequence << endl;
 		cout << "-----------------" << endl;
 	}
