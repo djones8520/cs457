@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 
 			cout << "SENT PACKET #: " << currentSequence << endl;
 			
-			//cout << "sendSize: " << sendSize << endl;
+			cout << "SIZE: " << sendSize << endl;
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
 				break;
