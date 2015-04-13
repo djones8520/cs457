@@ -195,9 +195,15 @@ void* receiveThread(void* arg){
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
+					uint16_t resendSeq;
+					memcpy(&resendSeq, &dataMap[window[i]].first[0], 2);
+					cout << "Resend Seq: " << resendSeq << endl;
+
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
+
+				
 				cerr << "Resending" << endl;
 				}
 
