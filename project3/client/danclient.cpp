@@ -124,6 +124,7 @@ int main(int argc, char **argv) {
 				if(recvBuff[2] == '1'){
 					maxSequence = sequenceNumber;
 				}
+				cout << "WRITE Seq: " << sequenceNumber << endl;
 
 				// PACKET IN WINDOW (window moves)			
 				recFile.write(&recvBuff[3],bytes_received-3);
@@ -131,6 +132,7 @@ int main(int argc, char **argv) {
 				// Write items in out of order packets in dataToWrite
 				uint16_t sequenceNumberAfter = sequenceNumber++;
 				while(dataToWrite.count(sequenceNumberAfter) > 0){
+					cout << "WRITE seq (map): " << sequenceNumberAfter << endl;
 					recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
 					sequenceNumberAfter++;
 				}
