@@ -104,6 +104,13 @@ int main(int argc, char **argv)
 			bool found = false;
 			while(!found){
 				windowLock.lock();
+cout << "Send window: ";
+for(int i=0; i<WINDOW_SIZE; i++){
+	cout << window[i] << " ";
+}
+cout << endl;
+
+
 				for(int i = 0; i < WINDOW_SIZE; i++){
 					
 					if(window[i] == OPEN_SLOT && !found){
