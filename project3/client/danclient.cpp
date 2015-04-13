@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
 	
 	
 	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+	cout << "Sequence received: " << sequenceNumber << endl;
 	while(window[0] <= maxSequence){
 			cout << "client dataCheck: " << recvBuff[2] << endl;
 
@@ -208,6 +209,7 @@ int main(int argc, char **argv) {
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+		cout << "Sequence received: " << sequenceNumber << endl;
 	}
 
 	printf("\nFile transferred\n");
