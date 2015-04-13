@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 			dataMapLock.unlock();
 
 			bool chkSum = valChkSum(sendbuff);
-			cerr << "Checksum: " << chkSum << endl;
+			//cerr << "Checksum: " << chkSum << endl;
 
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
