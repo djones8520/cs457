@@ -96,6 +96,13 @@ int main(int argc, char **argv)
 			char readbuff[BYTES_TO_SEND - 3];
 			char header[3]={'0','0','0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
+
+			if(bytesRead <= 0){
+				puts("Server: Reached end of file");
+				break;
+			}
+
+
 			total+= bytesRead;
 
 			memcpy(&header, &currentSequence, 2);
@@ -151,10 +158,7 @@ int main(int argc, char **argv)
 			cout << "SENT PACKET #: " << currentSequence << endl;
 			
 			cout << "SIZE: " << sendSize << endl;
-			if(bytesRead <= 0){
-				puts("Server: Reached end of file");
-				break;
-			}
+			
 
 			// Increment sequence
 			currentSequence++;
