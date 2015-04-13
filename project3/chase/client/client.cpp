@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 		cout << "-----------------" << endl;
 		//cout << "WINDOW[0]:    " << window[0] << endl;
 
-		for(int j = 0; j < window.size(); j++) {
+		for(int j = 0; j < 5; j++) {
 			cout << "WINDOW[" << j << "]: " << window[j] << endl;
 		}
 
