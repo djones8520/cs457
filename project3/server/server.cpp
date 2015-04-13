@@ -182,7 +182,7 @@ void* receiveThread(void* arg){
 
 		//FD_ZERO(&select_fds);
 		//FD_SET(fd2,&select_fds);
-		timeout.tv_sec = 1;
+		//timeout.tv_sec = 1;
 		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
@@ -198,7 +198,7 @@ void* receiveThread(void* arg){
 			}
 			windowLock.unlock();
 			//cerr << "The socket # is " << fd2 << endl;
-			//timeout.tv_sec = 1;
+			timeout.tv_sec = 1;
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
