@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 					puts("Server: Error while reading file");
 				}
 			}else if(bytesRead == 0){
-				header[2] = '1';
+				//header[2] = '1';
 			}
 
 			char sendbuff[BYTES_TO_SEND];
