@@ -202,13 +202,11 @@ void* receiveThread(void* arg){
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			cerr << "Got to ELSE" << endl;
+			cout << "ACK" << endl;
+
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
-
-			cout << "ACK" << endl;
-			cout << "buf: " << buf << endl;
 
 			uint16_t sequenceNumber;
 			memcpy(&sequenceNumber, &buf[0], 2);
