@@ -207,8 +207,8 @@ void* receiveThread(void* arg){
 				printf("Receive error. \n");
 			}
 
-			cout << "ACK" << endl;
-			cout << "buf: " << buf << endl;
+			//cout << "ACK" << endl;
+			//cout << "buf: " << buf << endl;
 
 			uint16_t sequenceNumber;
 			memcpy(&sequenceNumber, &buf[0], 2);
@@ -216,8 +216,9 @@ void* receiveThread(void* arg){
 			memcpy(&dataCheck, &buf[2], 1);
 
 
-			//cout << "dataCheck: " << dataCheck << endl;
-			//cout << "sequenceNumber: " << sequenceNumber << endl;
+			
+			cout << "GOT ACK FOR: " << sequenceNumber << endl;
+			cout << "dataCheck: " << dataCheck << endl;
 
 			// If there is no more data, end the thread
 			if(dataCheck != '0'){
