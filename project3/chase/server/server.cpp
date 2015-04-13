@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 			total+= bytesRead;
 
 			memcpy(&header, &currentSequence, 2);
-			cout << "Sequence #: " <<  currentSequence << endl;
+			
 
 			// Stay in this loop until there is a free spot in the window
 			bool found = false;
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
 			// Increment sequence
 			currentSequence++;
-
+			cout << "PREPING PACKET #: " <<  currentSequence << endl;
 
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
@@ -147,6 +147,9 @@ int main(int argc, char **argv)
 
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+
+			cout << "SENT PACKET #: " << currentSequence << endl;
+			
 			//cout << "sendSize: " << sendSize << endl;
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
