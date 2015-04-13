@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 
 						// COMMENTED OUT BECUASE IT SHOULD BE ALREADY IN THE MAP
 						memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
-
+						cout << "Packet is in window" << endl;
 						// Send acknowledgement
 						sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 					}
