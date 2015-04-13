@@ -258,6 +258,11 @@ void* receiveThread(void* arg){
 						window[i] = OPEN_SLOT;
 					}
 				}
+				cout << "Window: ";
+				for(int i = 0; i < WINDOW_SIZE; i++){
+					cout << window[i] << " ";
+				}
+				cout << endl;
 			}
 			else{
 				cout << "ACK out of order" << endl;
