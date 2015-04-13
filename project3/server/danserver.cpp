@@ -104,11 +104,7 @@ int main(int argc, char **argv)
 			bool found = false;
 			while(!found){
 				windowLock.lock();
-cout << "Send window: ";
-for(int i=0; i<WINDOW_SIZE; i++){
-	cout << window[i] << " ";
-}
-cout << endl;
+
 
 
 				for(int i = 0; i < WINDOW_SIZE; i++){
@@ -116,6 +112,11 @@ cout << endl;
 					if(window[i] == OPEN_SLOT && !found){
 						window[i] = currentSequence;
 						cout << "Open slot write: " << i << " " << window[i] << endl;
+cout << "Send window: ";
+for(int i=0; i<WINDOW_SIZE; i++){
+	cout << window[i] << " ";
+}
+cout << endl;
 						found = true;
 					}
 				}
