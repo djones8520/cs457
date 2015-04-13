@@ -138,8 +138,8 @@ int main(int argc, char **argv)
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
 			dataMapLock.unlock();
 
-			bool chkSum = valChkSum(sendbuff);
-			cerr << "Checksum: " << chkSum << endl;
+			//bool chkSum = valChkSum(sendbuff);
+			//cerr << "Checksum: " << chkSum << endl;
 
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
@@ -192,7 +192,7 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-				cerr << "Resending" << endl;
+					cerr << "Resending " << window[i] << endl;
 				}
 
 			}
@@ -202,7 +202,7 @@ void* receiveThread(void* arg){
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			cerr << "Got to ELSE" << endl;
+			//cerr << "Got to ELSE" << endl;
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
@@ -230,8 +230,8 @@ void* receiveThread(void* arg){
 			int i = 0;
 
 			windowLock.lock();
-			cout << "Thread sequence #: " << sequenceNumber;
-			cerr << " window: " << window[i] << endl;
+			//cout << "Thread sequence #: " << sequenceNumber;
+			//cerr << " window: " << window[i] << endl;
 			if(window[i] == sequenceNumber){
 				
 				dataMapLock.lock();
@@ -268,7 +268,7 @@ void* receiveThread(void* arg){
 						//window[k] = ACKNOWLEDGED;
 						window[k] = OPEN_SLOT;
 					}
-					cerr << "Window K " << window[k];
+					//cerr << "Window K " << window[k];
 				}
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
