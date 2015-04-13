@@ -265,7 +265,7 @@ void* receiveThread(void* arg){
 						//window[k] = ACKNOWLEDGED;
 						window[k] = OPEN_SLOT;
 					}
-					cerr << "Window K " << window[k] << endl;
+					//cerr << "Window K " << window[k] << endl;
 				}
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
