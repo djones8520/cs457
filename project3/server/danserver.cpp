@@ -230,7 +230,7 @@ void* receiveThread(void* arg){
 			cout << "Thread sequence #: " << sequenceNumber;
 			cerr << " window: " << window[i] << endl;
 			if(window[i] == sequenceNumber){
-				
+				cout << "ACK in order" << endl;
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
 				dataMapLock.unlock();
@@ -260,6 +260,7 @@ void* receiveThread(void* arg){
 				}
 			}
 			else{
+				count << "ACK out of order" << endl;
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
 						//window[k] = ACKNOWLEDGED;
