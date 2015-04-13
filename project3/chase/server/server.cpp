@@ -94,13 +94,18 @@ int main(int argc, char **argv)
 		while(1){
 			cout << "PREPING PACKET #: " <<  currentSequence << endl;			
 			char readbuff[BYTES_TO_SEND - 3];
+cout << "HERE1" << endl;
 			char header[3]={'0','0','0'};
+cout << "HERE2" << endl;
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
 
+			cout << "HERE3" << endl;
+	
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
 				break;
 			}
+cout << "HERE4" << endl;
 
 
 			total+= bytesRead;
