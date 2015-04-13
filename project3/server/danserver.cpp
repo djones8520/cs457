@@ -260,7 +260,7 @@ void* receiveThread(void* arg){
 				}
 			}
 			else{
-				count << "ACK out of order" << endl;
+				cout << "ACK out of order" << endl;
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
 						//window[k] = ACKNOWLEDGED;
