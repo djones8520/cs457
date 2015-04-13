@@ -264,8 +264,8 @@ void* receiveThread(void* arg){
 				cout << "ACK out of order" << endl;
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
-						//window[k] = ACKNOWLEDGED;
-						window[k] = OPEN_SLOT;
+						window[k] = ACKNOWLEDGED;
+						//window[k] = OPEN_SLOT;
 					}
 					//cerr << "Window K " << window[k] << endl;
 				}
