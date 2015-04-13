@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
 			dataMapLock.unlock();
 
-			bool chkSum = valChkSum(sendbuff);
+			//bool chkSum = valChkSum(sendbuff);
 			//cerr << "Checksum: " << chkSum << endl;
 
 			//printf("Server: BytesRead %d\n",bytesRead);

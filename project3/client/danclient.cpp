@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
 
 				// Send acknowledgement
 				int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-				//cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
+				cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
 
 				window[i] = ALL_ONES;
 			
