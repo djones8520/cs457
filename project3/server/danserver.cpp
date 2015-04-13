@@ -222,7 +222,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			cout << "ACK: " << sequenceNumber << endl;
+			cout << "ACK: " << sequenceNumber << " " << dataCheck << endl;
 			//cout << "dataCheck: " << dataCheck << endl;
 			//cout << "sequenceNumber: " << sequenceNumber << endl;
 
