@@ -107,8 +107,8 @@ int main(int argc, char **argv)
 				for(int i = 0; i < WINDOW_SIZE; i++){
 					
 					if(window[i] == OPEN_SLOT && !found){
-						cout << "Open slot write: " << i << " " << window[i] << endl;
 						window[i] = currentSequence;
+						cout << "Open slot write: " << i << " " << window[i] << endl;
 						found = true;
 					}
 				}
