@@ -105,8 +105,9 @@ int main(int argc, char **argv)
 			while(!found){
 				windowLock.lock();
 				for(int i = 0; i < WINDOW_SIZE; i++){
-					//cout << "window " << i << " " << window[i] << endl;
+					
 					if(window[i] == OPEN_SLOT && !found){
+						cout << "Open slot write: " << i << " " << window[i] << endl;
 						window[i] = currentSequence;
 						found = true;
 					}
@@ -144,7 +145,7 @@ int main(int argc, char **argv)
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[3]);
-
+			cout << "Send: " << currentSequence << endl;
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 			//cout << "sendSize: " << sendSize << endl;
