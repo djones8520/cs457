@@ -107,26 +107,21 @@ int main(int argc, char **argv)
 
 
 
-				for(int i = 0; i < WINDOW_SIZE; i++){
-					
+				for(int i = 0; i < WINDOW_SIZE; i++){					
 					if(window[i] == OPEN_SLOT && !found){
 						window[i] = currentSequence;
 						cout << "Open slot write: " << i << " " << window[i] << endl;
-cout << "Send window: ";
-for(int i=0; i<WINDOW_SIZE; i++){
-	cout << window[i] << " ";
-}
-cout << endl;
+						cout << "Send window: ";
+						for(int i=0; i<WINDOW_SIZE; i++){
+							cout << window[i] << " ";
+						}
+						cout << endl;
 						found = true;
 					}
 				}
 
 				windowLock.unlock();
 			}
-
-			// Increment sequence
-			currentSequence++;
-
 
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
@@ -163,6 +158,8 @@ cout << endl;
 			}
 
 
+			// Increment sequence
+			currentSequence++;
 
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
