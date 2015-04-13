@@ -92,6 +92,7 @@ int main(int argc, char **argv)
 
 		uint16_t currentSequence = 0;
 		while(1){
+			cout << "PREPING PACKET #: " <<  currentSequence << endl;			
 			char readbuff[BYTES_TO_SEND - 3];
 			char header[3]={'0','0','0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
@@ -115,9 +116,8 @@ int main(int argc, char **argv)
 				windowLock.unlock();
 			}
 
-			// Increment sequence
-			currentSequence++;
-			cout << "PREPING PACKET #: " <<  currentSequence << endl;
+			
+			
 
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
@@ -156,7 +156,8 @@ int main(int argc, char **argv)
 				break;
 			}
 
-
+			// Increment sequence
+			currentSequence++;
 
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
