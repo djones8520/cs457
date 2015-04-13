@@ -202,7 +202,7 @@ void* receiveThread(void* arg){
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			cout << "ACK" << endl;
+			
 
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
@@ -213,7 +213,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-
+			cout << "ACK: " << sequenceNumber << endl;
 			//cout << "dataCheck: " << dataCheck << endl;
 			//cout << "sequenceNumber: " << sequenceNumber << endl;
 
