@@ -139,7 +139,7 @@ int main(int argc, char **argv)
 			dataMapLock.unlock();
 
 			bool chkSum = valChkSum(sendbuff);
-			cerr << "Checksum: " << chkSum << endl;
+			//cerr << "Checksum: " << chkSum << endl;
 
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
@@ -202,13 +202,11 @@ void* receiveThread(void* arg){
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			cerr << "Got to ELSE" << endl;
+			cout << "ACK" << endl;
+
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
-
-			cout << "ACK" << endl;
-			cout << "buf: " << buf << endl;
 
 			uint16_t sequenceNumber;
 			memcpy(&sequenceNumber, &buf[0], 2);
@@ -267,7 +265,7 @@ void* receiveThread(void* arg){
 						//window[k] = ACKNOWLEDGED;
 						window[k] = OPEN_SLOT;
 					}
-					cerr << "Window K " << window[k];
+					//cerr << "Window K " << window[k] << endl;
 				}
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
