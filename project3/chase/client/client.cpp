@@ -208,6 +208,11 @@ int main(int argc, char **argv) {
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+
+		cout << "-----------------" << endl;
+		cout << "WINDOW[0]:    " << window[0] << endl;
+		cout << "MAX SEQUENCE: " << maxSequence << endl;
+		cout << "-----------------" << endl;
 	}
 
 	printf("\nFile transferred\n");
