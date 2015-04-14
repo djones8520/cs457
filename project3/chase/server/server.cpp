@@ -215,8 +215,22 @@ void* receiveThread(void* arg){
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
+
+			cerr << "DATAMAP BEFORE RESEND: " << endl;
+			for(std::map<int,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
+				cerr << "Sequence Key: " << it->first << endl;
+				cerr << "Packet Seq #:" << it->second->first[1] << endl;
+			}
+
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
+										
+
+
+
+
+
+
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
