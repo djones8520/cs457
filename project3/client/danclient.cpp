@@ -206,6 +206,8 @@ int main(int argc, char **argv) {
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 		}
 
+		memcpy(&sequenceNumber, &recvBuff[0], 2);
+		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 		
 		if(window[0] >= maxSequence)
 			break;
@@ -213,8 +215,6 @@ int main(int argc, char **argv) {
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
-		memcpy(&sequenceNumber, &recvBuff[0], 2);
-		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 
 		cout << "-----------------" << endl;
 		//cout << "WINDOW[0]:    " << window[0] << endl;
