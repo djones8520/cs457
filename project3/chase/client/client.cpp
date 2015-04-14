@@ -91,10 +91,10 @@ int main(int argc, char **argv) {
 		memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 	}
 
-	//cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+	//cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 
 	while(window[0] <= maxSequence){
-		//cout << "client dataCheck: " << recvBuff[2] << endl;
+		//cerr << "client dataCheck: " << recvBuff[2] << endl;
 		int i = 0;
 		if(window[i] == sequenceNumber){
 			if(recvBuff[2] == '1'){
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 			}
 
 			int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-			//cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
+			//cerr << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
 			window[i] = ALL_ONES;
 		
 			for(i; i < WINDOW_SIZE; i++){
@@ -124,15 +124,15 @@ int main(int argc, char **argv) {
 				}
 			}
 		
-			//cout << "window counter: " << windowCounter << endl;
+			//cerr << "window counter: " << windowCounter << endl;
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] == ALL_ONES){
 					window[i] = windowCounter;
 					windowCounter++;
 				}
-				cout << window[i];
+				//cerr << window[i];
 			}
-			//cout << endl << "end window move" << endl;
+			//cerr << endl << "end window move" << endl;
 		}else{
 			cerr << "PACKET IS OUT OF ORDER" << endl;
 			for(int k = 1; k < WINDOW_SIZE; k++){	
@@ -163,16 +163,16 @@ int main(int argc, char **argv) {
 		}
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-		/*cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-		cout << "-----------------" << endl;
-		cout << "WINDOW[0]:    " << window[0] << endl;
+		/*cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+		cerr << "-----------------" << endl;
+		cerr << "WINDOW[0]:    " << window[0] << endl;
 
 		for(int j = 0; j < 5; j++) {
-			cout << "WINDOW[" << j << "]: " << window[j] << endl;
+			cerr << "WINDOW[" << j << "]: " << window[j] << endl;
 		}
 
-		cout << "MAX SEQUENCE: " << maxSequence << endl;
-		cout << "-----------------" << endl;*/
+		cerr << "MAX SEQUENCE: " << maxSequence << endl;
+		cerr << "-----------------" << endl;*/
 	}
 
 	printf("\nFile transferred\n");
