@@ -363,9 +363,9 @@ void* receiveThread(void* arg){
 			
 			*/
 
-			
+			cout << "Max seq: " << maxSequence << " " << ackSequence << endl;
 			// Once all packets have been acknowledged, exit
-			if(ackSequence < maxSequence){
+			if(ackSequence >= maxSequence){
 				cout << "Receive thread exit" << endl;
 
 				break;
