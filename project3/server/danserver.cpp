@@ -38,7 +38,7 @@ bool valChkSum(char * data);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
-map<int, dataPair> dataMap;
+map<uint16_t, dataPair> dataMap;
 
 
 // Free window slot
@@ -216,6 +216,17 @@ void* receiveThread(void* arg){
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
+			
+			for(auto item : dataMap){
+				if(sendto(fd2,item.second.first,item.second.second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
+						cerr << "Resend Error" << endl;
+				}
+
+				uint16_t resendReq;
+				memcpy(&resendReq, &item.second.first, 2);
+				cerr << "Resending " << resendReq << endl;
+			}
+			/*
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
@@ -226,7 +237,7 @@ void* receiveThread(void* arg){
 					cerr << "Resending " << window[i] << " " << resendReq << endl;
 				}
 
-			}
+			}*/
 			windowLock.unlock();
 			//cerr << "The socket # is " << fd2 << endl;
 			//timeout.tv_sec = 1;
