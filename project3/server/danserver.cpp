@@ -220,7 +220,7 @@ void* receiveThread(void* arg){
 
 			for(auto item : dataMap){
 				uint16_t mapSeq;
-				memcpy(&mapSeq, &item.first[0], 2);
+				memcpy(&mapSeq, &item.first, 2);
 				cout << "Resend Seq: " << mapSeq << endl;
 			}
 
