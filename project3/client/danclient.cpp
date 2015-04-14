@@ -117,13 +117,14 @@ int main(int argc, char **argv) {
 	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 	while(window[0] <= maxSequence){
 			cout << "client dataCheck: " << recvBuff[2] << endl;
+			if(recvBuff[2] == '1'){
+				maxSequence = sequenceNumber;
+			}
 
 			int i = 0;
 			cout << "Current seq: " << window[i] << " " << "Seq rec: " << sequenceNumber << endl;
 			if(window[i] == sequenceNumber){
-				if(recvBuff[2] == '1'){
-					maxSequence = sequenceNumber;
-				}
+				
 
 				// PACKET IN WINDOW (window moves)			
 				recFile.write(&recvBuff[3],bytes_received-3);
@@ -174,9 +175,7 @@ int main(int argc, char **argv) {
 			
 				// IF WITHIN WINDOW
 				for(int k = 1; k < WINDOW_SIZE; k++){	
-					if(window[k] == sequenceNumber){
-						if(recvBuff[2] == '1')
-							maxSequence = sequenceNumber;	
+					if(window[k] == sequenceNumber){	
 
 						// PACKET IS IN WINDOW					
 						window[k] = ALL_ONES;
