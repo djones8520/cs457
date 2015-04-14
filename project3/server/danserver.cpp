@@ -223,7 +223,7 @@ void* receiveThread(void* arg){
 				}
 
 				uint16_t resendReq;
-				memcpy(&resendReq, &item.second.first, 2);
+				memcpy(&resendReq, item.second.first, 2);
 				cerr << "Resending " << resendReq << endl;
 			}
 			/*
