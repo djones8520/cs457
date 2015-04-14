@@ -161,7 +161,12 @@ int main(int argc, char **argv)
 
 			dataMapLock.lock();
 			uint16_t dataMapSeq;
-			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
+
+			char* storeValue;
+			storeValue = (char*)malloc(sizeof(char)*(bytesRead+3));
+			memcpy(storeValue, &sendbuff, bytesRead+3);
+
+			dataMap[PacketNumber] = make_pair(storeValue,bytesRead + 3);
 			memcpy(&dataMapSeq, dataMap[currentSequence].first, 2);
 			cout << "Datamap Seq: " << dataMapSeq << " Current Seq: " << currentSequence << endl;
 			dataMapLock.unlock();
@@ -283,6 +288,7 @@ void* receiveThread(void* arg){
 				if (window[j] == RecvSeqNumber) {
 					window[j] = ACKNOWLEDGED;
 					dataMapLock.lock();
+					free(dataMap[RecvSeqNumber].first);
 					dataMap.erase(RecvSeqNumber);
 					dataMapLock.unlock();
 				}
