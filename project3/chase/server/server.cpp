@@ -217,7 +217,7 @@ void* receiveThread(void* arg){
 			windowLock.lock();
 
 			cerr << "DATAMAP BEFORE RESEND: " << endl;
-			for(std::map<int,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
+			for(std::map<uint16_t,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
 				cerr << "Sequence Key: " << it->first << endl;
 				cerr << "Packet Seq #:" << it->second->first[1] << endl;
 			}
