@@ -103,11 +103,11 @@ int main(int argc, char **argv) {
 		int i = 0;
 		if(window[i] == sequenceNumber){
 
-			recFile.write(&recvBuff[3],bytes_received-3);
+			//recFile.write(&recvBuff[3],bytes_received-3);
 			uint16_t sequenceNumberAfter = sequenceNumber++;
 
 			while(dataToWrite.count(sequenceNumberAfter) > 0){
-				recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
+				//recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
 				sequenceNumberAfter++;
 			}
 
@@ -180,6 +180,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf("\nFile transferred\n");
+	write_to_file(&recFile,&dataToWrite);
 
 	recFile.close();
 	close(sockfd);
@@ -227,8 +228,3 @@ void write_to_file(ofstream * f, map<uint16_t, char[253]> * m){
 		f->write(iterator->second,253);
 	}
 }
-
-
-
-
-

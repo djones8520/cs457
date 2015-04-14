@@ -214,9 +214,9 @@ void* receiveThread(void* arg){
 						cerr << "Resend Error" << endl;
 					}
 					cerr << "Resending Window#: " << window[i] << endl;
-					uint16_t tmpSeq;
+					/*uint16_t tmpSeq;
 					memcpy(&tmpSeq,dataMap[window[i]].first,2);
-					cerr << "Resending Packet#: " << tmpSeq << endl;
+					cerr << "Resending Packet#: " << tmpSeq << endl;*/
 				}
 
 			}
