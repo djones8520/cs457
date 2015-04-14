@@ -192,11 +192,6 @@ int main(int argc, char **argv) {
 		
 		
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
-		if(window[0] <= maxSequence)
-			break;
-	
-		memset(recvBuff, 0, sizeof(recvBuff));
-		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		
 		if (dataToWrite.count(sequenceNumber) > 0) {
@@ -210,6 +205,13 @@ int main(int argc, char **argv) {
 			//cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 		}
+
+		
+		if(window[0] <= maxSequence)
+			break;
+	
+		memset(recvBuff, 0, sizeof(recvBuff));
+		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
