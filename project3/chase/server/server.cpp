@@ -94,25 +94,20 @@ int main(int argc, char **argv)
 		while(1){
 			cout << "PREPING PACKET #: " <<  currentSequence << endl;			
 			char readbuff[BYTES_TO_SEND - 3];
-cout << "HERE1" << endl;
 			char header[3]={'0','0','0'};
-cout << "HERE2" << endl;
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
 
-			cout << "HERE3" << endl;
-	
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
 				break;
 			}
-cout << "HERE4" << endl;
 
 
 			total+= bytesRead;
 
 			memcpy(&header, &currentSequence, 2);
 			
-
+			/*
 			// Stay in this loop until there is a free spot in the window
 			bool found = false;
 			while(!found){
@@ -127,7 +122,19 @@ cout << "HERE4" << endl;
 
 				windowLock.unlock();
 			}
+			*/
 
+			bool found = false;
+			while(!found) {
+				windowLock.lock();				
+				for (int i = 0; i < WINDOW_SIZE; i++) {
+					if (window[i] == OPEN_SLOT) {
+						window[i] = currentSequence;
+						found = true;
+					}
+				}
+				windowLock.unlock();
+			}
 			
 			
 
@@ -140,6 +147,7 @@ cout << "HERE4" << endl;
 				}
 			}else if(bytesRead == 0){
 				//header[2] = '1';
+				cout << "WHAAAAAATTTTT?????" << endl;
 			}
 
 			char sendbuff[BYTES_TO_SEND];
@@ -223,14 +231,14 @@ void* receiveThread(void* arg){
 			//cout << "ACK" << endl;
 			//cout << "buf: " << buf << endl;
 
-			uint16_t sequenceNumber;
-			memcpy(&sequenceNumber, &buf[0], 2);
+			uint16_t RecvSeqNumber;
+			memcpy(&RecvSeqNumber, &buf[0], 2);
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
 
 			
-			cout << "GOT ACK FOR: " << sequenceNumber << endl;
+			cout << "GOT ACK FOR: " << RecvSeqNumber << endl;
 			cout << "dataCheck: " << dataCheck << endl;
 
 			// If there is no more data, end the thread
@@ -240,12 +248,42 @@ void* receiveThread(void* arg){
 				break;
 			}
 
-			int i = 0;
+			cout << "WINDOW BEFORE: " << endl;
+			for (int x = 0; x < WINDOW_SIZE; x++) {
+				cout << "WINDOW[" << x << "]: " << window[x] << endl;
+			}
 
 			windowLock.lock();
-			//cout << "Thread sequence #: " << sequenceNumber;
-			//cerr << " window: " << window[i] << endl;
-			if(window[i] == sequenceNumber){
+
+			for (int j = 0; j < WINDOW_SIZE; j++) {
+				if (window[j] == RecvSeqNumber) {
+					window[j] = ACKNOWLEDGED;
+					dataMapLock.lock();
+					dataMap.erase(RecvSeqNumber);
+					dataMapLock.unlock();
+				}
+			}
+
+			while (window[0] == ACKNOWLEDGED) {
+				for (int k = 0; k < WINDOW_SIZE-1; k++) {
+					window[k] = window[k+1];
+				}
+				window[WINDOW_SIZE-1] = OPEN_SLOT;
+			}
+
+			windowLock.unlock();
+
+			cout << "WINDOW AFTER: " << endl;
+			for (int x = 0; x < WINDOW_SIZE; x++) {
+				cout << "WINDOW[" << x << "]: " << window[x] << endl;
+			}
+
+
+
+			/*
+			int i = 0;
+
+			if(window[i] == RecvSeqNumber){
 				
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
@@ -288,7 +326,8 @@ void* receiveThread(void* arg){
 				dataMapLock.unlock();
 			}
 
-			windowLock.unlock();
+			
+			*/
 
 			memset(buf, 0, sizeof(buf));
 			FD_ZERO(&select_fds);
