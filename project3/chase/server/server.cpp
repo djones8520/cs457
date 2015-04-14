@@ -145,7 +145,8 @@ int main(int argc, char **argv)
 						memcpy(&PacketNumber, &sendbuff[0], 2);
 						cout << "EXTRACTED/ADDED TO MAP: " << PacketNumber << endl;
 
-						char* storeValue = (char*) malloc(sizeof(char)*(bytesRead+3));
+						char* storeValue;
+						storeValue = (char*)malloc(sizeof(char)*(bytesRead+3));
 						memcpy(&storeValue, &sendbuff, bytesRead+3);
 
 						dataMap[PacketNumber] = make_pair(storeValue,bytesRead + 3);
@@ -289,6 +290,7 @@ void* receiveThread(void* arg){
 				if (window[j] == RecvSeqNumber) {
 					window[j] = ACKNOWLEDGED;
 					dataMapLock.lock();
+					free(dataMap[RecvSeqNumber].first);
 					dataMap.erase(RecvSeqNumber);
 					dataMapLock.unlock();
 				}
