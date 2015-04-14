@@ -34,7 +34,7 @@ map<uint16_t, char[BYTES_TO_REC-3]> dataToWrite;
 
 uint16_t genChkSum(char * data);
 bool valChkSum(char * data);
-void write_to_file(ofstream *, map<uint16_t, char[253]>);
+void write_to_file(ofstream *, map<uint16_t,char[253]>*);
 
 int main(int argc, char **argv) {
 	int windowCounter = 0;
