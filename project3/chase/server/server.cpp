@@ -107,21 +107,7 @@ int main(int argc, char **argv)
 
 			memcpy(&header, &currentSequence, 2);
 			
-			bool found = false;
-			while(!found) {
-				windowLock.lock();				
-				for (int i = 0; i < WINDOW_SIZE; i++) {
-					if (window[i] == OPEN_SLOT && !found) {
-						window[i] = currentSequence;
-						found = true;
-						cout << "ADDED TO WINDOW: " << endl;
-							for (int x = 0; x < WINDOW_SIZE; x++) {
-							cout << "WINDOW[" << x << "]: " << window[x] << endl;
-						}
-					}
-				}
-				windowLock.unlock();
-			}
+			
 			
 			
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
@@ -140,9 +126,31 @@ int main(int argc, char **argv)
 			memcpy(sendbuff,header,3);
 			memcpy(&sendbuff[3],readbuff,bytesRead);
 
-			dataMapLock.lock();
-			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
-			dataMapLock.unlock();
+
+			bool found = false;
+			while(!found) {
+				windowLock.lock();				
+				for (int i = 0; i < WINDOW_SIZE; i++) {
+					if (window[i] == OPEN_SLOT && !found) {
+						window[i] = currentSequence;
+
+						dataMapLock.lock();
+						dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
+						dataMapLock.unlock();
+
+						found = true;
+						cout << "ADDED TO WINDOW: " << endl;
+							for (int x = 0; x < WINDOW_SIZE; x++) {
+							cout << "WINDOW[" << x << "]: " << window[x] << endl;
+						}
+					}
+				}
+				windowLock.unlock();
+			}
+
+
+
+			
 
 			//bool chkSum = valChkSum(sendbuff);
 			//cerr << "Checksum: " << chkSum << endl;
@@ -174,7 +182,7 @@ int main(int argc, char **argv)
 void* receiveThread(void* arg){
 	char buf[BYTES_TO_SEND];
 
-	cout << "Receive thread created" << endl;
+	cerr << "Receive thread created" << endl;
 
 	fd_set select_fds;
 	struct timeval timeout;
@@ -199,7 +207,10 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					cerr << "Resending " << window[i] << endl;
+					cerr << "Resending Window#: " << window[i] << endl;
+					int tmpSeq;
+					memcpy(&tmpSeq,dataMap[window[i]].first,2);
+					cerr << "Resending Packet#: " << tmpSeq << endl;
 				}
 
 			}
