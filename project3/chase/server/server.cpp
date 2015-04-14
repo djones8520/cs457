@@ -38,8 +38,8 @@ bool valChkSum(char * data);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
-map<int, dataPair> dataMap;
-
+//map<int, dataPair> dataMap;
+map<uint16_t, dataPair> dataMap;
 
 // Free window slot
 uint16_t OPEN_SLOT = 65535;
@@ -140,7 +140,15 @@ int main(int argc, char **argv)
 						window[i] = currentSequence;
 
 						dataMapLock.lock();
-						dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
+
+						uint16_t PacketNumber;
+						memcpy(&PacketNumber, &sendbuff[0], 2);
+						cout << "EXTRACTED/ADDED TO MAP: " << PacketNumber << endl;
+						dataMap[PacketNumber] = make_pair(sendbuff,bytesRead + 3);
+
+						//cout << "ADDING TO MAP: " << currentSequence << endl;
+						
+						
 						dataMapLock.unlock();
 
 						found = true;
