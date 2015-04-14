@@ -217,12 +217,13 @@ void* receiveThread(void* arg){
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
-
+cout << "Resend Seq: ";
 			for(auto item : dataMap){
 				uint16_t mapSeq;
 				memcpy(&mapSeq, &item.first, 2);
-				cout << "Resend Seq: " << mapSeq << endl;
+				cout << mapSeq << " ";
 			}
+cout << endl;
 
 			uint16_t sequenceNumber;
 			memcpy(&sequenceNumber, &buf[0], 2);
