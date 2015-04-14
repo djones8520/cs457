@@ -136,6 +136,7 @@ int main(int argc, char **argv) {
 					sequenceNumberAfter++;
 				}
 
+
 				// Send acknowledgement
 				int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 				cout << "bytes_rec: " << bytes_received << " bytes_sent: " << sentSize << endl;
@@ -191,6 +192,9 @@ int main(int argc, char **argv) {
 		
 		
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
+		if(window[0] <= maxSequence)
+			break;
+	
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
