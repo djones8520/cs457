@@ -248,10 +248,11 @@ void* receiveThread(void* arg){
 				break;
 			}
 
-			cout << "WINDOW BEFORE: " << endl;
+			cout << "WINDOW BEFORE: ";
 			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << "WINDOW[" << x << "]: " << window[x] << endl;
+				cout << window[x] " ";
 			}
+			cout << endl;
 
 			windowLock.lock();
 
@@ -273,11 +274,12 @@ void* receiveThread(void* arg){
 
 			windowLock.unlock();
 
-			cout << "WINDOW AFTER: " << endl;
+			cout << "WINDOW AFTER: ";
 			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << "WINDOW[" << x << "]: " << window[x] << endl;
+				cout << window[x] " ";
 			}
 
+			cout << endl;
 
 
 			/*

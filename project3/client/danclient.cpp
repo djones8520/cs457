@@ -211,10 +211,11 @@ int main(int argc, char **argv) {
 
 		cout << "-----------------" << endl;
 		//cout << "WINDOW[0]:    " << window[0] << endl;
-
+		cout << "window: ";
 		for(int j = 0; j < 5; j++) {
-			cout << "WINDOW[" << j << "]: " << window[j] << endl;
+			cout << window[j] << " ";
 		}
+		cout << endl;
 
 		cout << "MAX SEQUENCE: " << maxSequence << endl;
 		cout << "-----------------" << endl;
