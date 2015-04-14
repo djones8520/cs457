@@ -161,7 +161,7 @@ int main(int argc, char **argv)
 
 			dataMapLock.lock();
 			uint16_t dataMapSeq;
-			memcpy(&dataMapSeq, &sendbuff.first, 2);
+			memcpy(&dataMapSeq, &sendbuff, 2);
 			cout << "Datamap Seq: " << dataMapSeq << " Current Seq: " << currentSequence << endl;
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
 			dataMapLock.unlock();
