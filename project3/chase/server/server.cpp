@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
 						char* storeValue;
 						storeValue = (char*)malloc(sizeof(char)*(bytesRead+3));
-						memcpy(&storeValue, &sendbuff, bytesRead+3);
+						memcpy(storeValue, &sendbuff, bytesRead+3);
 
 						dataMap[packetNumber] = make_pair(storeValue,bytesRead + 3);
 
