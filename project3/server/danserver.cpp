@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 			dataMapLock.lock();
 			uint16_t dataMapSeq;
 			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
-			memcpy(&dataMapSeq, &dataMap[currentSequence].first, 2);
+			memcpy(&dataMapSeq, dataMap[currentSequence].first, 2);
 			cout << "Datamap Seq: " << dataMapSeq << " Current Seq: " << currentSequence << endl;
 			dataMapLock.unlock();
 
@@ -223,7 +223,7 @@ void* receiveThread(void* arg){
 				}
 
 				uint16_t resendReq;
-				memcpy(&resendReq, &item.second.first, 2);
+				memcpy(&resendReq, item.second.first, 2);
 				cerr << "Resending " << resendReq << endl;
 			}
 			/*
@@ -274,7 +274,7 @@ void* receiveThread(void* arg){
 
 			for(auto item : dataMap){				
 				uint16_t seqResend;
-				memcpy(&seqResend, &item.second.first, 2);
+				memcpy(&seqResend, item.second.first, 2);
 				cout << seqResend << " ";
 			}
 			cout << endl;
