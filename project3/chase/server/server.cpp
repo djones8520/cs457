@@ -47,6 +47,9 @@ int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 struct sockaddr_in clientaddr;
 socklen_t slen_client = sizeof(clientaddr);
 
+uint16_t maxSequence = 65533;
+uint16_t ackSequence = 0;
+
 std::mutex windowLock;
 std::mutex dataMapLock;
 
@@ -105,6 +108,7 @@ int main(int argc, char **argv)
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 				if(feof(fp)){
 					header[2] = '1';
+					maxSequence = currentSequence;
 				}else if(ferror(fp)){
 					puts("Server: Error while reading file");
 				}
@@ -186,8 +190,8 @@ void* receiveThread(void* arg){
 	FD_ZERO(&select_fds);
 	FD_SET(fd2, &select_fds);
 
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 250000;
 
 	while(1){
 		timeout.tv_sec = 1;
@@ -209,10 +213,10 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					/*cerr << "Resending Window#: " << window[i] << endl;
-					int tmpSeq;
+					cerr << "Resending Window#: " << window[i] << endl;
+					uint16_t tmpSeq;
 					memcpy(&tmpSeq,dataMap[window[i]].first,2);
-					cerr << "Resending Packet#: " << tmpSeq << endl;*/
+					cerr << "Resending Packet#: " << tmpSeq << endl;
 				}
 
 			}
@@ -227,7 +231,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			//cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+			cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
 			//cerr << "dataCheck: " << dataCheck << endl;
 
 			if(dataCheck != '0'){
@@ -249,6 +253,8 @@ void* receiveThread(void* arg){
 					free(dataMap[recvSeqNumber].first);
 					dataMap.erase(recvSeqNumber);
 					dataMapLock.unlock();
+
+					ackSequence++;
 				}
 			}
 
@@ -311,6 +317,14 @@ void* receiveThread(void* arg){
 				dataMapLock.unlock();
 			}
 			*/
+
+			//cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
+			// Once all packets have been acknowledged, exit
+			if(ackSequence >= maxSequence){
+				cout << "Receive thread exit" << endl;
+
+				break;
+			}
 
 			memset(buf, 0, sizeof(buf));
 			FD_ZERO(&select_fds);
