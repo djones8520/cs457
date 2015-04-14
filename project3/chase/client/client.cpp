@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 	//cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 
 	while(window[0] <= maxSequence){
-		cout << "client dataCheck: " << recvBuff[2] << endl;
+		//cerr << "client dataCheck: " << recvBuff[2] << endl;
 		if(recvBuff[2] == '1'){
 			maxSequence = sequenceNumber;
 		}
