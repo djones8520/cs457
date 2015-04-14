@@ -250,7 +250,7 @@ void* receiveThread(void* arg){
 
 			cout << "WINDOW BEFORE: ";
 			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << window[x] " ";
+				cout << window[x] << " ";
 			}
 			cout << endl;
 
@@ -276,7 +276,7 @@ void* receiveThread(void* arg){
 
 			cout << "WINDOW AFTER: ";
 			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << window[x] " ";
+				cout << window[x] << " ";
 			}
 
 			cout << endl;
