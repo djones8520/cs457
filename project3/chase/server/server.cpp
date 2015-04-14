@@ -166,8 +166,8 @@ int main(int argc, char **argv)
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 
-			//cerr << "SENT PACKET #: " << currentSequence << endl;
-			//cerr << "SIZE: " << sendSize << endl;
+			cerr << "SENT PACKET #: " << currentSequence << endl;
+			cerr << "SIZE: " << sendSize << endl;
 			currentSequence++;
 
 		}
