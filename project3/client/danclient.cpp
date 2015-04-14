@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
 			cout << "client dataCheck: " << recvBuff[2] << endl;
 
 			int i = 0;
+			cout << "Current seq: " << window[i] << " " << "Seq rec: " << currentSequence << endl;
 			if(window[i] == sequenceNumber){
 				if(recvBuff[2] == '1'){
 					maxSequence = sequenceNumber;
@@ -194,15 +195,16 @@ int main(int argc, char **argv) {
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
+		
 		if (dataToWrite.count(sequenceNumber) > 0) {
 			// SENDS BACK ACK
-			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
+			//cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
 				cerr << "SEND ERROR" << endl;
 			}
 		} else {
 			// ADD PACKET TO MAP ONCE RECEIVED
-			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
+			//cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 		}
 
