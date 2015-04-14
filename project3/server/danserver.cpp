@@ -130,6 +130,11 @@ int main(int argc, char **argv)
 				for (int i = 0; i < WINDOW_SIZE; i++) {
 					if (window[i] == OPEN_SLOT && !found) {
 						window[i] = currentSequence;
+						cout << "Send window: ";
+						for(int m = 0; m < WINDOW_SIZE; m++){
+							cout << window[m] << " ";
+						}
+						cout << endl;
 						found = true;
 					}
 				}
@@ -238,8 +243,7 @@ void* receiveThread(void* arg){
 
 
 			
-			cout << "GOT ACK FOR: " << RecvSeqNumber << endl;
-			cout << "dataCheck: " << dataCheck << endl;
+			cout << "GOT ACK FOR: " << RecvSeqNumber << " dataCheck: " << dataCheck << endl;
 
 			// If there is no more data, end the thread
 			if(dataCheck != '0'){
@@ -247,12 +251,6 @@ void* receiveThread(void* arg){
 
 				break;
 			}
-
-			cout << "WINDOW BEFORE: ";
-			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << window[x] << " ";
-			}
-			cout << endl;
 
 			windowLock.lock();
 
