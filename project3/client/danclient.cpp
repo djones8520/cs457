@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 			cout << "client dataCheck: " << recvBuff[2] << endl;
 
 			int i = 0;
-			cout << "Current seq: " << window[i] << " " << "Seq rec: " << currentSequence << endl;
+			cout << "Current seq: " << window[i] << " " << "Seq rec: " << sequenceNumber << endl;
 			if(window[i] == sequenceNumber){
 				if(recvBuff[2] == '1'){
 					maxSequence = sequenceNumber;
