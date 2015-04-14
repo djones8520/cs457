@@ -117,13 +117,14 @@ int main(int argc, char **argv) {
 	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 	while(window[0] <= maxSequence){
 			cout << "client dataCheck: " << recvBuff[2] << endl;
+			if(recvBuff[2] == '1'){
+				maxSequence = sequenceNumber;
+			}
 
 			int i = 0;
 			cout << "Current seq: " << window[i] << " " << "Seq rec: " << sequenceNumber << endl;
 			if(window[i] == sequenceNumber){
-				if(recvBuff[2] == '1'){
-					maxSequence = sequenceNumber;
-				}
+				
 
 				// PACKET IN WINDOW (window moves)			
 				recFile.write(&recvBuff[3],bytes_received-3);
@@ -134,6 +135,7 @@ int main(int argc, char **argv) {
 					recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
 					sequenceNumberAfter++;
 				}
+
 
 				// Send acknowledgement
 				int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
@@ -174,9 +176,7 @@ int main(int argc, char **argv) {
 			
 				// IF WITHIN WINDOW
 				for(int k = 1; k < WINDOW_SIZE; k++){	
-					if(window[k] == sequenceNumber){
-						if(recvBuff[2] == '1')
-							maxSequence = sequenceNumber;	
+					if(window[k] == sequenceNumber){	
 
 						// PACKET IS IN WINDOW					
 						window[k] = ALL_ONES;
@@ -192,8 +192,6 @@ int main(int argc, char **argv) {
 		
 		
 		//printf("Got from the server \n%s\n", &recvBuff[3]);
-		memset(recvBuff, 0, sizeof(recvBuff));
-		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		
 		if (dataToWrite.count(sequenceNumber) > 0) {
@@ -207,6 +205,13 @@ int main(int argc, char **argv) {
 			//cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 		}
+
+		
+		if(window[0] <= maxSequence)
+			break;
+	
+		memset(recvBuff, 0, sizeof(recvBuff));
+		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
