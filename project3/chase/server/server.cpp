@@ -107,21 +107,7 @@ int main(int argc, char **argv)
 
 			memcpy(&header, &currentSequence, 2);
 			
-			bool found = false;
-			while(!found) {
-				windowLock.lock();				
-				for (int i = 0; i < WINDOW_SIZE; i++) {
-					if (window[i] == OPEN_SLOT && !found) {
-						window[i] = currentSequence;
-						found = true;
-						cout << "ADDED TO WINDOW: " << endl;
-							for (int x = 0; x < WINDOW_SIZE; x++) {
-							cout << "WINDOW[" << x << "]: " << window[x] << endl;
-						}
-					}
-				}
-				windowLock.unlock();
-			}
+			
 			
 			
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
@@ -140,9 +126,31 @@ int main(int argc, char **argv)
 			memcpy(sendbuff,header,3);
 			memcpy(&sendbuff[3],readbuff,bytesRead);
 
-			dataMapLock.lock();
-			dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
-			dataMapLock.unlock();
+
+			bool found = false;
+			while(!found) {
+				windowLock.lock();				
+				for (int i = 0; i < WINDOW_SIZE; i++) {
+					if (window[i] == OPEN_SLOT && !found) {
+						window[i] = currentSequence;
+
+						dataMapLock.lock();
+						dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
+						dataMapLock.unlock();
+
+						found = true;
+						cout << "ADDED TO WINDOW: " << endl;
+							for (int x = 0; x < WINDOW_SIZE; x++) {
+							cout << "WINDOW[" << x << "]: " << window[x] << endl;
+						}
+					}
+				}
+				windowLock.unlock();
+			}
+
+
+
+			
 
 			//bool chkSum = valChkSum(sendbuff);
 			//cerr << "Checksum: " << chkSum << endl;
