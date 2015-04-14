@@ -219,7 +219,9 @@ void* receiveThread(void* arg){
 			cerr << "DATAMAP BEFORE RESEND: " << endl;
 			for(std::map<uint16_t,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
 				cerr << "Sequence Key: " << it->first << endl;
-				cerr << "Packet Seq #:" << it->second.first[1] << endl;
+				uint16_t temp;
+				memcpy(&temp,it->second.first,2);
+				cerr << "Packet Seq #:" << temp << endl;
 			}
 
 			for(int i = 0; i < WINDOW_SIZE; i++){
