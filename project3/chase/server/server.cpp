@@ -141,6 +141,12 @@ int main(int argc, char **argv)
 
 						dataMapLock.lock();
 						dataMap[currentSequence] = make_pair(sendbuff,bytesRead + 3);
+
+						cout << "ADDING TO MAP: " << currentSequence << endl;
+						uint16_t PacketNumber;
+						memcpy(&PacketNumber, &sendbuff[0], 2);
+						cout << "EXTRACTED: " << PacketNumber << endl;
+						
 						dataMapLock.unlock();
 
 						found = true;
