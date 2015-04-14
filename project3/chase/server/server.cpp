@@ -38,12 +38,9 @@ bool valChkSum(char * data);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
-//map<int, dataPair> dataMap;
 map<uint16_t, dataPair> dataMap;
 
-// Free window slot
 uint16_t OPEN_SLOT = 65535;
-// Acknowledged packet
 uint16_t ACKNOWLEDGED = 65534;
 
 int sockfd = socket(AF_INET,SOCK_DGRAM,0);
@@ -80,9 +77,9 @@ int main(int argc, char **argv)
 			return 1;
 		}
 
-		// Set each item in window to all ones (ie free slot)
-		for(int i = 0; i < WINDOW_SIZE; i++)
+		for(int i = 0; i < WINDOW_SIZE; i++){
 			window[i] = 65535;
+		}
 
 		pthread_t thread;
 		int status;
@@ -102,23 +99,16 @@ int main(int argc, char **argv)
 				break;
 			}
 
-
 			total+= bytesRead;
-
 			memcpy(&header, &currentSequence, 2);
 			
-			
-			
-			
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
-			//if(bytesRead > 0){
 				if(feof(fp)){
 					header[2] = '1';
 				}else if(ferror(fp)){
 					puts("Server: Error while reading file");
 				}
 			}else if(bytesRead == 0){
-				//header[2] = '1';
 				cout << "WHAAAAAATTTTT?????" << endl;
 			}
 
@@ -126,11 +116,10 @@ int main(int argc, char **argv)
 			memcpy(sendbuff,header,3);
 			memcpy(&sendbuff[3],readbuff,bytesRead);
 
-			cerr << "DATAMAP: " << endl;
+			/*cerr << "DATAMAP: " << endl;
 			for(std::map<uint16_t,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
 				cerr << "Sequence: " << it->first << endl;
-			}
-
+			}*/
 
 			bool found = false;
 			while(!found) {
@@ -138,37 +127,30 @@ int main(int argc, char **argv)
 				for (int i = 0; i < WINDOW_SIZE; i++) {
 					if (window[i] == OPEN_SLOT && !found) {
 						window[i] = currentSequence;
-
 						dataMapLock.lock();
 
-						uint16_t PacketNumber;
-						memcpy(&PacketNumber, &sendbuff[0], 2);
-						cout << "EXTRACTED/ADDED TO MAP: " << PacketNumber << endl;
+						uint16_t packetNumber;
+						memcpy(&packetNumber, &sendbuff[0], 2);
+						//cerr << "EXTRACTED/ADDED TO MAP: " << packetNumber << endl;
 
 						char* storeValue;
 						storeValue = (char*)malloc(sizeof(char)*(bytesRead+3));
 						memcpy(&storeValue, &sendbuff, bytesRead+3);
 
-						dataMap[PacketNumber] = make_pair(storeValue,bytesRead + 3);
+						dataMap[packetNumber] = make_pair(storeValue,bytesRead + 3);
 
-						//cout << "ADDING TO MAP: " << currentSequence << endl;
-						
-						
+						//cerr << "ADDING TO MAP: " << currentSequence << endl;
 						dataMapLock.unlock();
 
 						found = true;
-						cout << "ADDED TO WINDOW: " << endl;
+						/*cerr << "ADDED TO WINDOW: " << endl;
 							for (int x = 0; x < WINDOW_SIZE; x++) {
-							cout << "WINDOW[" << x << "]: " << window[x] << endl;
-						}
+							cerr << "WINDOW[" << x << "]: " << window[x] << endl;
+						}*/
 					}
 				}
 				windowLock.unlock();
 			}
-
-
-
-			
 
 			//bool chkSum = valChkSum(sendbuff);
 			//cerr << "Checksum: " << chkSum << endl;
@@ -180,12 +162,8 @@ int main(int argc, char **argv)
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 
-			cout << "SENT PACKET #: " << currentSequence << endl;
-			
-			cout << "SIZE: " << sendSize << endl;
-			
-
-			// Increment sequence
+			//cerr << "SENT PACKET #: " << currentSequence << endl;
+			//cerr << "SIZE: " << sendSize << endl;
 			currentSequence++;
 
 		}
@@ -200,7 +178,7 @@ int main(int argc, char **argv)
 void* receiveThread(void* arg){
 	char buf[BYTES_TO_SEND];
 
-	cerr << "Receive thread created" << endl;
+	//cerr << "Receive thread created" << endl;
 
 	fd_set select_fds;
 	struct timeval timeout;
@@ -212,86 +190,64 @@ void* receiveThread(void* arg){
 	timeout.tv_usec = 0;
 
 	while(1){
-
-		//FD_ZERO(&select_fds);
-		//FD_SET(fd2,&select_fds);
 		timeout.tv_sec = 1;
 		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
 
-			cerr << "DATAMAP BEFORE RESEND: " << endl;
+			/*cerr << "DATAMAP BEFORE RESEND: " << endl;
 			for(std::map<uint16_t,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
 				cerr << "Sequence Key: " << it->first << endl;
 				uint16_t temp;
 				memcpy(&temp,it->second.first,2);
 				cerr << "Packet Seq #:" << temp << endl;
-			}
+			}*/
 
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
-										
-
-
-
-
-
-
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					cerr << "Resending Window#: " << window[i] << endl;
+					/*cerr << "Resending Window#: " << window[i] << endl;
 					int tmpSeq;
 					memcpy(&tmpSeq,dataMap[window[i]].first,2);
-					cerr << "Resending Packet#: " << tmpSeq << endl;
+					cerr << "Resending Packet#: " << tmpSeq << endl;*/
 				}
 
 			}
 			windowLock.unlock();
-			//cerr << "The socket # is " << fd2 << endl;
-			//timeout.tv_sec = 1;
-			//cerr << "The socket is # " << fd2 << endl;
-		}
-		else{
-			//cerr << "Got to ELSE" << endl;
+		}else{
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
 
-			//cout << "ACK" << endl;
-			//cout << "buf: " << buf << endl;
-
-			uint16_t RecvSeqNumber;
-			memcpy(&RecvSeqNumber, &buf[0], 2);
+			uint16_t recvSeqNumber;
+			memcpy(&recvSeqNumber, &buf[0], 2);
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
+			//cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+			//cerr << "dataCheck: " << dataCheck << endl;
 
-			
-			cout << "GOT ACK FOR: " << RecvSeqNumber << endl;
-			cout << "dataCheck: " << dataCheck << endl;
-
-			// If there is no more data, end the thread
 			if(dataCheck != '0'){
-				cout << "Receive thread exit" << endl;
-
+				cerr << "Receive thread exit" << endl;
 				break;
 			}
 
-			cout << "WINDOW BEFORE: " << endl;
+			/*cerr << "WINDOW BEFORE: " << endl;
 			for (int x = 0; x < WINDOW_SIZE; x++) {
 				cout << "WINDOW[" << x << "]: " << window[x] << endl;
-			}
+			}*/
 
 			windowLock.lock();
 
 			for (int j = 0; j < WINDOW_SIZE; j++) {
-				if (window[j] == RecvSeqNumber) {
+				if (window[j] == recvSeqNumber) {
 					window[j] = ACKNOWLEDGED;
 					dataMapLock.lock();
-					free(dataMap[RecvSeqNumber].first);
-					dataMap.erase(RecvSeqNumber);
+					free(dataMap[recvSeqNumber].first);
+					dataMap.erase(recvSeqNumber);
 					dataMapLock.unlock();
 				}
 			}
@@ -305,17 +261,15 @@ void* receiveThread(void* arg){
 
 			windowLock.unlock();
 
-			cout << "WINDOW AFTER: " << endl;
+			/*cerr << "WINDOW AFTER: " << endl;
 			for (int x = 0; x < WINDOW_SIZE; x++) {
-				cout << "WINDOW[" << x << "]: " << window[x] << endl;
-			}
-
-
+				cerr << "WINDOW[" << x << "]: " << window[x] << endl;
+			}*/
 
 			/*
 			int i = 0;
 
-			if(window[i] == RecvSeqNumber){
+			if(window[i] == recvSeqNumber){
 				
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
@@ -344,8 +298,7 @@ void* receiveThread(void* arg){
 						window[i] = OPEN_SLOT;
 					}
 				}
-			}
-			else{
+			}else{
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
 						//window[k] = ACKNOWLEDGED;
@@ -357,8 +310,6 @@ void* receiveThread(void* arg){
 					dataMap.erase(sequenceNumber);
 				dataMapLock.unlock();
 			}
-
-			
 			*/
 
 			memset(buf, 0, sizeof(buf));
