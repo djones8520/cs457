@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
 	//cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 
 	while(window[0] <= maxSequence){
-		cout << "client dataCheck: " << recvBuff[2] << endl;
+		//cerr << "client dataCheck: " << recvBuff[2] << endl;
 		if(recvBuff[2] == '1'){
 			maxSequence = sequenceNumber;
 		}
@@ -166,8 +166,8 @@ int main(int argc, char **argv) {
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-		/*cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-		cerr << "-----------------" << endl;
+		cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+		/*cerr << "-----------------" << endl;
 		cerr << "WINDOW[0]:    " << window[0] << endl;
 
 		for(int j = 0; j < 5; j++) {
