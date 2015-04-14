@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
 		}
 
 		
-		if(window[0] <= maxSequence)
+		if(window[0] >= maxSequence)
 			break;
 	
 		memset(recvBuff, 0, sizeof(recvBuff));
