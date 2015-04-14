@@ -218,7 +218,9 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					cerr << "Resending " << window[i] << endl;
+					uint16_t resendReq;
+					memcpy(&resendReq, dataMap[window[i]].first, 2);
+					cerr << "Resending " << window[i] << " " << resendReq << endl;
 				}
 
 			}
