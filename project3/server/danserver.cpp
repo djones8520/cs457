@@ -50,6 +50,9 @@ int sockfd = socket(AF_INET,SOCK_DGRAM,0);
 struct sockaddr_in clientaddr;
 socklen_t slen_client = sizeof(clientaddr);
 
+uint16_t maxSequence = 65533;
+uint16_t ackSequence = 0;
+
 std::mutex windowLock;
 std::mutex dataMapLock;
 
@@ -147,6 +150,7 @@ int main(int argc, char **argv)
 			//if(bytesRead > 0){
 				if(feof(fp)){
 					header[2] = '1';
+					maxSequence = currentSequence;
 				}else if(ferror(fp)){
 					puts("Server: Error while reading file");
 				}
@@ -270,13 +274,6 @@ void* receiveThread(void* arg){
 			
 			cout << "GOT ACK FOR: " << RecvSeqNumber << " dataCheck: " << dataCheck << endl;
 
-			// If there is no more data, end the thread
-			if(dataCheck != '0'){
-				cout << "Receive thread exit" << endl;
-
-				break;
-			}
-
 			windowLock.lock();
 			
 			cout << "Resend Req: ";
@@ -295,6 +292,8 @@ void* receiveThread(void* arg){
 					free(dataMap[RecvSeqNumber].first);
 					dataMap.erase(RecvSeqNumber);
 					dataMapLock.unlock();
+
+					ackSequence++;
 				}
 			}
 
@@ -363,6 +362,14 @@ void* receiveThread(void* arg){
 
 			
 			*/
+
+			
+			// Once all packets have been acknowledged, exit
+			if(ackSequence < maxSequence){
+				cout << "Receive thread exit" << endl;
+
+				break;
+			}
 
 			memset(buf, 0, sizeof(buf));
 			FD_ZERO(&select_fds);
