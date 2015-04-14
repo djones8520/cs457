@@ -143,6 +143,7 @@ int main(int argc, char **argv) {
 					window[k] = ALL_ONES;
 					// COMMENTED OUT BECUASE IT SHOULD BE ALREADY IN THE MAP
 					//memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+					cerr << "SENDING ACK#: " << sequenceNumber << endl;
 					sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 				}
 			}
@@ -168,8 +169,8 @@ int main(int argc, char **argv) {
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-		/*cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-		cerr << "-----------------" << endl;
+		cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+		/*cerr << "-----------------" << endl;
 		cerr << "WINDOW[0]:    " << window[0] << endl;
 
 		for(int j = 0; j < 5; j++) {
