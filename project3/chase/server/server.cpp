@@ -35,6 +35,7 @@ void strip_newline(char* s);
 void* receiveThread(void* arg);
 uint16_t genChkSum(char * data);
 bool valChkSum(char * data);
+void write_to_file(ofstream *, map<uint16_t, char[253]>);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
