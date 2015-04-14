@@ -107,23 +107,6 @@ int main(int argc, char **argv)
 
 			memcpy(&header, &currentSequence, 2);
 			
-			/*
-			// Stay in this loop until there is a free spot in the window
-			bool found = false;
-			while(!found){
-				windowLock.lock();
-				for(int i = 0; i < WINDOW_SIZE; i++){
-					//cout << "window " << i << " " << window[i] << endl;
-					if(window[i] == OPEN_SLOT && !found){
-						window[i] = currentSequence;
-						found = true;
-					}
-				}
-
-				windowLock.unlock();
-			}
-			*/
-
 			bool found = false;
 			while(!found) {
 				windowLock.lock();				
@@ -131,13 +114,16 @@ int main(int argc, char **argv)
 					if (window[i] == OPEN_SLOT && !found) {
 						window[i] = currentSequence;
 						found = true;
+						cout << "ADDED TO WINDOW: " << endl;
+							for (int x = 0; x < WINDOW_SIZE; x++) {
+							cout << "WINDOW[" << x << "]: " << window[x] << endl;
+						}
 					}
 				}
 				windowLock.unlock();
 			}
 			
 			
-
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
 				if(feof(fp)){

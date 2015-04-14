@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
 	ofstream recFile;
 	recFile.open(path);
 
+	// 
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 	uint16_t sequenceNumber;
