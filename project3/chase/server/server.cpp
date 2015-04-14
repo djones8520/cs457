@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 			memcpy(&sendbuff[3],readbuff,bytesRead);
 
 			cerr << "DATAMAP: " << endl;
-			for(iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
+			for(std::map<int,dataPair>::iterator it=dataMap.begin(); it!=dataMap.end(); ++it){
 				cerr << "Sequence: " << it->first << endl;
 			}
 
