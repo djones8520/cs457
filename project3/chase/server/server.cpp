@@ -190,8 +190,8 @@ void* receiveThread(void* arg){
 	FD_ZERO(&select_fds);
 	FD_SET(fd2, &select_fds);
 
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 250000;
 
 	while(1){
 		timeout.tv_sec = 1;
@@ -214,7 +214,7 @@ void* receiveThread(void* arg){
 						cerr << "Resend Error" << endl;
 					}
 					cerr << "Resending Window#: " << window[i] << endl;
-					int tmpSeq;
+					uint16_t tmpSeq;
 					memcpy(&tmpSeq,dataMap[window[i]].first,2);
 					cerr << "Resending Packet#: " << tmpSeq << endl;
 				}
