@@ -104,21 +104,24 @@ int main(int argc, char **argv)
 			bool found = false;
 			while(!found){
 				windowLock.lock();
-				for(int i = 0; i < WINDOW_SIZE; i++){
-					
+
+
+
+				for(int i = 0; i < WINDOW_SIZE; i++){					
 					if(window[i] == OPEN_SLOT && !found){
 						window[i] = currentSequence;
 						cout << "Open slot write: " << i << " " << window[i] << endl;
+						cout << "Send window: ";
+						for(int i=0; i<WINDOW_SIZE; i++){
+							cout << window[i] << " ";
+						}
+						cout << endl;
 						found = true;
 					}
 				}
 
 				windowLock.unlock();
 			}
-
-			// Increment sequence
-			currentSequence++;
-
 
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
@@ -155,6 +158,8 @@ int main(int argc, char **argv)
 			}
 
 
+			// Increment sequence
+			currentSequence++;
 
 		}
 		printf("File sent.  Total Bytes... %d\n",total);
@@ -190,9 +195,15 @@ void* receiveThread(void* arg){
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
+					uint16_t resendSeq;
+					memcpy(&resendSeq, &dataMap[window[i]].first[0], 2);
+					cout << "Resend Seq: " << resendSeq << endl;
+
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
+
+				
 				cerr << "Resending" << endl;
 				}
 
@@ -203,10 +214,14 @@ void* receiveThread(void* arg){
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
-			
-
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
+			}
+
+			for(auto item : dataMap){
+				uint16_t mapSeq;
+				memcpy(&mapSeq, &item.first, 2);
+				cout << "Resend Seq: " << mapSeq << endl;
 			}
 
 			uint16_t sequenceNumber;
@@ -214,7 +229,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			cout << "ACK: " << sequenceNumber << endl;
+			cout << "ACK: " << sequenceNumber << " " << dataCheck << endl;
 			//cout << "dataCheck: " << dataCheck << endl;
 			//cout << "sequenceNumber: " << sequenceNumber << endl;
 
@@ -234,6 +249,7 @@ void* receiveThread(void* arg){
 				cout << "ACK in order" << endl;
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
+					cout << "Map remove: " << sequenceNumber << endl;
 				dataMapLock.unlock();
 
 				// window moves
