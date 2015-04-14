@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 void* receiveThread(void* arg){
 	char buf[BYTES_TO_SEND];
 
-	cout << "Receive thread created" << endl;
+	cerr << "Receive thread created" << endl;
 
 	fd_set select_fds;
 	struct timeval timeout;
@@ -199,7 +199,10 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					cerr << "Resending " << window[i] << endl;
+					cerr << "Resending Window#: " << window[i] << endl;
+					int tmpSeq;
+					memcpy(&tmpSeq,dataMap[window[i]].first,2);
+					cerr << "Resending Packet#: " << tmpSeq << endl;
 				}
 
 			}
