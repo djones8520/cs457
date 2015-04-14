@@ -230,13 +230,13 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+			//cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
 			//cerr << "dataCheck: " << dataCheck << endl;
 
-			if(dataCheck != '0'){
+			/*if(dataCheck != '0'){
 				cerr << "Receive thread exit" << endl;
 				break;
-			}
+			}*/
 
 			/*cerr << "WINDOW BEFORE: " << endl;
 			for (int x = 0; x < WINDOW_SIZE; x++) {
@@ -317,7 +317,7 @@ void* receiveThread(void* arg){
 			}
 			*/
 
-			//cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
+			cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
 			// Once all packets have been acknowledged, exit
 			if(ackSequence >= maxSequence){
 				cout << "Receive thread exit" << endl;
