@@ -144,7 +144,11 @@ int main(int argc, char **argv)
 						uint16_t PacketNumber;
 						memcpy(&PacketNumber, &sendbuff[0], 2);
 						cout << "EXTRACTED/ADDED TO MAP: " << PacketNumber << endl;
-						dataMap[PacketNumber] = make_pair(sendbuff,bytesRead + 3);
+
+						char* storeValue = (char*) malloc(bytesRead+3);
+						memcpy(&storeValue, &sendbuff, bytesRead+3);
+
+						dataMap[PacketNumber] = make_pair(storeValue,bytesRead + 3);
 
 						//cout << "ADDING TO MAP: " << currentSequence << endl;
 						
