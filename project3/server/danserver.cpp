@@ -253,6 +253,15 @@ void* receiveThread(void* arg){
 			}
 
 			windowLock.lock();
+			
+			cout << "Resend Req: ";
+
+			for(auto item : dataMap){				
+				uint16_t seqResend;
+				memcpy(&seqResend, &item.first, 2);
+				cout << seqResend << " ";
+			}
+			cout << endl;
 
 			for (int j = 0; j < WINDOW_SIZE; j++) {
 				if (window[j] == RecvSeqNumber) {
