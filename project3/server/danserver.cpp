@@ -219,7 +219,7 @@ void* receiveThread(void* arg){
 						cerr << "Resend Error" << endl;
 					}
 					uint16_t resendReq;
-					memcpy(&resendReq, &dataMap[window[i]].first, 2);
+					memcpy(&resendReq, dataMap[window[i]].first, 2);
 					cerr << "Resending " << window[i] << " " << resendReq << endl;
 				}
 
