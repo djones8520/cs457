@@ -213,10 +213,10 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-					/*cerr << "Resending Window#: " << window[i] << endl;
+					cerr << "Resending Window#: " << window[i] << endl;
 					int tmpSeq;
 					memcpy(&tmpSeq,dataMap[window[i]].first,2);
-					cerr << "Resending Packet#: " << tmpSeq << endl;*/
+					cerr << "Resending Packet#: " << tmpSeq << endl;
 				}
 
 			}
@@ -231,7 +231,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			//cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+			cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
 			//cerr << "dataCheck: " << dataCheck << endl;
 
 			if(dataCheck != '0'){
