@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 		if(window[i] == sequenceNumber){
 
 			//recFile.write(&recvBuff[3],bytes_received-3);
-			uint16_t sequenceNumberAfter = sequenceNumber++;
+			uint16_t sequenceNumberAfter = sequenceNumber + 1;
 
 			while(dataToWrite.count(sequenceNumberAfter) > 0){
 				//recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
