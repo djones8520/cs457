@@ -83,6 +83,8 @@ int main(int argc, char **argv) {
 	uint16_t sequenceNumber;
 	memcpy(&sequenceNumber, &recvBuff[0], 2);
 
+	cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
+
 	if (dataToWrite.count(sequenceNumber) > 0) {
 		cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 		sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
@@ -144,10 +146,8 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
-		memset(recvBuff, 0, sizeof(recvBuff));
 
-		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
-
+		cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 		if (dataToWrite.count(sequenceNumber) > 0) {
 			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 
@@ -159,15 +159,16 @@ int main(int argc, char **argv) {
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 		}
 
-		if(window[0] >= maxSequence)
+		if(window[0] >= maxSequence){
 			break;
+		}
 	
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
-		cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-		/*cerr << "-----------------" << endl;
+		/*cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
+		cerr << "-----------------" << endl;
 		cerr << "WINDOW[0]:    " << window[0] << endl;
 
 		for(int j = 0; j < 5; j++) {
