@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
 
 	// CHECKS TO MAKE SURE PACKET IS NOT ALREADY IN THE MAP
-	/*if (dataToWrite.count(sequenceNumber) > 0) {
+	if (dataToWrite.count(sequenceNumber) > 0) {
 		// SENDS BACK ACK
 		cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 		sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
@@ -109,13 +109,12 @@ int main(int argc, char **argv) {
 		// ADD PACKET TO MAP ONCE RECEIVED
 		cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 		memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
-	}*/
+	}
 
 
 	
 	
 	cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-	cout << "Sequence received: " << sequenceNumber << endl;
 	while(window[0] <= maxSequence){
 			cout << "client dataCheck: " << recvBuff[2] << endl;
 
@@ -124,7 +123,6 @@ int main(int argc, char **argv) {
 				if(recvBuff[2] == '1'){
 					maxSequence = sequenceNumber;
 				}
-				cout << "WRITE Seq: " << sequenceNumber << endl;
 
 				// PACKET IN WINDOW (window moves)			
 				recFile.write(&recvBuff[3],bytes_received-3);
@@ -132,7 +130,6 @@ int main(int argc, char **argv) {
 				// Write items in out of order packets in dataToWrite
 				uint16_t sequenceNumberAfter = sequenceNumber++;
 				while(dataToWrite.count(sequenceNumberAfter) > 0){
-					cout << "WRITE seq (map): " << sequenceNumberAfter << endl;
 					recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
 					sequenceNumberAfter++;
 				}
@@ -184,8 +181,8 @@ int main(int argc, char **argv) {
 						window[k] = ALL_ONES;
 
 						// COMMENTED OUT BECUASE IT SHOULD BE ALREADY IN THE MAP
-						memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
-						cout << "Packet is in window" << endl;
+						//memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+
 						// Send acknowledgement
 						sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 					}
@@ -197,7 +194,7 @@ int main(int argc, char **argv) {
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
-		/*if (dataToWrite.count(sequenceNumber) > 0) {
+		if (dataToWrite.count(sequenceNumber) > 0) {
 			// SENDS BACK ACK
 			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
@@ -207,11 +204,21 @@ int main(int argc, char **argv) {
 			// ADD PACKET TO MAP ONCE RECEIVED
 			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
-		}*/
+		}
 
 		memcpy(&sequenceNumber, &recvBuff[0], 2);
 		cout << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
-		cout << "Sequence received: " << sequenceNumber << endl;
+
+		cout << "-----------------" << endl;
+		//cout << "WINDOW[0]:    " << window[0] << endl;
+		cout << "window: ";
+		for(int j = 0; j < 5; j++) {
+			cout << window[j] << " ";
+		}
+		cout << endl;
+
+		cout << "MAX SEQUENCE: " << maxSequence << endl;
+		cout << "-----------------" << endl;
 	}
 
 	printf("\nFile transferred\n");

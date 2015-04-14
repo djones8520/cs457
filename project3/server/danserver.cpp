@@ -92,36 +92,51 @@ int main(int argc, char **argv)
 
 		uint16_t currentSequence = 0;
 		while(1){
+			cout << "PREPING PACKET #: " <<  currentSequence << endl;			
 			char readbuff[BYTES_TO_SEND - 3];
 			char header[3]={'0','0','0'};
 			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
+
+			if(bytesRead <= 0){
+				puts("Server: Reached end of file");
+				break;
+			}
+
+
 			total+= bytesRead;
 
 			memcpy(&header, &currentSequence, 2);
-			cout << "Sequence #: " <<  currentSequence << endl;
-
+			
+			/*
 			// Stay in this loop until there is a free spot in the window
 			bool found = false;
 			while(!found){
 				windowLock.lock();
-
-
-
-				for(int i = 0; i < WINDOW_SIZE; i++){					
+				for(int i = 0; i < WINDOW_SIZE; i++){
+					//cout << "window " << i << " " << window[i] << endl;
 					if(window[i] == OPEN_SLOT && !found){
 						window[i] = currentSequence;
-						cout << "Open slot write: " << i << " " << window[i] << endl;
-						cout << "Send window: ";
-						for(int i=0; i<WINDOW_SIZE; i++){
-							cout << window[i] << " ";
-						}
-						cout << endl;
 						found = true;
 					}
 				}
 
 				windowLock.unlock();
 			}
+			*/
+
+			bool found = false;
+			while(!found) {
+				windowLock.lock();				
+				for (int i = 0; i < WINDOW_SIZE; i++) {
+					if (window[i] == OPEN_SLOT && !found) {
+						window[i] = currentSequence;
+						found = true;
+					}
+				}
+				windowLock.unlock();
+			}
+			
+			
 
 			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
 			//if(bytesRead > 0){
@@ -131,7 +146,8 @@ int main(int argc, char **argv)
 					puts("Server: Error while reading file");
 				}
 			}else if(bytesRead == 0){
-				header[2] = '1';
+				//header[2] = '1';
+				cout << "WHAAAAAATTTTT?????" << endl;
 			}
 
 			char sendbuff[BYTES_TO_SEND];
@@ -148,15 +164,14 @@ int main(int argc, char **argv)
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[3]);
-			cout << "Send: " << currentSequence << endl;
+
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
-			//cout << "sendSize: " << sendSize << endl;
-			if(bytesRead <= 0){
-				puts("Server: Reached end of file");
-				break;
-			}
 
+			cout << "SENT PACKET #: " << currentSequence << endl;
+			
+			cout << "SIZE: " << sendSize << endl;
+			
 
 			// Increment sequence
 			currentSequence++;
@@ -188,51 +203,43 @@ void* receiveThread(void* arg){
 
 		//FD_ZERO(&select_fds);
 		//FD_SET(fd2,&select_fds);
-		//timeout.tv_sec = 1;
+		timeout.tv_sec = 1;
 		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
 			for(int i = 0; i < WINDOW_SIZE; i++){
 				if(window[i] != ACKNOWLEDGED && window[i] != OPEN_SLOT){
-					uint16_t resendSeq;
-					memcpy(&resendSeq, &dataMap[window[i]].first[0], 2);
-					cout << "Resend Seq: " << resendSeq << endl;
-
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-
-				
-				cerr << "Resending" << endl;
+					cerr << "Resending " << window[i] << endl;
 				}
 
 			}
 			windowLock.unlock();
 			//cerr << "The socket # is " << fd2 << endl;
-			timeout.tv_sec = 1;
+			//timeout.tv_sec = 1;
 			//cerr << "The socket is # " << fd2 << endl;
 		}
 		else{
+			//cerr << "Got to ELSE" << endl;
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
-cout << "Resend Seq: ";
-			for(auto item : dataMap){
-				uint16_t mapSeq;
-				memcpy(&mapSeq, &item.first, 2);
-				cout << mapSeq << " ";
-			}
-cout << endl;
 
-			uint16_t sequenceNumber;
-			memcpy(&sequenceNumber, &buf[0], 2);
+			//cout << "ACK" << endl;
+			//cout << "buf: " << buf << endl;
+
+			uint16_t RecvSeqNumber;
+			memcpy(&RecvSeqNumber, &buf[0], 2);
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			cout << "ACK: " << sequenceNumber << " " << dataCheck << endl;
-			//cout << "dataCheck: " << dataCheck << endl;
-			//cout << "sequenceNumber: " << sequenceNumber << endl;
+
+			
+			cout << "GOT ACK FOR: " << RecvSeqNumber << endl;
+			cout << "dataCheck: " << dataCheck << endl;
 
 			// If there is no more data, end the thread
 			if(dataCheck != '0'){
@@ -241,16 +248,47 @@ cout << endl;
 				break;
 			}
 
-			int i = 0;
+			cout << "WINDOW BEFORE: ";
+			for (int x = 0; x < WINDOW_SIZE; x++) {
+				cout << window[x] << " ";
+			}
+			cout << endl;
 
 			windowLock.lock();
-			cout << "Thread sequence #: " << sequenceNumber;
-			cerr << " window: " << window[i] << endl;
-			if(window[i] == sequenceNumber){
-				cout << "ACK in order" << endl;
+
+			for (int j = 0; j < WINDOW_SIZE; j++) {
+				if (window[j] == RecvSeqNumber) {
+					window[j] = ACKNOWLEDGED;
+					dataMapLock.lock();
+					dataMap.erase(RecvSeqNumber);
+					dataMapLock.unlock();
+				}
+			}
+
+			while (window[0] == ACKNOWLEDGED) {
+				for (int k = 0; k < WINDOW_SIZE-1; k++) {
+					window[k] = window[k+1];
+				}
+				window[WINDOW_SIZE-1] = OPEN_SLOT;
+			}
+
+			windowLock.unlock();
+
+			cout << "WINDOW AFTER: ";
+			for (int x = 0; x < WINDOW_SIZE; x++) {
+				cout << window[x] << " ";
+			}
+
+			cout << endl;
+
+
+			/*
+			int i = 0;
+
+			if(window[i] == RecvSeqNumber){
+				
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
-					cout << "Map remove: " << sequenceNumber << endl;
 				dataMapLock.unlock();
 
 				// window moves
@@ -276,27 +314,22 @@ cout << endl;
 						window[i] = OPEN_SLOT;
 					}
 				}
-				
 			}
 			else{
-				cout << "ACK out of order" << endl;
 				for(int k = 1; k < WINDOW_SIZE; k++){
 					if(window[k] == sequenceNumber){
-						window[k] = ACKNOWLEDGED;
-						//window[k] = OPEN_SLOT;
+						//window[k] = ACKNOWLEDGED;
+						window[k] = OPEN_SLOT;
 					}
-					//cerr << "Window K " << window[k] << endl;
+					//cerr << "Window K " << window[k];
 				}
 				dataMapLock.lock();
 					dataMap.erase(sequenceNumber);
 				dataMapLock.unlock();
 			}
-				cout << "Window: ";
-				for(int i = 0; i < WINDOW_SIZE; i++){
-					cout << window[i] << " ";
-				}
-				cout << endl;
-			windowLock.unlock();
+
+			
+			*/
 
 			memset(buf, 0, sizeof(buf));
 			FD_ZERO(&select_fds);
