@@ -214,3 +214,17 @@ bool valChkSum(char * data){
 	newChkSum |= oldChkSum;
 	return newChkSum == VALID_CHECKSUM;
 }
+
+// write_to_file(FILE_POINTER,MAP_OF_DATA_POINTER)
+void write_to_file(ofstream * f, map<uint16_t, char[253]> * m){
+	typedef map<uint16_t,char[253]>::iterator it_type;
+	for(it_type iterator = m->begin(); iterator != m->end();iterator++)
+	{
+		f->write(iterator->second,253);
+	}
+}
+
+
+
+
+
