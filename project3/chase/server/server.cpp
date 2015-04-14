@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 			while(!found) {
 				windowLock.lock();				
 				for (int i = 0; i < WINDOW_SIZE; i++) {
-					if (window[i] == OPEN_SLOT) {
+					if (window[i] == OPEN_SLOT && !found) {
 						window[i] = currentSequence;
 						found = true;
 					}
