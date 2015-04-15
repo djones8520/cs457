@@ -228,6 +228,6 @@ void write_to_file(ofstream * f, map<uint16_t, char[253]> * m){
 	for(it_type iterator = m->begin(); iterator != m->end();iterator++)
 	{
 		cerr << "Writing " << sizeof(iterator->second) << " bytes to file" << endl;
-		f->write(iterator->second,253);
+		f->write(iterator->second,sizeof(iterator->second));
 	}
 }
