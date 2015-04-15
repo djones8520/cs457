@@ -87,15 +87,15 @@ int main(int argc, char **argv) {
 
 	socklen_t slen_server = sizeof(serveraddr);
 
-	ofstream recFile;
-	recFile.open(path);
-
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 	if(recvBuff[4] == '4'){
 		cerr << "File doesn't exist..." << endl;
 		return 0;
 	}
+
+	ofstream recFile;
+	recFile.open(path);
 
 	uint16_t sequenceNumber;
 	memcpy(&sequenceNumber, &recvBuff[2], 2);
