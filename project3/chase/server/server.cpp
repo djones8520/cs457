@@ -292,7 +292,7 @@ uint16_t genChkSum(char * data, int size){
 		data++;
 	}
 	
-	chkSum = ~chkSum;
+	chkSum = ~chkSum + 1;
 	cerr << "chkSum: " << chkSum << endl;
 	return chkSum;
 }
