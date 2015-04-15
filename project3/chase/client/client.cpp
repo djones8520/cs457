@@ -115,6 +115,7 @@ int main(int argc, char **argv) {
 	}*/
 
 	while(window[0] <= maxSequence){
+		cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 		if(valChkSum(recvBuff,bytes_received)){
 			cerr << "CHKSUM VALIDATED" << endl;
 			if(recvBuff[4] == '1'){
@@ -161,7 +162,6 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 			if (dataMap.count(sequenceNumber) > 0) {
 				cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 
