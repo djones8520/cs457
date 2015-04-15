@@ -163,8 +163,8 @@ int main(int argc, char **argv)
 
 			uint16_t chkSum = genChkSum(sendbuff,bytesRead);
 			memcpy(&sendbuff[0],&chkSum,2);
-			cerr << "Generated Checksum: " << chkSum << endl;
-			cerr << "Checksum in Packet: " << sendbuff[0] << sendbuff[1] << endl;
+			/*cerr << "Generated Checksum: " << chkSum << endl;
+			cerr << "Checksum in Packet: " << sendbuff[0] << sendbuff[1] << endl;*/
 
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + OVERHEAD,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
@@ -263,7 +263,6 @@ void* receiveThread(void* arg){
 					cout << "Receive thread exit" << endl;
 					return 0;
 				}
-
 			}
 
 			memset(buf, 0, sizeof(buf));
