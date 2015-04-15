@@ -230,7 +230,7 @@ void* receiveThread(void* arg){
 			char dataCheck;
 			memcpy(&dataCheck, &buf[2], 1);
 
-			//cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+			cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
 			//cerr << "dataCheck: " << dataCheck << endl;
 
 			/*if(dataCheck != '0'){
@@ -271,57 +271,10 @@ void* receiveThread(void* arg){
 				cerr << "WINDOW[" << x << "]: " << window[x] << endl;
 			}*/
 
-			/*
-			int i = 0;
-
-			if(window[i] == recvSeqNumber){
-				
-				dataMapLock.lock();
-					dataMap.erase(sequenceNumber);
-				dataMapLock.unlock();
-
-				// window moves
-				window[i] = OPEN_SLOT;
-
-				for(i; i < WINDOW_SIZE; i++){
-					bool found = false;
-
-					for(int j = i+1; j < WINDOW_SIZE; j++){
-						if(window[j] != OPEN_SLOT && window[j] != ACKNOWLEDGED && !found){
-							window[i] = window[j];
-							window[j] = OPEN_SLOT;
-
-							found = true;
-						}
-
-						if(j == (WINDOW_SIZE-1) && !found)
-							window[i] = OPEN_SLOT;
-					}
-
-					// The last window slot won't be compared and must be set to OPEN_SLOT
-					if(i == (WINDOW_SIZE - 1)){
-						window[i] = OPEN_SLOT;
-					}
-				}
-			}else{
-				for(int k = 1; k < WINDOW_SIZE; k++){
-					if(window[k] == sequenceNumber){
-						//window[k] = ACKNOWLEDGED;
-						window[k] = OPEN_SLOT;
-					}
-					//cerr << "Window K " << window[k];
-				}
-				dataMapLock.lock();
-					dataMap.erase(sequenceNumber);
-				dataMapLock.unlock();
-			}
-			*/
-
 			cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
 			// Once all packets have been acknowledged, exit
-			if(ackSequence >= maxSequence){
+			if(ackSequence > maxSequence){
 				cout << "Receive thread exit" << endl;
-
 				break;
 			}
 
