@@ -190,6 +190,9 @@ void* receiveThread(void* arg){
 				return 0;
 			}
 
+			resendcount++;
+			cerr << "Resending Window#: " << window[i] << endl;
+
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
@@ -199,9 +202,6 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
-
-					resendcount++;
-					cerr << "Resending Window#: " << window[i] << endl;
 				}
 
 			}
