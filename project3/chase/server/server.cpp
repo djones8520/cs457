@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 			uint16_t chkSum = genChkSum(sendbuff,bytesRead);
 			memcpy(&sendbuff[0],&chkSum,2);
 			cerr << "Generated Checksum: " << chkSum << endl;
-			printf("Checksum in Packet: %02X\n",sendbuff[0]);
+			//printf("Checksum in Packet: %02X\n",sendbuff[0]);
 
 			bool found = false;
 			while(!found) {
@@ -220,11 +220,11 @@ void* receiveThread(void* arg){
 			windowLock.unlock();
 		}else{
 			int bytesReceived;
-			if(bytesReceived = recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
+			if((bytesReceived = recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client)) < 0){
 				printf("Receive error. \n");
 			}
 
-			cerr << "ACK BYTES_RECEIVED: " << bytesReceived << endl;
+			//cerr << "ACK BYTES_RECEIVED: " << bytesReceived << endl;
 
 			if(valChkSum(buf,bytesReceived)){
 				cerr << "CHKSUM VALIDATED" << endl;
@@ -309,9 +309,9 @@ bool valChkSum(char * data, int size){
 		newChkSum += *data;
 		data++;
 	}
-	cerr << "ACK PACKET oldChkSum: " << oldChkSum << endl;
-	cerr << "ACK PACKET newChkSum: " << newChkSum << endl;
+	//cerr << "ACK PACKET oldChkSum: " << oldChkSum << endl;
+	//cerr << "ACK PACKET newChkSum: " << newChkSum << endl;
 	newChkSum |= oldChkSum;
-	cerr << "ACK PACKET finalChkSum: " << newChkSum << endl;
+	//cerr << "ACK PACKET finalChkSum: " << newChkSum << endl;
 	return newChkSum == VALID_CHECKSUM;
 }
