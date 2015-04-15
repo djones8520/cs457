@@ -20,13 +20,13 @@
 #include <stdlib.h>
 #include <map>
 
-using namespace std;
-
 #define BYTES_TO_REC 256
-#define OVERHEAD 5
 #define WINDOW_SIZE 5
 #define VALID_CHECKSUM 65535
 
+using namespace std;
+
+const int OVERHEAD = 5;
 uint16_t window[WINDOW_SIZE];
 uint16_t ALL_ONES = 65535;
 uint16_t maxSequence = 65533;
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 	}*/
 
 	while(window[0] <= maxSequence){
-		if(valChkSum(recvBuff,bytesRead)){
+		if(valChkSum(recvBuff,bytes_received)){
 			cerr << "CHKSUM VALIDATED" << endl;
 			if(recvBuff[4] == '1'){
 				maxSequence = sequenceNumber;
@@ -187,7 +187,7 @@ uint16_t genChkSum(char * data, int size){
 	uint16_t chkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
+	for(int i = 0; i < size + (OVERHEAD - 2); i++){
 		cerr << *data;
 		chkSum += *data;
 		data++;
@@ -203,7 +203,7 @@ bool valChkSum(char * data, int size){
 	uint16_t newChkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
+	for(int i = 0; i < size + (OVERHEAD - 2); i++){
 		cerr << *data;
 		newChkSum += *data;
 		data++;

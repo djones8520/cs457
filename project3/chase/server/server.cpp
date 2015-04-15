@@ -24,7 +24,6 @@
 #include <utility>
 
 #define BYTES_TO_SEND 256
-#define OVERHEAD 5
 #define VALID_CHECKSUM 65535
 #define WINDOW_SIZE 5
 #define BUFLEN 5000
@@ -40,6 +39,7 @@ uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
 map<uint16_t, dataPair> dataMap;
 
+const int OVERHEAD = 5;
 uint16_t OPEN_SLOT = 65535;
 uint16_t ACKNOWLEDGED = 65534;
 
@@ -50,7 +50,6 @@ socklen_t slen_client = sizeof(clientaddr);
 uint16_t maxSequence = 65533;
 uint16_t ackSequence = 0;
 
-int resendCount = 0;
 int MAX_RESEND = 10;
 
 std::mutex windowLock;
@@ -177,6 +176,7 @@ int main(int argc, char **argv)
 
 void* receiveThread(void* arg){
 	char buf[BYTES_TO_SEND];
+	int resendCount = 0;
 
 	fd_set select_fds;
 	struct timeval timeout;
@@ -195,8 +195,8 @@ void* receiveThread(void* arg){
 				return 0;
 			}
 
-			resendcount++;
-			cerr << "Resending Window#: " << window[i] << endl;
+			resendCount++;
+			//cerr << "Resending Window#: " << window[i] << endl;
 
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
@@ -279,7 +279,7 @@ uint16_t genChkSum(char * data, int size){
 	uint16_t chkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
+	for(int i = 0; i < size + (OVERHEAD - 2); i++){
 		cerr << *data;
 		chkSum += *data;
 		data++;
@@ -295,7 +295,7 @@ bool valChkSum(char * data, int size){
 	uint16_t newChkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
+	for(int i = 0; i < size + (OVERHEAD - 2); i++){
 		cerr << *data;
 		newChkSum += *data;
 		data++;
