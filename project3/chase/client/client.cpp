@@ -33,8 +33,8 @@ uint16_t maxSequence = 65533;
 typedef pair<char*,int> dataPair;
 map<uint16_t, dataPair> dataMap;
 
-uint16_t genChkSum(char * data);
-bool valChkSum(char * data);
+uint16_t genChkSum(char * data, int size);
+bool valChkSum(char * data, int size);
 void write_to_file(ofstream *, map<uint16_t,dataPair>*);
 
 int main(int argc, char **argv) {
@@ -83,91 +83,94 @@ int main(int argc, char **argv) {
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
 	uint16_t sequenceNumber;
-	memcpy(&sequenceNumber, &recvBuff[0], 2);
+	memcpy(&sequenceNumber, &recvBuff[2], 2);
 
 	cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 
-	if (dataMap.count(sequenceNumber) > 0) {
+	/*if (dataMap.count(sequenceNumber) > 0) {
 		cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 		sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 	} else {
 		cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 		
 		char* storeValue;
-		storeValue = (char*)malloc(sizeof(char)*(bytes_received-3));
-		memcpy(storeValue, &recvBuff[3], bytes_received-3);
-		dataMap[sequenceNumber] = make_pair(storeValue,bytes_received-3);
-	}
+		storeValue = (char*)malloc(sizeof(char)*(bytes_received - OVERHEAD));
+		memcpy(storeValue, &recvBuff[OVERHEAD], bytes_received - OVERHEAD);
+		dataMap[sequenceNumber] = make_pair(storeValue,bytes_received - OVERHEAD);
+	}*/
 
 	while(window[0] <= maxSequence){
-		if(recvBuff[2] == '1'){
-			maxSequence = sequenceNumber;
-		}
-		int i = 0;
-		if(window[i] == sequenceNumber){
-			uint16_t sequenceNumberAfter = sequenceNumber + 1;
-
-			while(dataMap.count(sequenceNumberAfter) > 0){
-				sequenceNumberAfter++;
+		if(valChkSum(recvBuff,bytesRead)){
+			cerr << "CHKSUM VALIDATED" << endl;
+			if(recvBuff[4] == '1'){
+				maxSequence = sequenceNumber;
 			}
+			int i = 0;
+			if(window[i] == sequenceNumber){
+				uint16_t sequenceNumberAfter = sequenceNumber + 1;
 
-			int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-			window[i] = ALL_ONES;
+				while(dataMap.count(sequenceNumberAfter) > 0){
+					sequenceNumberAfter++;
+				}
+
+				int sentSize = sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
+				window[i] = ALL_ONES;
 		
-			for(i; i < WINDOW_SIZE; i++){
-				bool found = false;
-				for(int j = i+1; j < WINDOW_SIZE; j++){
-					if(window[j] != ALL_ONES && !found){
-						window[i] = window[j];
-						window[j] = ALL_ONES;
-						found = true;
+				for(i; i < WINDOW_SIZE; i++){
+					bool found = false;
+					for(int j = i+1; j < WINDOW_SIZE; j++){
+						if(window[j] != ALL_ONES && !found){
+							window[i] = window[j];
+							window[j] = ALL_ONES;
+							found = true;
+						}
+					}
+				}
+		
+				for(int i = 0; i < WINDOW_SIZE; i++){
+					if(window[i] == ALL_ONES){
+						window[i] = windowCounter;
+						windowCounter++;
+					}
+				
+				}
+			}else{
+				cerr << "PACKET IS OUT OF ORDER" << endl;
+				for(int k = 1; k < WINDOW_SIZE; k++){	
+					if(window[k] == sequenceNumber){
+						window[k] = ALL_ONES;
+
+						cerr << "SENDING ACK#: " << sequenceNumber << endl;
+						sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 					}
 				}
 			}
-		
-			for(int i = 0; i < WINDOW_SIZE; i++){
-				if(window[i] == ALL_ONES){
-					window[i] = windowCounter;
-					windowCounter++;
+
+			cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
+			if (dataMap.count(sequenceNumber) > 0) {
+				cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
+
+				if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
+					cerr << "SEND ERROR" << endl;
 				}
-				
-			}
-		}else{
-			cerr << "PACKET IS OUT OF ORDER" << endl;
-			for(int k = 1; k < WINDOW_SIZE; k++){	
-				if(window[k] == sequenceNumber){
-					window[k] = ALL_ONES;
-
-					cerr << "SENDING ACK#: " << sequenceNumber << endl;
-					sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
-				}
-			}
-		}
-
-		cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
-		if (dataMap.count(sequenceNumber) > 0) {
-			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
-
-			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
-				cerr << "SEND ERROR" << endl;
-			}
-		}else{
-			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
+			}else{
+				cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
 			
-			char* storeValue;
-			storeValue = (char*)malloc(sizeof(char)*(bytes_received-3));
-			memcpy(storeValue, &recvBuff[3], bytes_received-3);
-			dataMap[sequenceNumber] = make_pair(storeValue,bytes_received-3);
-		}
+				char* storeValue;
+				storeValue = (char*)malloc(sizeof(char)*(bytes_received - OVERHEAD));
+				memcpy(storeValue, &recvBuff[OVERHEAD], bytes_received - OVERHEAD);
+				dataMap[sequenceNumber] = make_pair(storeValue,bytes_received - OVERHEAD);
+			}
 
-		if(window[0] >= maxSequence){
-			break;
+			if(window[0] >= maxSequence){
+				break;
+			}
 		}
 	
 		memset(recvBuff, 0, sizeof(recvBuff));
 		bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
-		memcpy(&sequenceNumber, &recvBuff[0], 2);
+		memcpy(&sequenceNumber, &recvBuff[2], 2);
 		cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
 	}
 
@@ -180,12 +183,11 @@ int main(int argc, char **argv) {
   	return 0;
 }
 
-uint16_t genChkSum(char * data){
+uint16_t genChkSum(char * data, int size){
 	uint16_t chkSum = 0;
 	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
+	data += 2;
+	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
 		cerr << *data;
 		chkSum += *data;
 		data++;
@@ -195,14 +197,13 @@ uint16_t genChkSum(char * data){
 	return chkSum;
 }
 
-bool valChkSum(char * data){
+bool valChkSum(char * data, int size){
 	uint16_t oldChkSum;
 	memcpy(&oldChkSum,data,2);
 	uint16_t newChkSum = 0;
 	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
+	data += 2;
+	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
 		cerr << *data;
 		newChkSum += *data;
 		data++;

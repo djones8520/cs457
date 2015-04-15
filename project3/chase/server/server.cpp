@@ -24,7 +24,7 @@
 #include <utility>
 
 #define BYTES_TO_SEND 256
-#define OVERHEAD 3
+#define OVERHEAD 5
 #define VALID_CHECKSUM 65535
 #define WINDOW_SIZE 5
 #define BUFLEN 5000
@@ -33,8 +33,8 @@ using namespace std;
 
 void strip_newline(char* s);
 void* receiveThread(void* arg);
-uint16_t genChkSum(char * data);
-bool valChkSum(char * data);
+uint16_t genChkSum(char * data, int size);
+bool valChkSum(char * data, int size);
 
 uint16_t window[WINDOW_SIZE];
 typedef pair<char*,int> dataPair;
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
 		uint16_t currentSequence = 0;
 		while(maxSequence > currentSequence){
 			cout << "PREPING PACKET #: " <<  currentSequence << endl;			
-			char readbuff[BYTES_TO_SEND - 3];
-			char header[3]={'0','0','0'};
-			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - 3,fp);
+			char readbuff[BYTES_TO_SEND - OVERHEAD];
+			char header[OVERHEAD]={'0','0','0','0','0'};
+			int bytesRead = fread(readbuff,1,BYTES_TO_SEND - OVERHEAD,fp);
 
 			if(bytesRead <= 0){
 				puts("Server: Reached end of file");
@@ -103,11 +103,11 @@ int main(int argc, char **argv)
 			}
 
 			total+= bytesRead;
-			memcpy(&header, &currentSequence, 2);
+			memcpy(&header[2], &currentSequence, 2);
 			
-			if(bytesRead <= BYTES_TO_SEND - 3 && bytesRead >= 0){
+			if(bytesRead <= BYTES_TO_SEND - OVERHEAD && bytesRead >= 0){
 				if(feof(fp)){
-					header[2] = '1';
+					header[4] = '1';
 					maxSequence = currentSequence;
 				}else if(ferror(fp)){
 					puts("Server: Error while reading file");
@@ -117,8 +117,8 @@ int main(int argc, char **argv)
 			}
 
 			char sendbuff[BYTES_TO_SEND];
-			memcpy(sendbuff,header,3);
-			memcpy(&sendbuff[3],readbuff,bytesRead);
+			memcpy(sendbuff,header,OVERHEAD);
+			memcpy(&sendbuff[OVERHEAD],readbuff,bytesRead);
 
 			bool found = false;
 			while(!found) {
@@ -129,13 +129,13 @@ int main(int argc, char **argv)
 						dataMapLock.lock();
 
 						uint16_t packetNumber;
-						memcpy(&packetNumber, &sendbuff[0], 2);
+						memcpy(&packetNumber, &sendbuff[2], 2);
 
 						char* storeValue;
-						storeValue = (char*)malloc(sizeof(char)*(bytesRead+3));
-						memcpy(storeValue, &sendbuff, bytesRead+3);
+						storeValue = (char*)malloc(sizeof(char)*(bytesRead + OVERHEAD));
+						memcpy(storeValue, &sendbuff, bytesRead + OVERHEAD);
 
-						dataMap[packetNumber] = make_pair(storeValue,bytesRead + 3);
+						dataMap[packetNumber] = make_pair(storeValue,bytesRead + OVERHEAD);
 
 						dataMapLock.unlock();
 
@@ -150,9 +150,14 @@ int main(int argc, char **argv)
 
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
-			//printf("Server: sent %s\n",&sendbuff[3]);
+			//printf("Server: sent %s\n",&sendbuff[OVERHEAD]);
 
-			int sendSize = sendto(sockfd,sendbuff,bytesRead + 3,0,
+			uint16_t chkSum = genChkSum(sendbuff,bytesRead);
+			memcpy(&sendbuff[0],&chkSum,2);
+			cerr << "Generated Checksum: " << chkSum << endl;
+			cerr << "Checksum in Packet: " << sendbuff[0] << sendbuff[1] << endl;
+
+			int sendSize = sendto(sockfd,sendbuff,bytesRead + OVERHEAD,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
 
 			cerr << "SENT PACKET #: " << currentSequence << endl;
@@ -197,45 +202,49 @@ void* receiveThread(void* arg){
 			}
 			windowLock.unlock();
 		}else{
-			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
+			int bytesReceived;
+			if(bytesReceived = recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
 
-			uint16_t recvSeqNumber;
-			memcpy(&recvSeqNumber, &buf[0], 2);
-			char dataCheck;
-			memcpy(&dataCheck, &buf[2], 1);
+			if(valChkSum(buf,bytesReceived)){
+				cerr << "CHKSUM VALIDATED" << endl;
+				uint16_t recvSeqNumber;
+				memcpy(&recvSeqNumber, &buf[2], 2);
+				char dataCheck;
+				memcpy(&dataCheck, &buf[4], 1);
 
-			cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
+				cerr << "GOT ACK FOR: " << recvSeqNumber << endl;
 
-			windowLock.lock();
+				windowLock.lock();
 
-			for (int j = 0; j < WINDOW_SIZE; j++) {
-				if (window[j] == recvSeqNumber) {
-					window[j] = ACKNOWLEDGED;
-					dataMapLock.lock();
-					free(dataMap[recvSeqNumber].first);
-					dataMap.erase(recvSeqNumber);
-					dataMapLock.unlock();
+				for (int j = 0; j < WINDOW_SIZE; j++) {
+					if (window[j] == recvSeqNumber) {
+						window[j] = ACKNOWLEDGED;
+						dataMapLock.lock();
+						free(dataMap[recvSeqNumber].first);
+						dataMap.erase(recvSeqNumber);
+						dataMapLock.unlock();
 
-					ackSequence++;
+						ackSequence++;
+					}
 				}
-			}
 
-			while (window[0] == ACKNOWLEDGED) {
-				for (int k = 0; k < WINDOW_SIZE-1; k++) {
-					window[k] = window[k+1];
+				while (window[0] == ACKNOWLEDGED) {
+					for (int k = 0; k < WINDOW_SIZE-1; k++) {
+						window[k] = window[k+1];
+					}
+					window[WINDOW_SIZE-1] = OPEN_SLOT;
 				}
-				window[WINDOW_SIZE-1] = OPEN_SLOT;
-			}
 
-			windowLock.unlock();
+				windowLock.unlock();
 
-			cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
-			// Once all packets have been acknowledged, exit
-			if(ackSequence > maxSequence){
-				cout << "Receive thread exit" << endl;
-				break;
+				cerr << "Max seq: " << maxSequence << " " << ackSequence << endl;
+				// Once all packets have been acknowledged, exit
+				if(ackSequence > maxSequence){
+					cout << "Receive thread exit" << endl;
+					break;
+				}
 			}
 
 			memset(buf, 0, sizeof(buf));
@@ -254,36 +263,32 @@ void strip_newline(char *s){
 	}
 }
 
-uint16_t genChkSum(char * data){
+uint16_t genChkSum(char * data, int size){
 	uint16_t chkSum = 0;
 	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
+	data += 2;
+	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
 		cerr << *data;
 		chkSum += *data;
 		data++;
 	}
 
 	chkSum = ~chkSum;
-
 	return chkSum;
 }
 
-bool valChkSum(char * data){
+bool valChkSum(char * data, int size){
 	uint16_t oldChkSum;
 	memcpy(&oldChkSum,data,2);
 	uint16_t newChkSum = 0;
 	
-	data += OVERHEAD;
-	int len = strlen(data);
-	for(int i = 0; i < len; i++){
+	data += 2;
+	for(int i = 0; i < size + [OVERHEAD - 2]; i++){
 		cerr << *data;
 		newChkSum += *data;
 		data++;
 	}
 
 	newChkSum |= oldChkSum;
-
 	return newChkSum == VALID_CHECKSUM;
 }
