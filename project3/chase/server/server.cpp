@@ -78,8 +78,15 @@ int main(int argc, char **argv)
 		printf("Server received: %s\n",buf);
 		FILE *fp = fopen(buf,"rb");
 		if(fp == NULL){
-			printf("Server: File read error\n");
-			return 1;
+			printf("File doesn't exist\n");
+
+			char noFile[BYTES_TO_SEND];
+			noFile[4] = '4';
+
+			sendto(sockfd,noFile,BYTES_TO_SEND,0,
+				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
+			
+			break;
 		}
 
 		for(int i = 0; i < WINDOW_SIZE; i++){
