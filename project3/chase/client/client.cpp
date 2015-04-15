@@ -218,7 +218,7 @@ bool valChkSum(char * data, int size){
 	uint16_t newChkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size - 2); i++){
+	for(int i = 0; i < size - 2; i++){
 		//cerr << *data;
 		newChkSum += *data;
 		data++;
