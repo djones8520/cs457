@@ -129,6 +129,11 @@ int main(int argc, char **argv)
 			memcpy(sendbuff,header,OVERHEAD);
 			memcpy(&sendbuff[OVERHEAD],readbuff,bytesRead);
 
+			uint16_t chkSum = genChkSum(sendbuff,bytesRead);
+			memcpy(&sendbuff[0],&chkSum,2);
+			cerr << "Generated Checksum: " << chkSum << endl;
+			printf("Checksum in Packet: %02X\n",sendbuff[0]);
+
 			bool found = false;
 			while(!found) {
 				windowLock.lock();				
@@ -160,11 +165,6 @@ int main(int argc, char **argv)
 			//printf("Server: BytesRead %d\n",bytesRead);
 			//printf("Server: SendBuff Size... %d\n",strlen(sendbuff));
 			//printf("Server: sent %s\n",&sendbuff[OVERHEAD]);
-
-			uint16_t chkSum = genChkSum(sendbuff,bytesRead);
-			memcpy(&sendbuff[0],&chkSum,2);
-			/*cerr << "Generated Checksum: " << chkSum << endl;
-			cerr << "Checksum in Packet: " << sendbuff[0] << sendbuff[1] << endl;*/
 
 			int sendSize = sendto(sockfd,sendbuff,bytesRead + OVERHEAD,0,
 				(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in));
@@ -223,6 +223,8 @@ void* receiveThread(void* arg){
 			if(bytesReceived = recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
+
+			cerr << "ACK BYTES_RECEIVED: " << bytesReceived << endl;
 
 			if(valChkSum(buf,bytesReceived)){
 				cerr << "CHKSUM VALIDATED" << endl;
@@ -307,9 +309,9 @@ bool valChkSum(char * data, int size){
 		newChkSum += *data;
 		data++;
 	}
-
-	newChkSum |= oldChkSum;
 	cerr << "ACK PACKET oldChkSum: " << oldChkSum << endl;
 	cerr << "ACK PACKET newChkSum: " << newChkSum << endl;
+	newChkSum |= oldChkSum;
+	cerr << "ACK PACKET finalChkSum: " << newChkSum << endl;
 	return newChkSum == VALID_CHECKSUM;
 }

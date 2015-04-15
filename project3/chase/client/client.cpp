@@ -120,6 +120,7 @@ int main(int argc, char **argv) {
 			uint16_t chkSum = genChkSum(recvBuff,bytes_received);
 			memcpy(&recvBuff[0],&chkSum,2);
 			cerr << "CHKSUM VALIDATED" << endl;
+			cerr << "NEW CHKSUM: " << chkSum << endl;
 			if(recvBuff[4] == '1'){
 				maxSequence = sequenceNumber;
 			}
@@ -204,7 +205,7 @@ uint16_t genChkSum(char * data, int size){
 	uint16_t chkSum = 0;
 	
 	data += 2;
-	for(int i = 0; i < size + (OVERHEAD - 2); i++){
+	for(int i = 0; i < size - 2; i++){
 		//cerr << *data;
 		chkSum += *data;
 		data++;
