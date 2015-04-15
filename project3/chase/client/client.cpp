@@ -117,6 +117,8 @@ int main(int argc, char **argv) {
 	while(window[0] <= maxSequence){
 		cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 		if(valChkSum(recvBuff,bytes_received)){
+			uint16_t chkSum = genChkSum(recvBuff,bytes_received);
+			memcpy(&recvBuff[0],&chkSum,2);
 			cerr << "CHKSUM VALIDATED" << endl;
 			if(recvBuff[4] == '1'){
 				maxSequence = sequenceNumber;
@@ -207,7 +209,7 @@ uint16_t genChkSum(char * data, int size){
 		chkSum += *data;
 		data++;
 	}
-
+	
 	chkSum = ~chkSum;
 	return chkSum;
 }
