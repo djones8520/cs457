@@ -291,8 +291,9 @@ uint16_t genChkSum(char * data, int size){
 		chkSum += *data;
 		data++;
 	}
-
+	
 	chkSum = ~chkSum;
+	cerr << "chkSum: " << chkSum << endl;
 	return chkSum;
 }
 
@@ -309,5 +310,7 @@ bool valChkSum(char * data, int size){
 	}
 
 	newChkSum |= oldChkSum;
+	cerr << "ACK PACKET oldChkSum: " << oldChkSum << endl;
+	cerr << "ACK PACKET newChkSum: " << newChkSum << endl;
 	return newChkSum == VALID_CHECKSUM;
 }
