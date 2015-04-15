@@ -35,9 +35,19 @@ map<uint16_t, dataPair> dataMap;
 
 uint16_t genChkSum(char * data, int size);
 bool valChkSum(char * data, int size);
+int valid_port(string s);
 void write_to_file(ofstream *, map<uint16_t,dataPair>*);
 
 int main(int argc, char **argv) {
+	if (argc != 3) {
+		cerr << "Please specify 2 arguments (IP Address and Port Number)" << endl;
+		return 0;
+	} else {
+		if(!valid_port(argv[2])) {
+			return 0;
+		}
+	}	
+
 	int windowCounter = 0;
 	for(int i = 0; i < WINDOW_SIZE; i++){
 		window[i] = i;
@@ -55,8 +65,8 @@ int main(int argc, char **argv) {
 	char serverIP[5000];
 	struct sockaddr_in serveraddr;
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(9010);
-	string ipAddress = argv[2];
+	serveraddr.sin_port = htons(atoi(argv[2]));
+	string ipAddress = argv[1];
 	serveraddr.sin_addr.s_addr = inet_addr(ipAddress.c_str());
 	  
 	printf("Enter a file name: ");
@@ -226,4 +236,21 @@ void write_to_file(ofstream * f, map<uint16_t, dataPair> * m){
 		cerr << "Writing " << iterator->second.second << " bytes to file" << endl;
 		f->write(iterator->second.first,iterator->second.second);
 	}
+}
+
+int valid_port(string s)
+{
+	int port;
+	for(unsigned int j = 0; j < s.length();j++){
+		if(!isdigit(s.at(j))){
+			cerr << "Invalid port number: please only enter numeric characters\n";
+			return 0;
+		}
+		port = atoi(&s[0]);
+		if(port < 0 || port > 61000){
+			cerr << "Invalid port: port number must be between 0 and 61,000\n";
+			return 0;
+		}
+	}
+	return 1;
 }
