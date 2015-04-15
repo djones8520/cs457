@@ -224,9 +224,10 @@ bool valChkSum(char * data, int size){
 		data++;
 	}
 
-	newChkSum |= oldChkSum;
 	cerr << "oldChkSum: " << oldChkSum << endl;
 	cerr << "newChkSum: " << newChkSum << endl;
+	newChkSum |= oldChkSum;
+	cerr << "finalChkSum: " << newChkSum << endl;
 	return newChkSum == VALID_CHECKSUM;
 }
 
