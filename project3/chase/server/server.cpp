@@ -50,6 +50,9 @@ socklen_t slen_client = sizeof(clientaddr);
 uint16_t maxSequence = 65533;
 uint16_t ackSequence = 0;
 
+int resendCount = 0;
+int MAX_RESEND = 10;
+
 std::mutex windowLock;
 std::mutex dataMapLock;
 
@@ -182,6 +185,11 @@ void* receiveThread(void* arg){
 	while(1){
 		timeout.tv_sec = 1;
 		if(select(fd2+1, &select_fds, NULL, NULL, &timeout) == 0){
+			if(resendCount >= MAX_RESEND){
+				cerr << "Max resend reached.  Exiting Receive thread..." << endl;
+				return 0;
+			}
+
 			FD_ZERO(&select_fds);
 			FD_SET(fd2,&select_fds);
 			windowLock.lock();
@@ -191,6 +199,8 @@ void* receiveThread(void* arg){
 					if(sendto(fd2,dataMap[window[i]].first,dataMap[window[i]].second,0,(struct sockaddr*)&clientaddr,sizeof(struct sockaddr_in)) < 0){
 						cerr << "Resend Error" << endl;
 					}
+
+					resendcount++;
 					cerr << "Resending Window#: " << window[i] << endl;
 				}
 
@@ -200,6 +210,8 @@ void* receiveThread(void* arg){
 			if (recvfrom(fd2, buf, BYTES_TO_SEND, 0, (struct sockaddr*)&clientaddr, &slen_client) < 0){
 				printf("Receive error. \n");
 			}
+
+			resendCount = 0;
 
 			uint16_t recvSeqNumber;
 			memcpy(&recvSeqNumber, &buf[0], 2);
@@ -235,7 +247,7 @@ void* receiveThread(void* arg){
 			// Once all packets have been acknowledged, exit
 			if(ackSequence > maxSequence){
 				cout << "Receive thread exit" << endl;
-				break;
+				return 0;
 			}
 
 			memset(buf, 0, sizeof(buf));
