@@ -30,11 +30,12 @@ using namespace std;
 uint16_t window[WINDOW_SIZE];
 uint16_t ALL_ONES = 65535;
 uint16_t maxSequence = 65533;
-map<uint16_t, char[BYTES_TO_REC-3]> dataToWrite;
+typedef pair<char*,int> dataPair;
+map<uint16_t, dataPair> dataMap;
 
 uint16_t genChkSum(char * data);
 bool valChkSum(char * data);
-void write_to_file(ofstream *, map<uint16_t,char[253]>*);
+void write_to_file(ofstream *, map<uint16_t,dataPair>*);
 
 int main(int argc, char **argv) {
 	int windowCounter = 0;
@@ -86,12 +87,16 @@ int main(int argc, char **argv) {
 
 	cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
 
-	if (dataToWrite.count(sequenceNumber) > 0) {
+	if (dataMap.count(sequenceNumber) > 0) {
 		cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 		sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 	} else {
 		cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
-		memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+		//memcpy(&dataMap[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+		char* storeValue;
+		storeValue = (char*)malloc(sizeof(char)*(bytes_received-3));
+		memcpy(storeValue, &recvBuff[3], bytes_received-3);
+		dataMap[sequenceNumber] = make_pair(storeValue,bytes_received-3);
 	}
 
 	//cerr << "Current slot: " << window[0] << " Max seq: " << maxSequence << endl;
@@ -107,8 +112,8 @@ int main(int argc, char **argv) {
 			//recFile.write(&recvBuff[3],bytes_received-3);
 			uint16_t sequenceNumberAfter = sequenceNumber + 1;
 
-			while(dataToWrite.count(sequenceNumberAfter) > 0){
-				//recFile.write(dataToWrite[sequenceNumberAfter],bytes_received-3);
+			while(dataMap.count(sequenceNumberAfter) > 0){
+				//recFile.write(dataMap[sequenceNumberAfter],bytes_received-3);
 				sequenceNumberAfter++;
 			}
 
@@ -142,7 +147,7 @@ int main(int argc, char **argv) {
 				if(window[k] == sequenceNumber){
 					window[k] = ALL_ONES;
 					// COMMENTED OUT BECUASE IT SHOULD BE ALREADY IN THE MAP
-					//memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+					//memcpy(&dataMap[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
 					cerr << "SENDING ACK#: " << sequenceNumber << endl;
 					sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in));
 				}
@@ -150,7 +155,7 @@ int main(int argc, char **argv) {
 		}
 
 		cerr << "RECEIVED PACKET#: " << sequenceNumber << endl;
-		if (dataToWrite.count(sequenceNumber) > 0) {
+		if (dataMap.count(sequenceNumber) > 0) {
 			cerr << "PACKET " << sequenceNumber << " RECIEVED AGAIN. SENDING ACK." << endl;
 
 			if(sendto(sockfd, recvBuff, bytes_received, 0, (struct sockaddr*)&serveraddr, sizeof(struct sockaddr_in)) < 0){
@@ -158,7 +163,11 @@ int main(int argc, char **argv) {
 			}
 		}else{
 			cerr << "ADDING PACKET " << sequenceNumber << " TO MAP." << endl;
-			memcpy(&dataToWrite[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+			//memcpy(&dataMap[sequenceNumber], &recvBuff[3], BYTES_TO_REC-3);
+			char* storeValue;
+			storeValue = (char*)malloc(sizeof(char)*(bytes_received-3));
+			memcpy(storeValue, &recvBuff[3], bytes_received-3);
+			dataMap[sequenceNumber] = make_pair(storeValue,bytes_received-3);
 		}
 
 		if(window[0] >= maxSequence){
@@ -182,7 +191,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf("\nFile transferred\n");
-	write_to_file(&recFile,&dataToWrite);
+	write_to_file(&recFile,&dataMap);
 
 	recFile.close();
 	close(sockfd);
@@ -223,11 +232,11 @@ bool valChkSum(char * data){
 }
 
 // write_to_file(FILE_POINTER,MAP_OF_DATA_POINTER)
-void write_to_file(ofstream * f, map<uint16_t, char[253]> * m){
-	typedef map<uint16_t,char[253]>::iterator it_type;
+void write_to_file(ofstream * f, map<uint16_t, dataPair> * m){
+	typedef map<uint16_t,dataPair>::iterator it_type;
 	for(it_type iterator = m->begin(); iterator != m->end();iterator++)
 	{
-		cerr << "Writing " << sizeof(iterator->second) << " bytes to file" << endl;
-		f->write(iterator->second,sizeof(iterator->second));
+		cerr << "Writing " << iterator->second.second << " bytes to file" << endl;
+		f->write(iterator->second.first,iterator->second.second);
 	}
 }
