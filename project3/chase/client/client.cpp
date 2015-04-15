@@ -82,6 +82,11 @@ int main(int argc, char **argv) {
 
 	int bytes_received = recvfrom(sockfd, recvBuff, BYTES_TO_REC, 0, (struct sockaddr*)&serveraddr, &slen_server);
 
+	if(recvBuff[4] == '4'){
+		cerr << "File doesn't exist..." << endl;
+		return 0;
+	}
+
 	uint16_t sequenceNumber;
 	memcpy(&sequenceNumber, &recvBuff[0], 2);
 
