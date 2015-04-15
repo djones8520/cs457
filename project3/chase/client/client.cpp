@@ -203,7 +203,7 @@ uint16_t genChkSum(char * data, int size){
 	
 	data += 2;
 	for(int i = 0; i < size + (OVERHEAD - 2); i++){
-		cerr << *data;
+		//cerr << *data;
 		chkSum += *data;
 		data++;
 	}
@@ -219,7 +219,7 @@ bool valChkSum(char * data, int size){
 	
 	data += 2;
 	for(int i = 0; i < size + (OVERHEAD - 2); i++){
-		cerr << *data;
+		//cerr << *data;
 		newChkSum += *data;
 		data++;
 	}
